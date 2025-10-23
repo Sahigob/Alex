@@ -1,3 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Matamarcianos Auto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: monospace;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    canvas {
+      border: 3px solid #0f0;
+      background-color: #000;
+      margin-top: 10px;
+      touch-action: none;
+    }
+
+    #controlesTactiles {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .botonControl {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .botonControl.activo {
+      background-color: #0f0;
+    }
+
+    @media (min-width: 600px) {
+      #controlesTactiles {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Matamarcianos Auto</h1>
+  <canvas id="juegoCanvas" width="320" height="480"></canvas>
+  <div id="controlesTactiles">
+    <button class="botonControl" data-key="ArrowLeft">◀️</button>
+    <button class="botonControl" data-key="ArrowRight">▶️</button>
+  </div>
+  <script>
+    const canvas = document.getElementById("juegoCanvas");
+    const ctx = canvas.getContext("2d");
+    const ancho = canvas.width;
+    const alto = canvas.height;
+
+    let juegoActivo = true;
+    let score = 0;
+    let tiempoInicial = Date.now();
+    let teclasPresionadas = {};
+
+    const jugador = {
+      ancho: 20,
+      alto: 20,
+      x: ancho / 2 - 10,
+      y: alto - 30,
+      velocidad: 4,
+      puedeDisparar: true,
+      cadenciaDisparo: 300
+    };
+
+    let misilesJugador = [];
+    let misilesMarcianos = [];
+
+    const MISIL_VELOCIDAD = 6;
+    const MISIL_ANCHO = 2;
+    const MISIL_ALTO = 8;
+
+    const LÁSER_VELOCIDAD = 4;
+    const LÁSER_ANCHO = 3;
+    const LÁSER_ALTO = 10;
+    const CADENCIA_MARCIANOS = 2000;
+
+    let marcianos = [];
+    const MARCIANO_FILAS = 4;
+    const MARCIANO_COLS = 8;
+    const MARCIANO_ANCHO = 18;
+    const MARCIANO_ALTO = 14;
+    const MARCIANO_ESPACIO = 25;
+    let MARCIANO_DIR = 1;
+    let MARCIANO_VELOCIDAD = 1.0;
+    const MARCIANO_CAIDA = 10;
+    let MARCIANO_PROXIMO_MOV = Date.now();
+    const MARCIANO_INTERVALO = 800;
+    let MARCIANO_PROXIMO_DISP = Date.now();
+
+    function inicializarMarcianos() {
+      const emojis = ["🛸", "🚀", "🛰️", "👾", "🌌", "🪐", "🔫", "🧠"];
+      marcianos = [];
+      for (let i = 0; i < MARCIANO_FILAS; i++) {
+        for (let j = 0; j < MARCIANO_COLS; j++) {
+          marcianos.push({
+            x: j * MARCIANO_ESPACIO + 15,
+            y: i * MARCIANO_ESPACIO + 15,
+            ancho: MARCIANO_ANCHO,
+            alto: MARCIANO_ALTO,
+            descuelga: false,
+            velocidadDescuelgue: 2,
+            emoji: emojis[(i * MARCIANO_COLS + j) % emojis.length]
+          });
+        }
+      }
+    }
+
+    function reiniciarJuego() {
+      score = 0;
+      tiempoInicial = Date.now();
+      jugador.x = ancho / 2 - jugador.ancho / 2;
+      misilesJugador = [];
+      misilesMarcianos = [];
+      MARCIANO_DIR = 1;
+      MARCIANO_VELOCIDAD = 1.0;
+      inicializarMarcianos();
+      juegoActivo = true;
+    }
+
+    function manejarDerrota() {
+      juegoActivo = false;
+      alert("¡Game Over! Te han golpeado o invadido. Score Final: " + score);
+      reiniciarJuego();
+    }
+
+    function crearMisilJugador() {
+      if (jugador.puedeDisparar) {
+        misilesJugador.push({
+          x: jugador.x + jugador.ancho / 2 - MISIL_ANCHO / 2,
+          y: jugador.y,
+          ancho: MISIL_ANCHO,
+          alto: MISIL_ALTO,
+          velocidadY: -MISIL_VELOCIDAD
+        });
+        jugador.puedeDisparar = false;
+        setTimeout(() => {
+          jugador.puedeDisparar = true;
+        }, jugador.cadenciaDisparo);
+      }
+    }
+
+    function manejarControles() {
+      if (teclasPresionadas['ArrowLeft'] || teclasPresionadas['a']) {
+        jugador.x -= jugador.velocidad;
+      }
+      if (teclasPresionadas['ArrowRight'] || teclasPresionadas['d']) {
+        jugador.x += jugador.velocidad;
+      }
+
+      crearMisilJugador();
+
+      if (jugador.x < 0) jugador.x = 0;
+      if (jugador.x + jugador.ancho > ancho) jugador.x = ancho - jugador.ancho;
+    }
+
+    canvas.addEventListener('touchmove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const touchX = e.touches[0].clientX - rect.left;
+      jugador.x = touchX - jugador.ancho / 2;
+      if (jugador.x < 0) jugador.x = 0;
+      if (jugador.x + jugador.ancho > ancho) jugador.x = ancho - jugador.ancho;
+    });
+
+    function crearMisilMarciano() {
+      if (marcianos.length > 0) {
+        const index = Math.floor(Math.random() * marcianos.length);
+        const m = marcianos[index];
+        misilesMarcianos.push({
+          x: m.x + m.ancho / 2 - LÁSER_ANCHO / 2,
+          y: m.y + m.alto,
+          ancho: LÁSER_ANCHO,
+          alto: LÁSER_ALTO,
+          velocidadY: LÁSER_VELOCIDAD
+        });
+      }
+    }
+
+    function actualizarMarcianos() {
+      const ahora = Date.now();
+      let cambiarDireccion = false;
+
+      if (ahora > MARCIANO_PROXIMO_MOV) {
+        marcianos.forEach(m => {
+          if (!m.descuelga) m.x += MARCIANO_DIR * MARCIANO_VELOCIDAD;
+        });
+
+        for (const m of marcianos) {
+          if (!m.descuelga && (m.x + m.ancho > ancho || m.x < 0)) {
+            cambiarDireccion = true;
+            break;
+          }
+          if (
+            m.descuelga &&
+            m.y + m.alto >= jugador.y &&
+            m.y <= jugador.y + jugador.alto &&
+            m.x < jugador.x + jugador.ancho &&
+            m.x + m.ancho > jugador.x
+          ) {
+            manejarDerrota();
+            return;
+          }
+        }
+
+        if (cambiarDireccion) {
+          MARCIANO_DIR *= -1;
+          marcianos.forEach(m => {
+            if (!m.descuelga) m.y += MARCIANO_CAIDA;
+          });
+          MARCIANO_VELOCIDAD += 0.1;
+        }
+
+        MARCIANO_PROXIMO_MOV = ahora + MARCIANO_INTERVALO;
+      }
+
+      if (ahora > MARCIANO_PROXIMO_DISP && marcianos.length > 0) {
+        const intervaloAjustado = Math.max(800, CADENCIA_MARCIANOS / (marcianos.length / 5));
+        crearMisilMarciano();
+        MARCIANO_PROXIMO_DISP = ahora + intervaloAjustado;
+      }
+
+      if (ahora % 5000 < 50 && marcianos.length > 0) {
+        const candidatos = marcianos.filter(m => !m.descuelga);
+        if (candidatos.length > 0) {
+          const elegido = candidatos[Math.floor(Math.random() * candidatos.length)];
+          elegido.descuelga = true;
+          elegido.velocidadDescuelgue = 2 + Math.random() * 2;
+        }
+      }
+
+      marcianos.forEach(m => {
+        if (m.descuelga) {
+          m.y += m.velocidadDescuelgue;
+          if (m.y > alto + m.alto) {
+            m.descuelga = false;
+          }
+        }
+      });
+    }
     function actualizarMisilesYColisiones() {
       misilesJugador = misilesJugador.filter(m => m.y > 0);
       misilesMarcianos = misilesMarcianos.filter(m => m.y < alto);
@@ -51,10 +303,6 @@
       ctx.textBaseline = "top";
       ctx.fillStyle = "#0f0";
       ctx.fillText("🛸", jugador.x, jugador.y);
-
-      // Borde de colisión para depuración
-      ctx.strokeStyle = "#f0f";
-      ctx.strokeRect(jugador.x, jugador.y, jugador.ancho, jugador.alto);
     }
 
     function dibujarMisiles() {
@@ -71,9 +319,11 @@
 
     function dibujarMarcianos() {
       ctx.font = "16px monospace";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
       marcianos.forEach((m) => {
         ctx.fillStyle = "#fff";
-        ctx.fillText(m.emoji, m.x, m.y + m.alto);
+        ctx.fillText(m.emoji, m.x, m.y);
       });
     }
 
