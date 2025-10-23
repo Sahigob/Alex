@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tres en Raya Táctil</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            user-select: none; /* Evita la selección de texto en móviles */
+            touch-action: manipulation; /* Optimiza la respuesta táctil */
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #estadoJuego {
+            margin: 15px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        #tablero {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            background-color: #333;
+            border: 5px solid #333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .casilla {
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .casilla:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Estilos para las marcas (opcional, mejora la visual) */
+        .casilla.X { color: #ff5722; } /* Naranja/Rojo */
+        .casilla.O { color: #00bcd4; } /* Cyan/Azul */
+        
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>¡Tres en Raya! 🎯</h1>
+    <div id="estadoJuego">Turno de: X</div>
+    
+    <div id="tablero">
+        </div>
+    
+    <button onclick="reiniciarJuego()">Reiniciar Juego</button>
+
+    <script>
+        // -------------------------------------------------------------------
+        // VARIABLES GLOBALES
+        // -------------------------------------------------------------------
+        const tableroHTML = document.getElementById('tablero');
+        const estadoJuegoHTML = document.getElementById('estadoJuego');
+        let tablero = ['', '', '', '', '', '', '', '', '']; // Representación del tablero (9 casillas)
+        let jugadorActual = 'X';
+        let juegoActivo = true;
+
+        // Combinaciones ganadoras
+        const combinacionesGanadoras = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Filas
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columnas
+            [0, 4, 8], [2, 4, 6]             // Diagonales
+        ];
+
+        // -------------------------------------------------------------------
+        // INICIALIZACIÓN: CREAR CASILLAS Y EVENTOS
+        // -------------------------------------------------------------------
+        function crearTablero() {
+            tableroHTML.innerHTML = ''; // Limpiar cualquier contenido anterior
+            for (let i = 0; i < 9; i++) {
+                const casilla = document.createElement('div');
+                casilla.classList.add('casilla');
+                casilla.dataset.index = i; // Guardar el índice de la casilla
+                
+                // Añadir evento para el manejo de clics (ratón) o toques (táctil)
+                casilla.addEventListener('click', manejarMovimiento);
+                
+                // Aunque 'click' funciona en táctil, un manejo de 'touchend' 
+                // podría usarse para juegos más complejos, pero 'click' es 
+                // suficiente aquí y es más simple.
+                // Sin embargo, incluiremos 'touchend' para asegurar la respuesta inmediata.
+                casilla.addEventListener('touchend', manejarMovimiento);
+
+                tableroHTML.appendChild(casilla);
+            }
+        }
+
+        // -------------------------------------------------------------------
+        // LÓGICA DEL JUEGO
+        // -------------------------------------------------------------------
+
+        function manejarMovimiento(evento) {
+            if (!juegoActivo) return; // Si el juego terminó, no hacer nada
+
+            // Asegurarse de obtener la casilla, ya sea por click o touchend
+            const casilla = evento.currentTarget;
+            const indice = parseInt(casilla.dataset.index);
+
+            // Verificar si la casilla ya está ocupada
+            if (tablero[indice] !== '') {
+                return;
+            }
+
+            // 1. Marcar la casilla en el array y en el HTML
+            tablero[indice] = jugadorActual;
+            casilla.textContent = jugadorActual;
+            casilla.classList.add(jugadorActual); // Añadir clase para estilo (X o O)
+
+            // 2. Comprobar el estado del juego
+            if (comprobarVictoria()) {
+                estadoJuegoHTML.textContent = `🎉 ¡El jugador ${jugadorActual} ha ganado! 🎉`;
+                juegoActivo = false;
+                return;
+            }
+
+            if (comprobarEmpate()) {
+                estadoJuegoHTML.textContent = `🤝 ¡Es un empate! 🤝`;
+                juegoActivo = false;
+                return;
+            }
+
+            // 3. Cambiar de turno
+            jugadorActual = jugadorActual === 'X' ? 'O' : 'X';
+            estadoJuegoHTML.textContent = `Turno de: ${jugadorActual}`;
+        }
+
+        function comprobarVictoria() {
+            return combinacionesGanadoras.some(combinacion => {
+                // Comprobar si los tres índices de la combinación tienen el mismo símbolo
+                const [a, b, c] = combinacion;
+                return tablero[a] !== '' && tablero[a] === tablero[b] && tablero[b] === tablero[c];
+            });
+        }
+
+        function comprobarEmpate() {
+            // Si no hay victoria y todas las casillas están llenas (no hay strings vacíos)
+            return !tablero.includes('');
+        }
+
+        // -------------------------------------------------------------------
+        // REINICIO
+        // -------------------------------------------------------------------
+
+        function reiniciarJuego() {
+            tablero = ['', '', '', '', '', '', '', '', ''];
+            jugadorActual = 'X';
+            juegoActivo = true;
+            estadoJuegoHTML.textContent = `Turno de: X`;
+            crearTablero();
+        }
+
+        // Iniciar el juego al cargar la página
+        crearTablero();
+
+    </script>
+</body>
+</html>

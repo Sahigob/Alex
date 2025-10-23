@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¡Premio! Juego de Pares de Emojis</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #fce4ec;
+      padding: 20px;
+    }
+
+    header h1 {
+      color: #d81b60;
+      font-size: 2.2em;
+      text-align: center;
+    }
+
+    p {
+      color: #4a148c;
+    }
+
+    .game-container {
+      width: 320px;
+      height: 480px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+      grid-gap: 8px;
+      perspective: 1000px;
+    }
+
+    .memory-card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform .5s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .memory-card.flip, .memory-card.match {
+      transform: rotateY(180deg);
+    }
+
+    .front-face, .back-face {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      backface-visibility: hidden;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 40px;
+    }
+
+    .front-face {
+      transform: rotateY(180deg);
+      background-color: #ffffff;
+    }
+
+    .back-face {
+      background-color: #4db6ac;
+      color: white;
+      font-weight: bold;
+      font-size: 24px;
+      border: 3px solid #00897b;
+    }
+
+    #mensaje-victoria {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #a5d6a7;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0, 150, 0, 0.5);
+    }
+
+    #mensaje-victoria h2 {
+      color: #388e3c;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>¡Premio! Juego de Pares de Emojis</h1>
+  </header>
+
+  <main class="game-container"></main>
+
+  <div id="mensaje-victoria" style="display: none;">
+    <h2>¡GANASTE! 🏆 Eres increíblemente inteligente.</h2>
+    <button onclick="window.location.reload()" style="padding: 10px 20px; font-size: 1.2em; cursor: pointer; margin-top: 10px; background-color: #e91e63; color: white; border: none; border-radius: 5px;">Jugar de nuevo</button>
+  </div>
+
+  <script>
+    const cardsArray = [
+      { name: 'icono1', img: '🐱' },
+      { name: 'icono2', img: '🦄' },
+      { name: 'icono3', img: '🌈' },
+      { name: 'icono4', img: '⭐' },
+      { name: 'icono5', img: '🍎' },
+      { name: 'icono6', img: '🍕' }
+    ];
+
+    const gameCards = [...cardsArray, ...cardsArray]; // 6 pares = 12 cartas
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    shuffle(gameCards);
+
+    const gameContainer = document.querySelector('.game-container');
+    let hasFlippedCard = false;
+    let lockBoard = false;
+    let firstCard, secondCard;
+    let matches = 0;
+    const totalMatches = cardsArray.length;
+
+    function createBoard() {
+      gameCards.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('memory-card');
+        cardElement.dataset.card = card.name;
+
+        const frontFace = document.createElement('div');
+        frontFace.classList.add('front-face');
+        frontFace.textContent = card.img;
+
+        const backFace = document.createElement('div');
+        backFace.classList.add('back-face');
+        backFace.textContent = '✨';
+
+        cardElement.appendChild(frontFace);
+        cardElement.appendChild(backFace);
+
+        cardElement.addEventListener('click', flipCard);
+        gameContainer.appendChild(cardElement);
+      });
+    }
+
+    function flipCard() {
+      if (lockBoard) return;
+      if (this === firstCard) return;
+
+      this.classList.add('flip');
+
+      if (!hasFlippedCard) {
+        hasFlippedCard = true;
+        firstCard = this;
+        return;
+      }
+
+      secondCard = this;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      let isMatch = firstCard.dataset.card === secondCard.dataset.card;
+      isMatch ? disableCards() : unflipCards();
+    }
+
+    function disableCards() {
+      firstCard.removeEventListener('click', flipCard);
+      secondCard.removeEventListener('click', flipCard);
+
+      firstCard.classList.add('match');
+      secondCard.classList.add('match');
+
+      matches++;
+
+      if (matches === totalMatches) {
+        document.getElementById('mensaje-victoria').style.display = 'block';
+      }
+
+      resetBoard();
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+      setTimeout(() => {
+        firstCard.classList.remove('flip');
+        secondCard.classList.remove('flip');
+        resetBoard();
+      }, 1000);
+    }
+
+    function resetBoard() {
+      [hasFlippedCard, lockBoard] = [false, false];
+      [firstCard, secondCard] = [null, null];
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>
