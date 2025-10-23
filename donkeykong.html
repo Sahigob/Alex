@@ -121,13 +121,15 @@
       { x: 120, y: 80, ancho: 70, alto: 10 },
       { x: 240, y: 80, ancho: ancho - 240, alto: 10 },
       { x: 50, y: alto - 100, ancho: 200, alto: 10 },
-      { x: 0, y: alto - 200, ancho: 150, alto: 10 },
-      { x: 170, y: alto - 300, ancho: 150, alto: 10 }
+      { x: 0, y: alto - 200, ancho: 150, alto: 10 }
+      // Última viga eliminada
     ];
 
     function reiniciarJuego() {
       carla = { ...ESTADO_INICIAL_CARLA };
       barriles = [];
+      donkeyKong.intervaloBarril = 2000;
+      donkeyKong.velocidadMovimiento = 0.5;
       juegoActivo = true;
     }
 
@@ -137,6 +139,7 @@
     }
 
     function crearBarril() {
+      const esRebotador = Math.random() < 0.3;
       barriles.push({
         x: donkeyKong.x + donkeyKong.ancho / 2,
         y: donkeyKong.y + donkeyKong.alto,
@@ -145,7 +148,8 @@
         velocidadY: 0,
         rodando: false,
         dirRodamiento: donkeyKong.dirX,
-        velocidadRodamiento: 1.5
+        velocidadRodamiento: 1.5,
+        rebotador: esRebotador
       });
       donkeyKong.ultimoBarril = Date.now();
     }
@@ -168,9 +172,14 @@
           if (b.x > p.x && b.x < p.x + p.ancho) {
             if (b.y + b.radio >= p.y && b.y + b.radio <= p.y + 5 && b.velocidadY >= 0) {
               b.y = p.y - b.radio;
-              b.velocidadY = 0;
+              if (b.rebotador) {
+                b.velocidadY = -5;
+                b.rodando = false;
+              } else {
+                b.velocidadY = 0;
+                b.rodando = true;
+              }
               enSuelo = true;
-              b.rodando = true;
             }
           }
         });
@@ -187,6 +196,7 @@
             b.rodando = false;
             b.velocidadX = 0;
             b.dirRodamiento *= -1;
+            b.velocidadRodamiento += 0.2;
           }
         }
 
@@ -242,6 +252,8 @@
 
       if (Date.now() - donkeyKong.ultimoBarril > donkeyKong.intervaloBarril) {
         crearBarril();
+        donkeyKong.intervaloBarril = Math.max(500, donkeyKong.intervaloBarril - 50);
+        donkeyKong.velocidadMovimiento = Math.min(2.5, donkeyKong.velocidadMovimiento + 0.05);
       }
     }
 
@@ -302,7 +314,7 @@
       barriles.forEach(b => {
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.radio, 0, Math.PI * 2);
-        ctx.fillStyle = "#FF8C00";
+        ctx.fillStyle = b.rebotador ? "#FF69B4" : "#FF8C00";
         ctx.fill();
         ctx.lineWidth = 2;
         ctx.strokeStyle = "#000";
@@ -352,27 +364,22 @@
     const botones = document.querySelectorAll('.botonControl');
     botones.forEach(boton => {
       const key = boton.dataset.key;
-
       boton.addEventListener('touchstart', (e) => {
         e.preventDefault();
         teclasPresionadas[key] = true;
       });
-
       boton.addEventListener('touchend', (e) => {
         e.preventDefault();
         teclasPresionadas[key] = false;
       });
-
       boton.addEventListener('mousedown', () => {
         teclasPresionadas[key] = true;
       });
-
       boton.addEventListener('mouseup', () => {
         teclasPresionadas[key] = false;
       });
     });
 
-    // Iniciar juego
     reiniciarJuego();
     dibujar();
   </script>
