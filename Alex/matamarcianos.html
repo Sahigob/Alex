@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matamarcianos Auto-Fuego y Marcianos Rápidos</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #222;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: none; 
+            font-family: monospace;
+            color: white;
+            padding-bottom: 20px;
+        }
+
+        #contenedorJuego {
+            position: relative;
+        }
+
+        canvas {
+            border: 5px solid #00ff00; 
+            background: #000;
+            display: block;
+        }
+
+        /* Controles Táctiles: Solo para movimiento, el disparo es automático */
+        #controlesTactiles {
+            display: flex;
+            justify-content: center; 
+            gap: 20px; /* Separación entre botones */
+            width: 320px;
+            margin-top: 15px;
+            padding: 0 5px;
+            box-sizing: border-box;
+        }
+
+        .botonControl {
+            padding: 15px 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            flex-grow: 1;
+            margin: 0 5px;
+            opacity: 0.9;
+            transition: opacity 0.1s;
+        }
+        
+        .botonControl.movimiento {
+            background-color: #3498DB;
+            flex-grow: 1; /* Mismo tamaño para ambos */
+        }
+
+        .botonControl:active, .botonControl.activo {
+            opacity: 1.0;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @media (min-width: 600px) {
+            #controlesTactiles {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Matamarcianos Auto</h1>
+    
+    <div id="contenedorJuego">
+        <canvas id="juegoCanvas" width="320" height="480"></canvas>
+    </div>
+
+    <div id="controlesTactiles">
+        <button class="botonControl movimiento" data-key="ArrowLeft">◀️ IZQ</button>
+        <button class="botonControl movimiento" data-key="ArrowRight">DER ▶️</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("juegoCanvas");
+        const ctx = canvas.getContext("2d");
+        const ancho = canvas.width;
+        const alto = canvas.height;
+
+        // -------------------------------------------------------------------
+        // VARIABLES GLOBALES
+        // -------------------------------------------------------------------
+        let juegoActivo = true;
+        let score = 0;
+        let tiempoInicial = Date.now();
+        let teclasPresionadas = {};
+
+        // Jugador
+        const jugador = {
+            ancho: 20,
+            alto: 15,
+            x: ancho / 2 - 10,
+            y: alto - 30,
+            velocidad: 4,
+            puedeDisparar: true,
+            cadenciaDisparo: 300 // ms entre disparos del jugador
+        };
+
+        // Disparos del Jugador
+        let misilesJugador = [];
+        const MISIL_VELOCIDAD = 6;
+        const MISIL_ANCHO = 2;
+        const MISIL_ALTO = 8;
+        
+        // Disparos de los Marcianos
+        let misilesMarcianos = [];
+        const LÁSER_VELOCIDAD = 4;
+        const LÁSER_ANCHO = 3;
+        const LÁSER_ALTO = 10;
+        const CADENCIA_MARCIANOS = 2000; // Un disparo cada 2 segundos
+
+        // Marcianos
+        let marcianos = [];
+        const MARCIANO_FILAS = 4;
+        const MARCIANO_COLS = 8;
+        const MARCIANO_ANCHO = 18;
+        const MARCIANO_ALTO = 14;
+        const MARCIANO_ESPACIO = 25;
+        let MARCIANO_DIR = 1; 
+        let MARCIANO_VELOCIDAD = 1.0; // ¡DOBLE DE RÁPIDO!
+        const MARCIANO_CAIDA = 10;
+        let MARCIANO_PROXIMO_MOV = Date.now();
+        const MARCIANO_INTERVALO = 800; // Movimiento cada 800ms
+        let MARCIANO_PROXIMO_DISP = Date.now();
+
+
+        // -------------------------------------------------------------------
+        // FUNCIÓN DE REINICIO
+        // -------------------------------------------------------------------
+
+        function inicializarMarcianos() {
+            marcianos = [];
+            for (let i = 0; i < MARCIANO_FILAS; i++) {
+                for (let j = 0; j < MARCIANO_COLS; j++) {
+                    marcianos.push({
+                        x: j * MARCIANO_ESPACIO + 15, 
+                        y: i * MARCIANO_ESPACIO + 15,
+                        ancho: MARCIANO_ANCHO,
+                        alto: MARCIANO_ALTO
+                    });
+                }
+            }
+        }
+
+        function reiniciarJuego() {
+            score = 0;
+            tiempoInicial = Date.now();
+            jugador.x = ancho / 2 - 10;
+            misilesJugador = [];
+            misilesMarcianos = [];
+            MARCIANO_DIR = 1;
+            MARCIANO_VELOCIDAD = 1.0;
+            inicializarMarcianos();
+            juegoActivo = true;
+        }
+
+        function manejarDerrota() {
+             juegoActivo = false;
+             alert("¡Game Over! Te han golpeado o invadido. Score Final: " + score);
+             reiniciarJuego();
+        }
+
+        // -------------------------------------------------------------------
+        // LÓGICA DEL JUGADOR
+        // -------------------------------------------------------------------
+
+        function crearMisilJugador() {
+            if (jugador.puedeDisparar) {
+                misilesJugador.push({
+                    x: jugador.x + jugador.ancho / 2 - MISIL_ANCHO / 2,
+                    y: jugador.y,
+                    ancho: MISIL_ANCHO,
+                    alto: MISIL_ALTO,
+                    velocidadY: -MISIL_VELOCIDAD
+                });
+                jugador.puedeDisparar = false;
+                setTimeout(() => {
+                    jugador.puedeDisparar = true; 
+                }, jugador.cadenciaDisparo); 
+            }
+        }
+        
+        function manejarControles() {
+            // Movimiento Lateral
+            if (teclasPresionadas['ArrowLeft'] || teclasPresionadas['a']) {
+                jugador.x -= jugador.velocidad;
+            }
+            if (teclasPresionadas['ArrowRight'] || teclasPresionadas['d']) {
+                jugador.x += jugador.velocidad;
+            }
+
+            // AUTO-DISPARO: Lo llamamos constantemente
+            crearMisilJugador();
+
+            // Limitar al borde
+            if (jugador.x < 0) jugador.x = 0;
+            if (jugador.x + jugador.ancho > ancho) jugador.x = ancho - jugador.ancho;
+        }
+
+
+        // -------------------------------------------------------------------
+        // LÓGICA DE LOS MARCIANOS Y SUS DISPAROS
+        // -------------------------------------------------------------------
+
+        function crearMisilMarciano() {
+            if (marcianos.length > 0) {
+                // Selecciona un marciano aleatorio para disparar
+                const index = Math.floor(Math.random() * marcianos.length);
+                const m = marcianos[index];
+                
+                misilesMarcianos.push({
+                    x: m.x + m.ancho / 2 - LÁSER_ANCHO / 2,
+                    y: m.y + m.alto,
+                    ancho: LÁSER_ANCHO,
+                    alto: LÁSER_ALTO,
+                    velocidadY: LÁSER_VELOCIDAD
+                });
+            }
+        }
+
+        function actualizarMarcianos() {
+            const ahora = Date.now();
+            let cambiarDireccion = false;
+
+            // 1. Movimiento Lateral y Vertical
+            if (ahora > MARCIANO_PROXIMO_MOV) {
+                marcianos.forEach(m => {
+                    m.x += MARCIANO_DIR * MARCIANO_VELOCIDAD;
+                });
+
+                for (const m of marcianos) {
+                    if (m.x + m.ancho > ancho || m.x < 0) {
+                        cambiarDireccion = true;
+                        break;
+                    }
+                    if (m.y + m.alto >= jugador.y) {
+                         manejarDerrota();
+                         return; 
+                    }
+                }
+
+                if (cambiarDireccion) {
+                    MARCIANO_DIR *= -1;
+                    marcianos.forEach(m => {
+                        m.y += MARCIANO_CAIDA;
+                    });
+                    MARCIANO_VELOCIDAD += 0.1;
+                }
+
+                MARCIANO_PROXIMO_MOV = ahora + MARCIANO_INTERVALO;
+            }
+            
+            // 2. Disparo de Marcianos
+            if (ahora > MARCIANO_PROXIMO_DISP && marcianos.length > 0) {
+                // Asegura que no disparen demasiado rápido al inicio
+                const intervaloAjustado = Math.max(800, CADENCIA_MARCIANOS / (marcianos.length / 5));
+                crearMisilMarciano();
+                MARCIANO_PROXIMO_DISP = ahora + intervaloAjustado;
+            }
+        }
+
+        // -------------------------------------------------------------------
+        // LÓGICA DE COLISIONES
+        // -------------------------------------------------------------------
+
+        function actualizarMisilesYColisiones() {
+            // 1. Mover misiles y limpiar
+            misilesJugador = misilesJugador.filter(m => m.y > 0);
+            misilesMarcianos = misilesMarcianos.filter(m => m.y < alto);
+
+            // 2. Colisión Misiles Jugador -> Marcianos
+            for (let i = 0; i < misilesJugador.length; i++) {
+                let misil = misilesJugador[i];
+                misil.y += misil.velocidadY;
+
+                for (let j = 0; j < marcianos.length; j++) {
+                    let marciano = marcianos[j];
+
+                    if (
+                        misil.x < marciano.x + marciano.ancho && misil.x + misil.ancho > marciano.x &&
+                        misil.y < marciano.y + marciano.alto && misil.y + misil.alto > marciano.y
+                    ) {
+                        // PUNTAJE BASADO EN TIEMPO (más rápido = mejor)
+                        const tiempoTranscurrido = (Date.now() - tiempoInicial) / 1000; // Segundos
+                        score += Math.max(1, Math.round(50 / tiempoTranscurrido * marcianos.length)); 
+
+                        marcianos.splice(j, 1);
+                        misilesJugador.splice(i, 1);
+                        i--;
+                        
+                        if (marcianos.length === 0) {
+                            juegoActivo = false;
+                            alert("¡Victoria! Score Final: " + score);
+                            reiniciarJuego();
+                            return;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // 3. Colisión Misiles Marcianos -> Jugador
+            for (let i = 0; i < misilesMarcianos.length; i++) {
+                let laser = misilesMarcianos[i];
+                laser.y += laser.velocidadY;
+
+                // Colisión Jugador
+                if (
+                    laser.x < jugador.x + jugador.ancho && laser.x + laser.ancho > jugador.x &&
+                    laser.y < jugador.y + jugador.alto && laser.y + laser.alto > jugador.y
+                ) {
+                    manejarDerrota();
+                    return;
+                }
+            }
+        }
+
+
+        // -------------------------------------------------------------------
+        // FUNCIONES DE DIBUJO
+        // -------------------------------------------------------------------
+
+        function dibujarJugador() {
+            ctx.fillStyle = "#00ff00"; 
+            ctx.fillRect(jugador.x, jugador.y, jugador.ancho, jugador.alto);
+        }
+
+        function dibujarMisiles() {
+            // Misiles del Jugador
+            ctx.fillStyle = "#ff0000"; 
+            misilesJugador.forEach(m => {
+                ctx.fillRect(m.x, m.y, m.ancho, m.alto);
+            });
+            
+            // Misiles de los Marcianos
+            ctx.fillStyle = "#FFFF00"; // Láser Amarillo
+            misilesMarcianos.forEach(m => {
+                ctx.fillRect(m.x, m.y, m.ancho, m.alto);
+            });
+        }
+
+        function dibujarMarcianos() {
+            ctx.fillStyle = "#ffffff"; 
+            ctx.font = "14px monospace";
+            marcianos.forEach(m => {
+                ctx.fillRect(m.x, m.y, m.ancho, m.alto); 
+                ctx.fillStyle = "#000"; 
+                ctx.fillText("👽", m.x, m.y + m.alto); 
+                ctx.fillStyle = "#ffffff"; 
+            });
+        }
+
+        function dibujarScore() {
+            ctx.fillStyle = "#00ff00";
+            ctx.font = "12px monospace";
+            ctx.fillText("SCORE: " + score, 5, 15);
+            
+            const tiempoTranscurrido = ((Date.now() - tiempoInicial) / 1000).toFixed(1);
+            ctx.fillText("TIME: " + tiempoTranscurrido + "s", ancho - 80, 15);
+        }
+
+        // -------------------------------------------------------------------
+        // BUCLE PRINCIPAL
+        // -------------------------------------------------------------------
+
+        function dibujar() {
+            if (!juegoActivo) {
+                 return; 
+            }
+
+            ctx.clearRect(0, 0, ancho, alto);
+            
+            // Actualizar lógica
+            manejarControles();
+            actualizarMarcianos();
+            actualizarMisilesYColisiones();
+            
+            // Dibujar
+            dibujarScore();
+            dibujarJugador();
+            dibujarMisiles();
+            dibujarMarcianos();
+
+            requestAnimationFrame(dibujar);
+        }
+
+        // -------------------------------------------------------------------
+        // MANEJO DE ENTRADAS (Optimizado)
+        // -------------------------------------------------------------------
+
+        // TECLADO
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+            teclasPresionadas[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            teclasPresionadas[e.key] = false;
+        });
+
+        // TÁCTIL
+        const botones = document.querySelectorAll('.botonControl');
+        botones.forEach(boton => {
+            const key = boton.dataset.key;
+
+            boton.addEventListener('touchstart', (e) => {
+                e.preventDefault(); 
+                teclasPresionadas[key] = true;
+                boton.classList.add('activo');
+            }, false);
+
+            boton.addEventListener('touchend', (e) => {
+                e.preventDefault(); 
+                teclasPresionadas[key] = false;
+                boton.classList.remove('activo');
+            }, false);
+        });
+
+        // Iniciar el juego
+        reiniciarJuego();
+        dibujar();
+    </script>
+</body>
+</html>
