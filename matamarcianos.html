@@ -73,7 +73,8 @@
       y: alto - 30,
       velocidad: 4,
       puedeDisparar: true,
-      cadenciaDisparo: 300
+      cadenciaDisparo: 300,
+      vidas: 5
     };
 
     let misilesJugador = [];
@@ -108,7 +109,7 @@
         for (let j = 0; j < MARCIANO_COLS; j++) {
           marcianos.push({
             x: j * MARCIANO_ESPACIO + 15,
-            y: i * MARCIANO_ESPACIO + 15,
+            y: i * MARCIANO_ESPACIO + 30, // espacio extra para mostrar el texto arriba
             ancho: MARCIANO_ANCHO,
             alto: MARCIANO_ALTO,
             descuelga: false,
@@ -123,6 +124,7 @@
       score = 0;
       tiempoInicial = Date.now();
       jugador.x = ancho / 2 - jugador.ancho / 2;
+      jugador.vidas = 5;
       misilesJugador = [];
       misilesMarcianos = [];
       MARCIANO_DIR = 1;
@@ -132,10 +134,19 @@
     }
 
     function manejarDerrota() {
-      juegoActivo = false;
-      alert("¡Game Over! Te han golpeado o invadido. Score Final: " + score);
-      reiniciarJuego();
-    }
+  jugador.vidas--;
+  if (jugador.vidas <= 0) {
+    juegoActivo = false;
+    alert("¡Game Over! Te has quedado sin vidas. Score Final: " + score);
+    reiniciarJuego();
+  } else {
+    // Solo reinicia la ronda, no el juego completo
+    jugador.x = ancho / 2 - jugador.ancho / 2;
+    misilesJugador = [];
+    misilesMarcianos = [];
+  }
+}
+
 
     function crearMisilJugador() {
       if (jugador.puedeDisparar) {
@@ -331,6 +342,7 @@
       ctx.fillStyle = "#00ff00";
       ctx.font = "12px monospace";
       ctx.fillText("SCORE: " + score, 5, 15);
+      ctx.fillText("VIDAS: " + jugador.vidas, ancho / 2 - 25, 15);
       const tiempoTranscurrido = ((Date.now() - tiempoInicial) / 1000).toFixed(1);
       ctx.fillText("TIME: " + tiempoTranscurrido + "s", ancho - 80, 15);
     }
