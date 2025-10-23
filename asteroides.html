@@ -76,7 +76,7 @@
   <h1>Ataque de Asteroides 🚀</h1>
 
   <div id="contenedorJuego">
-    <canvas id="juegoCanvas" width="360" height="600"></canvas>
+    <canvas id="juegoCanvas" width="320" height="480"></canvas>
     <div id="hud">
       <span>PUNTOS: <span id="scoreDisplay">0</span></span>
       <span>VIDAS: <span id="livesDisplay">3</span></span>
@@ -208,7 +208,7 @@
       bucleJuegoFrame = requestAnimationFrame(dibujar);
     }
 
-    function manejarToque(e) {
+    function manejarToqueAsteroide(e) {
       e.preventDefault();
       if (!juegoActivo) return;
 
@@ -235,8 +235,18 @@
       }
     }
 
-    canvas.addEventListener('mousedown', manejarToque);
-    canvas.addEventListener('touchstart', manejarToque);
+    function moverNaveConToque(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches[0].clientX) - rect.left;
+      nave.x = x;
+      if (nave.x < nave.radio) nave.x = nave.radio;
+      if (nave.x > ancho - nave.radio) nave.x = ancho - nave.radio;
+    }
+
+    canvas.addEventListener('touchstart', manejarToqueAsteroide);
+    canvas.addEventListener('mousedown', manejarToqueAsteroide);
+    canvas.addEventListener('touchmove', moverNaveConToque);
+    canvas.addEventListener('mousemove', moverNaveConToque);
 
     function iniciarJuego() {
       score = 0;
