@@ -64,7 +64,7 @@
       padding: 10px 20px;
       font-size: 1em;
       cursor: pointer;
-      background-color: #28a745;
+      background-color: #dc3545; /* Rojo para reiniciar, más apropiado para un "Game Over" */
       color: white;
       border: none;
       border-radius: 5px;
@@ -103,9 +103,12 @@
     let score = 0;
     let vidas = 3;
     let asteroides = [];
-    let dificultad = 1.0;
+    let dificultad = 1.5; // Dificultad inicial aumentada para más cantidad
+    const intervaloBase = 500; // Intervalo base para crear asteroides (más bajo = más rápido)
     let generadorIntervalo;
     let bucleJuegoFrame;
+    let tiempoUltimoAsteroide = 0;
+    const tiempoMinimoEntreAsteroides = 200; // Mínimo de milisegundos entre asteroides
 
     const nave = { x: ancho / 2, y: alto - 50, radio: 15, color: '#00BFFF' };
 
@@ -117,6 +120,11 @@
       { emoji: "🔮", color: "#6f0", puntos: 25, velocidad: 4.0 }
     ];
 
+    /**
+     * Crea un nuevo asteroide.
+     * Se usa `setTimeout` en el bucle principal en lugar de `setInterval` para
+     * un control más flexible de la cantidad.
+     */
     function crearAsteroide() {
       const tipo = tiposAsteroide[Math.floor(Math.random() * tiposAsteroide.length)];
       const radio = 18;
@@ -130,33 +138,63 @@
         velocidadX: (Math.random() - 0.5) * 1.5,
         velocidadY: tipo.velocidad * dificultad,
         tipo: tipo,
-        vida: 1
       });
     }
 
+    /**
+     * Generador continuo de asteroides.
+     * Esto permite una mayor cantidad y un ritmo más frenético.
+     */
+    function generarAsteroidesContinuo() {
+        if (!juegoActivo) return;
+        const ahora = performance.now();
+        const intervaloActual = Math.max(intervaloBase / dificultad, tiempoMinimoEntreAsteroides);
+
+        // Genera un asteroide en cada intervalo
+        if (ahora - tiempoUltimoAsteroide > intervaloActual) {
+            crearAsteroide();
+            tiempoUltimoAsteroide = ahora;
+        }
+
+        // Se usa `setTimeout` en lugar de `setInterval` para un control más preciso
+        generadorIntervalo = setTimeout(generarAsteroidesContinuo, intervaloActual * (0.8 + Math.random() * 0.4)); // Pequeña variación para que no sea un reloj
+    }
+
+
+    /**
+     * Actualiza la posición de los asteroides y revisa colisiones/salida.
+     */
     function actualizarAsteroides() {
       for (let i = asteroides.length - 1; i >= 0; i--) {
         const a = asteroides[i];
         a.x += a.velocidadX;
         a.y += a.velocidadY;
 
-        if (a.y > alto + a.radio) {
+        // 1. Colisión con la Nave (¡Ahora te daña!)
+        const dxNave = a.x - nave.x;
+        const dyNave = a.y - nave.y;
+        const distanciaNave = Math.sqrt(dxNave * dxNave + dyNave * dyNave);
+        if (distanciaNave < a.radio + nave.radio) {
+          // COLISIÓN: El jugador muere (pierde una vida)
           asteroides.splice(i, 1);
           perderVida();
           continue;
         }
 
-        const dx = a.x - nave.x;
-        const dy = a.y - nave.y;
-        const distancia = Math.sqrt(dx * dx + dy * dy);
-        if (distancia < a.radio + nave.radio) {
-          score += a.tipo.puntos;
-          actualizarHUD();
+        // 2. Asteroide sale de la pantalla (¡Ahora ganas puntos por esquivar!)
+        if (a.y > alto + a.radio) {
           asteroides.splice(i, 1);
-          perderVida();
+          score += a.tipo.puntos; // Puntos por esquivar
+          actualizarHUD();
+          continue;
         }
       }
     }
+
+    /**
+     * **¡Se eliminó la función `manejarToqueAsteroide`!**
+     * El juego ahora se trata de esquivar, no de tocar/disparar.
+     */
 
     function actualizarHUD() {
       scoreDisplay.textContent = score;
@@ -172,12 +210,14 @@
 
     function terminarJuego() {
       juegoActivo = false;
-      clearInterval(generadorIntervalo);
+      clearTimeout(generadorIntervalo); // Limpia el setTimeout
       cancelAnimationFrame(bucleJuegoFrame);
       finalScore.textContent = score;
       mensajeFinal.style.display = 'block';
     }
+
     function dibujarNave() {
+      // Dibuja la nave como un triángulo (la forma actual)
       ctx.fillStyle = nave.color;
       ctx.beginPath();
       ctx.moveTo(nave.x, nave.y - nave.radio);
@@ -185,6 +225,12 @@
       ctx.lineTo(nave.x + nave.radio, nave.y + nave.radio);
       ctx.closePath();
       ctx.fill();
+
+      // Pequeño círculo para representar el radio de colisión
+      // ctx.strokeStyle = 'red';
+      // ctx.beginPath();
+      // ctx.arc(nave.x, nave.y, nave.radio, 0, Math.PI * 2);
+      // ctx.stroke();
     }
 
     function dibujarAsteroides() {
@@ -194,11 +240,21 @@
         ctx.textBaseline = "middle";
         ctx.fillStyle = a.tipo.color;
         ctx.fillText(a.tipo.emoji, a.x, a.y);
+
+        // Pequeño círculo para representar el radio de colisión
+        // ctx.strokeStyle = 'red';
+        // ctx.beginPath();
+        // ctx.arc(a.x, a.y, a.radio, 0, Math.PI * 2);
+        // ctx.stroke();
       });
     }
 
     function dibujar() {
       if (!juegoActivo) return;
+
+      // Incrementa la dificultad lentamente con el tiempo
+      dificultad += 0.0005; // Aumenta la velocidad y la tasa de generación
+
       ctx.clearRect(0, 0, ancho, alto);
       ctx.fillStyle = '#222';
       ctx.fillRect(0, 0, ancho, alto);
@@ -208,34 +264,9 @@
       bucleJuegoFrame = requestAnimationFrame(dibujar);
     }
 
-    function manejarToqueAsteroide(e) {
-      e.preventDefault();
-      if (!juegoActivo) return;
-
-      const rect = canvas.getBoundingClientRect();
-      const xToque = (e.clientX || e.touches[0].clientX) - rect.left;
-      const yToque = (e.clientY || e.touches[0].clientY) - rect.top;
-
-      for (let i = asteroides.length - 1; i >= 0; i--) {
-        const a = asteroides[i];
-        const distancia = Math.sqrt((xToque - a.x) ** 2 + (yToque - a.y) ** 2);
-        if (distancia < a.radio) {
-          a.vida--;
-          score += a.tipo.puntos;
-          actualizarHUD();
-          if (a.vida <= 0) {
-            asteroides.splice(i, 1);
-            score += 50;
-            dificultad += 0.05;
-          } else {
-            a.tipo.color = '#FF4500';
-          }
-          return;
-        }
-      }
-    }
-
+    // Mueve la nave con el cursor/toque
     function moverNaveConToque(e) {
+      e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const x = (e.clientX || e.touches[0].clientX) - rect.left;
       nave.x = x;
@@ -243,21 +274,23 @@
       if (nave.x > ancho - nave.radio) nave.x = ancho - nave.radio;
     }
 
-    canvas.addEventListener('touchstart', manejarToqueAsteroide);
-    canvas.addEventListener('mousedown', manejarToqueAsteroide);
-    canvas.addEventListener('touchmove', moverNaveConToque);
+    // Listener para el movimiento de la nave
+    canvas.addEventListener('touchmove', moverNaveConToque, { passive: false });
     canvas.addEventListener('mousemove', moverNaveConToque);
 
     function iniciarJuego() {
       score = 0;
       vidas = 3;
-      dificultad = 1.0;
+      dificultad = 1.5; // Dificultad inicial
       asteroides = [];
       juegoActivo = true;
       mensajeFinal.style.display = 'none';
       actualizarHUD();
-      clearInterval(generadorIntervalo);
-      generadorIntervalo = setInterval(crearAsteroide, 1000 / dificultad);
+
+      clearTimeout(generadorIntervalo);
+      tiempoUltimoAsteroide = performance.now();
+      generarAsteroidesContinuo(); // Inicia la generación continua
+
       cancelAnimationFrame(bucleJuegoFrame);
       dibujar();
     }
