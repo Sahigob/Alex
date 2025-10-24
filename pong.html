@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8" />
   <title>Clásico Pong - Saque desde la Pala</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
@@ -11,17 +12,28 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      min-height: 100svh;
       touch-action: none;
       font-family: monospace;
       color: white;
     }
 
+    h1 {
+      font-size: 1.2rem;
+      margin: 10px 0;
+      text-align: center;
+    }
+
     #contenedorJuego {
       position: relative;
+      width: 100%;
+      max-width: 360px;
     }
 
     canvas {
+      width: 100%;
+      aspect-ratio: 3 / 5;
+      height: auto;
       border: 5px solid #00ff00;
       background: #000;
       display: block;
@@ -30,16 +42,17 @@
     #controlesTactiles {
       display: flex;
       justify-content: center;
-      gap: 20px;
-      width: 360px;
-      margin-top: 15px;
-      padding: 0 5px;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+      margin-top: 10px;
+      padding: 0 10px;
       box-sizing: border-box;
     }
 
     .botonControl {
-      padding: 15px 10px;
-      font-size: 16px;
+      padding: 12px 8px;
+      font-size: 14px;
       font-weight: bold;
       color: white;
       border: none;
@@ -69,21 +82,27 @@
 </head>
 <body>
   <h1>Pong: Saque Auténtico (A 20)</h1>
-
   <div id="contenedorJuego">
-    <canvas id="juegoCanvas" width="360" height="600"></canvas>
+    <canvas id="juegoCanvas"></canvas>
   </div>
-
   <div id="controlesTactiles">
     <button class="botonControl movimiento" data-key="ArrowLeft">◀️ IZQ</button>
     <button class="botonControl movimiento" data-key="ArrowRight">DER ▶️</button>
   </div>
-
   <script>
     const canvas = document.getElementById("juegoCanvas");
     const ctx = canvas.getContext("2d");
-    const ancho = canvas.width;
-    const alto = canvas.height;
+
+    function ajustarCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+    window.addEventListener("resize", ajustarCanvas);
+    ajustarCanvas();
+
+    const ancho = () => canvas.width;
+    const alto = () => canvas.height;
 
     let juegoActivo = true;
     let teclasPresionadas = {};
@@ -98,8 +117,8 @@
     const PADDLE_VELOCIDAD = 6;
 
     const jugador = {
-      x: (ancho / 2) - (PADDLE_ANCHO / 2),
-      y: alto - PADDLE_ALTO - 10,
+      x: () => (ancho() / 2) - (PADDLE_ANCHO / 2),
+      y: () => alto() - PADDLE_ALTO - 10,
       ancho: PADDLE_ANCHO,
       alto: PADDLE_ALTO,
       velocidad: PADDLE_VELOCIDAD,
@@ -107,8 +126,8 @@
     };
 
     const cpu = {
-      x: (ancho / 2) - (PADDLE_ANCHO / 2),
-      y: 10,
+      x: () => (ancho() / 2) - (PADDLE_ANCHO / 2),
+      y: () => 10,
       ancho: PADDLE_ANCHO,
       alto: PADDLE_ALTO,
       velocidad: PADDLE_VELOCIDAD * 0.8,
@@ -117,35 +136,30 @@
 
     const bola = {
       radio: 8,
-      x: ancho / 2,
-      y: alto / 2,
+      x: ancho() / 2,
+      y: alto() / 2,
       velocidadX: 0,
       velocidadY: 0,
       color: "#ffffff"
     };
 
     function resetearBola(servidor) {
-      let palaServidora = (servidor === 1) ? jugador : cpu;
-      bola.x = palaServidora.x + palaServidora.ancho / 2;
+      const palaServidora = (servidor === 1) ? jugador : cpu;
+      bola.x = palaServidora.x() + palaServidora.ancho / 2;
       bola.y = (servidor === 1)
-        ? palaServidora.y - bola.radio
-        : palaServidora.y + palaServidora.alto + bola.radio;
+        ? palaServidora.y() - bola.radio
+        : palaServidora.y() + palaServidora.alto + bola.radio;
 
-      bola.velocidadX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 2 + 6);
-bola.velocidadY = servidor * -8;
-
-
+      bola.velocidadX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.5 + 2);
+      bola.velocidadY = servidor * -2; // velocidad inicial más lenta
       proximoServidor = servidor;
     }
 
     function comprobarVictoria() {
-      if (scoreJugador >= PUNTUACION_MAXIMA) {
-        alert(`¡Ganaste! ${scoreJugador} - ${scoreCPU}. ¡Felicidades!`);
-        reiniciarJuegoTotal();
-        return true;
-      }
-      if (scoreCPU >= PUNTUACION_MAXIMA) {
-        alert(`¡Perdiste! ${scoreJugador} - ${scoreCPU}. ¡La CPU ganó!`);
+      if (scoreJugador >= PUNTUACION_MAXIMA || scoreCPU >= PUNTUACION_MAXIMA) {
+        alert(scoreJugador >= PUNTUACION_MAXIMA
+          ? `¡Ganaste! ${scoreJugador} - ${scoreCPU}. ¡Felicidades!`
+          : `¡Perdiste! ${scoreJugador} - ${scoreCPU}. ¡La CPU ganó!`);
         reiniciarJuegoTotal();
         return true;
       }
@@ -159,76 +173,63 @@ bola.velocidadY = servidor * -8;
       juegoActivo = true;
     }
     function moverJugador() {
-      if (teclasPresionadas['ArrowLeft'] || teclasPresionadas['a']) {
-        jugador.x -= jugador.velocidad;
-      }
-      if (teclasPresionadas['ArrowRight'] || teclasPresionadas['d']) {
-        jugador.x += jugador.velocidad;
-      }
-      if (jugador.x < 0) jugador.x = 0;
-      if (jugador.x + jugador.ancho > ancho) jugador.x = ancho - jugador.ancho;
+      const x = teclasPresionadas['ArrowLeft'] || teclasPresionadas['a'] ? -1 :
+                teclasPresionadas['ArrowRight'] || teclasPresionadas['d'] ? 1 : 0;
+      jugador._x = Math.min(Math.max((jugador._x ?? jugador.x()) + x * jugador.velocidad, 0), ancho() - jugador.ancho);
     }
 
     function moverCPU() {
       const centroBola = bola.x;
-      const centroCPU = cpu.x + cpu.ancho / 2;
-
-      if (centroCPU < centroBola - 10) {
-        cpu.x += cpu.velocidad;
-      } else if (centroCPU > centroBola + 10) {
-        cpu.x -= cpu.velocidad;
-      }
-
-      if (cpu.x < 0) cpu.x = 0;
-      if (cpu.x + cpu.ancho > ancho) cpu.x = ancho - cpu.ancho;
+      const centroCPU = (cpu._x ?? cpu.x()) + cpu.ancho / 2;
+      const dir = centroCPU < centroBola - 10 ? 1 : centroCPU > centroBola + 10 ? -1 : 0;
+      cpu._x = Math.min(Math.max((cpu._x ?? cpu.x()) + dir * cpu.velocidad, 0), ancho() - cpu.ancho);
     }
 
     function moverBola() {
       bola.x += bola.velocidadX;
       bola.y += bola.velocidadY;
 
-      if (bola.x + bola.radio > ancho || bola.x - bola.radio < 0) {
+      // Aceleración progresiva hasta velocidad máxima
+      const signoY = Math.sign(bola.velocidadY);
+      const velocidadActual = Math.abs(bola.velocidadY);
+      if (velocidadActual < 8) {
+        bola.velocidadY += signoY * 0.05;
+      }
+
+      if (bola.x + bola.radio > ancho() || bola.x - bola.radio < 0) {
         bola.velocidadX *= -1;
       }
 
-      if (
-        bola.y + bola.radio > jugador.y &&
-        bola.x > jugador.x && bola.x < jugador.x + jugador.ancho &&
-        bola.velocidadY > 0
-      ) {
+      const colision = (pala) =>
+        bola.x > pala._x && bola.x < pala._x + pala.ancho &&
+        bola.y + bola.radio > pala.y() && bola.y - bola.radio < pala.y() + pala.alto;
+
+      if (colision(jugador) && bola.velocidadY > 0) {
         bola.velocidadY *= -1;
-        const puntoImpacto = (bola.x - (jugador.x + jugador.ancho / 2)) / (jugador.ancho / 2);
+        const puntoImpacto = (bola.x - (jugador._x + jugador.ancho / 2)) / (jugador.ancho / 2);
         bola.velocidadX = puntoImpacto * 5;
       }
 
-      if (
-        bola.y - bola.radio < cpu.y + cpu.alto &&
-        bola.x > cpu.x && bola.x < cpu.x + cpu.ancho &&
-        bola.velocidadY < 0
-      ) {
+      if (colision(cpu) && bola.velocidadY < 0) {
         bola.velocidadY *= -1;
-        const puntoImpacto = (bola.x - (cpu.x + cpu.ancho / 2)) / (cpu.ancho / 2);
+        const puntoImpacto = (bola.x - (cpu._x + cpu.ancho / 2)) / (cpu.ancho / 2);
         bola.velocidadX = puntoImpacto * 5;
       }
 
       if (bola.y - bola.radio < 0) {
         scoreJugador++;
-        if (!comprobarVictoria()) {
-          resetearBola(1);
-        }
+        if (!comprobarVictoria()) resetearBola(1);
       }
 
-      if (bola.y + bola.radio > alto) {
+      if (bola.y + bola.radio > alto()) {
         scoreCPU++;
-        if (!comprobarVictoria()) {
-          resetearBola(-1);
-        }
+        if (!comprobarVictoria()) resetearBola(-1);
       }
     }
 
     function dibujarPala(pala) {
       ctx.fillStyle = pala.color;
-      ctx.fillRect(pala.x, pala.y, pala.ancho, pala.alto);
+      ctx.fillRect(pala._x ?? pala.x(), pala.y(), pala.ancho, pala.alto);
     }
 
     function dibujarBola() {
@@ -242,18 +243,18 @@ bola.velocidadY = servidor * -8;
     function dibujarMarcador() {
       ctx.fillStyle = "#ffffff";
       ctx.font = "20px monospace";
-      ctx.fillText(scoreCPU, ancho - 30, 40);
-      ctx.fillText(scoreJugador, ancho - 30, alto - 20);
+      ctx.fillText(scoreCPU, ancho() - 30, 40);
+      ctx.fillText(scoreJugador, ancho() - 30, alto() - 20);
 
       ctx.fillStyle = (proximoServidor === 1) ? "#00ff00" : "#ff0000";
       ctx.beginPath();
-      ctx.arc(ancho - 50, proximoServidor === 1 ? alto - 25 : 35, 4, 0, Math.PI * 2);
+      ctx.arc(ancho() - 50, proximoServidor === 1 ? alto() - 25 : 35, 4, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.beginPath();
       ctx.setLineDash([5, 5]);
-      ctx.moveTo(0, alto / 2);
-      ctx.lineTo(ancho, alto / 2);
+      ctx.moveTo(0, alto() / 2);
+      ctx.lineTo(ancho(), alto() / 2);
       ctx.strokeStyle = "#ffffff";
       ctx.stroke();
       ctx.setLineDash([]);
@@ -261,7 +262,7 @@ bola.velocidadY = servidor * -8;
 
     function dibujar() {
       if (!juegoActivo) return;
-      ctx.clearRect(0, 0, ancho, alto);
+      ctx.clearRect(0, 0, ancho(), alto());
       moverJugador();
       moverCPU();
       moverBola();
