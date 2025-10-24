@@ -87,33 +87,32 @@
     const LÁSER_VELOCIDAD = 4;
     const LÁSER_ANCHO = 3;
     const LÁSER_ALTO = 10;
-    const CADENCIA_MARCIANOS = 2000;
+    const CADENCIA_MARCIANOS = 1000;
 
     let marcianos = [];
-    const MARCIANO_FILAS = 4;
-    const MARCIANO_COLS = 8;
+    const MARCIANO_FILAS = 6;
+    const MARCIANO_COLS = 10;
     const MARCIANO_ANCHO = 18;
     const MARCIANO_ALTO = 14;
     const MARCIANO_ESPACIO = 25;
     let MARCIANO_DIR = 1;
-    let MARCIANO_VELOCIDAD = 1.0;
+    let MARCIANO_VELOCIDAD = 1.5;
     const MARCIANO_CAIDA = 10;
     let MARCIANO_PROXIMO_MOV = Date.now();
-    const MARCIANO_INTERVALO = 800;
+    const MARCIANO_INTERVALO = 500;
     let MARCIANO_PROXIMO_DISP = Date.now();
-
-    function inicializarMarcianos() {
-      const emojis = ["🛸", "🚀", "🛰️", "👾", "🌌", "🪐", "🔫", "🧠"];
+    function inicializarMarcianos(tipo = "normal") {
+      const emojis = tipo === "rápido" ? ["💨", "⚡", "🔥"] : ["🛸", "🚀", "🛰️", "👾", "🌌", "🪐", "🔫", "🧠"];
       marcianos = [];
       for (let i = 0; i < MARCIANO_FILAS; i++) {
         for (let j = 0; j < MARCIANO_COLS; j++) {
           marcianos.push({
             x: j * MARCIANO_ESPACIO + 15,
-            y: i * MARCIANO_ESPACIO + 30, // espacio extra para mostrar el texto arriba
+            y: i * MARCIANO_ESPACIO + 30,
             ancho: MARCIANO_ANCHO,
             alto: MARCIANO_ALTO,
             descuelga: false,
-            velocidadDescuelgue: 2,
+            velocidadDescuelgue: tipo === "rápido" ? 4 : 2,
             emoji: emojis[(i * MARCIANO_COLS + j) % emojis.length]
           });
         }
@@ -128,25 +127,23 @@
       misilesJugador = [];
       misilesMarcianos = [];
       MARCIANO_DIR = 1;
-      MARCIANO_VELOCIDAD = 1.0;
+      MARCIANO_VELOCIDAD = 1.5;
       inicializarMarcianos();
       juegoActivo = true;
     }
 
     function manejarDerrota() {
-  jugador.vidas--;
-  if (jugador.vidas <= 0) {
-    juegoActivo = false;
-    alert("¡Game Over! Te has quedado sin vidas. Score Final: " + score);
-    reiniciarJuego();
-  } else {
-    // Solo reinicia la ronda, no el juego completo
-    jugador.x = ancho / 2 - jugador.ancho / 2;
-    misilesJugador = [];
-    misilesMarcianos = [];
-  }
-}
-
+      jugador.vidas--;
+      if (jugador.vidas <= 0) {
+        juegoActivo = false;
+        alert("¡Game Over! Te has quedado sin vidas. Score Final: " + score);
+        reiniciarJuego();
+      } else {
+        jugador.x = ancho / 2 - jugador.ancho / 2;
+        misilesJugador = [];
+        misilesMarcianos = [];
+      }
+    }
 
     function crearMisilJugador() {
       if (jugador.puedeDisparar) {
@@ -185,7 +182,6 @@
       if (jugador.x < 0) jugador.x = 0;
       if (jugador.x + jugador.ancho > ancho) jugador.x = ancho - jugador.ancho;
     });
-
     function crearMisilMarciano() {
       if (marcianos.length > 0) {
         const index = Math.floor(Math.random() * marcianos.length);
@@ -202,6 +198,9 @@
 
     function actualizarMarcianos() {
       const ahora = Date.now();
+      const tiempoTranscurrido = (ahora - tiempoInicial) / 1000;
+      MARCIANO_VELOCIDAD = 1.5 + tiempoTranscurrido * 0.05;
+
       let cambiarDireccion = false;
 
       if (ahora > MARCIANO_PROXIMO_MOV) {
@@ -231,14 +230,14 @@
           marcianos.forEach(m => {
             if (!m.descuelga) m.y += MARCIANO_CAIDA;
           });
-          MARCIANO_VELOCIDAD += 0.1;
+          MARCIANO_VELOCIDAD += 0.2;
         }
 
         MARCIANO_PROXIMO_MOV = ahora + MARCIANO_INTERVALO;
       }
 
       if (ahora > MARCIANO_PROXIMO_DISP && marcianos.length > 0) {
-        const intervaloAjustado = Math.max(800, CADENCIA_MARCIANOS / (marcianos.length / 5));
+        const intervaloAjustado = Math.max(300, CADENCIA_MARCIANOS / (marcianos.length / 5));
         crearMisilMarciano();
         MARCIANO_PROXIMO_DISP = ahora + intervaloAjustado;
       }
@@ -252,15 +251,26 @@
         }
       }
 
+      if (ahora % 7000 < 50 && marcianos.length > 0) {
+        const candidatos = marcianos.filter(m => !m.descuelga);
+        if (candidatos.length > 0) {
+          const elegido = candidatos[Math.floor(Math.random() * candidatos.length)];
+          elegido.x = Math.random() * (ancho - elegido.ancho);
+          elegido.y = Math.random() * (alto / 2);
+        }
+      }
+
       marcianos.forEach(m => {
         if (m.descuelga) {
           m.y += m.velocidadDescuelgue;
+          m.x += Math.sin(Date.now() / 100) * 2;
           if (m.y > alto + m.alto) {
             m.descuelga = false;
           }
         }
       });
     }
+
     function actualizarMisilesYColisiones() {
       misilesJugador = misilesJugador.filter(m => m.y > 0);
       misilesMarcianos = misilesMarcianos.filter(m => m.y < alto);
@@ -283,10 +293,9 @@
             misilesJugador.splice(i, 1);
             i--;
             if (marcianos.length === 0) {
-              juegoActivo = false;
-              alert("¡Victoria! Score Final: " + score);
-              reiniciarJuego();
-              return;
+              score += 100;
+              const tipo = Math.random() > 0.5 ? "rápido" : "normal";
+              inicializarMarcianos(tipo);
             }
             break;
           }
@@ -346,7 +355,6 @@
       const tiempoTranscurrido = ((Date.now() - tiempoInicial) / 1000).toFixed(1);
       ctx.fillText("TIME: " + tiempoTranscurrido + "s", ancho - 80, 15);
     }
-
     function dibujar() {
       if (!juegoActivo) return;
       ctx.clearRect(0, 0, ancho, alto);
