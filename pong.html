@@ -101,6 +101,14 @@
     window.addEventListener("resize", ajustarCanvas);
     ajustarCanvas();
 
+    // Movimiento táctil de la pala
+    canvas.addEventListener("touchmove", (e) => {
+      const toque = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const posicionX = toque.clientX - rect.left;
+      jugador._x = Math.min(Math.max(posicionX - jugador.ancho / 2, 0), ancho() - jugador.ancho);
+    });
+
     const ancho = () => canvas.width;
     const alto = () => canvas.height;
 
@@ -112,7 +120,7 @@
     const PUNTUACION_MAXIMA = 20;
     let proximoServidor = 1;
 
-    const PADDLE_ANCHO = 80;
+    const PADDLE_ANCHO = 76; // reducido un 5%
     const PADDLE_ALTO = 12;
     const PADDLE_VELOCIDAD = 6;
 
@@ -151,7 +159,7 @@
         : palaServidora.y() + palaServidora.alto + bola.radio;
 
       bola.velocidadX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.5 + 2);
-      bola.velocidadY = servidor * -2; // velocidad inicial más lenta
+      bola.velocidadY = servidor * -2; // velocidad inicial lenta
       proximoServidor = servidor;
     }
 
