@@ -47,8 +47,9 @@
         let bolaRadio = 5;
         let bolaX = ancho / 2;
         let bolaY = alto - 30;
-        let velocidadX = 3; // velocidad aumentada
-        let velocidadY = -3;
+        let velocidadX = 4;
+        let velocidadY = -4;
+        const velocidadMaxima = 10;
 
         const ladrilloFila = 5;
         const ladrilloColumna = 8;
@@ -158,6 +159,14 @@
             if(bolaY + velocidadY > alto - bolaRadio - paletaAltura) {
                 if(bolaX > paletaX && bolaX < paletaX + paletaAncho) {
                     velocidadY = -velocidadY;
+
+                    // Aumentar velocidad progresivamente
+                    if (Math.abs(velocidadY) < velocidadMaxima) {
+                        velocidadY *= 1.1;
+                    }
+                    if (Math.abs(velocidadX) < velocidadMaxima) {
+                        velocidadX *= 1.1;
+                    }
                 } else if (bolaY + velocidadY > alto - bolaRadio) {
                     alert("¡FIN DEL JUEGO!");
                     document.location.reload();
