@@ -62,6 +62,8 @@
         }
 
         .botonControl {
+            /* Hacemos que todos los botones sean cuadrados */
+            aspect-ratio: 1 / 1; 
             font-family: 'Press Start 2P', monospace;
             font-weight: bold;
             color: #ffffff;
@@ -73,52 +75,55 @@
             box-shadow: 3px 3px #ff00ff;
             transition: all 0.1s;
             touch-action: manipulation;
-            display: flex; /* Para centrar el contenido (flecha/texto) */
+            display: flex; 
             align-items: center;
             justify-content: center;
             font-size: 24px; /* Tamaño de las flechas */
-            line-height: 1; /* Asegura que la flecha no se salga */
+            line-height: 1; 
         }
 
         /* Posicionamiento específico para cada botón dentro del grid */
         .botonControl[data-key="ArrowUp"] {
-            grid-column: 2; /* Columna central */
-            grid-row: 1;    /* Fila superior */
+            grid-column: 2; 
+            grid-row: 1;    
             background-color: #ff8c00;
             border: 3px solid #ffa500;
             box-shadow: 3px 3px #ffa500;
         }
         .botonControl[data-key="ArrowLeft"] {
-            grid-column: 1; /* Columna izquierda */
-            grid-row: 2;    /* Fila central */
+            grid-column: 1; 
+            grid-row: 2;    
             background-color: #6a006a;
             border: 3px solid #ff00ff;
             box-shadow: 3px 3px #ff00ff;
         }
-        .botonControl[data-key=" "] { /* Botón de SALTO */
-            grid-column: 2; /* Columna central */
-            grid-row: 2;    /* Fila central */
+        .botonControl[data-key=" "] { /* Botón de SALTO (Centro) */
+            grid-column: 2; 
+            grid-row: 2;    
             background-color: #004d40;
             border: 3px solid #00ff80;
             box-shadow: 3px 3px #00ff80;
-            font-size: 14px; /* Texto de SALTO */
+            font-size: 10px; /* Ajustamos el tamaño para que el texto encaje en el cuadrado */
+            line-height: 1.2;
+            padding: 2px;
         }
         .botonControl[data-key="ArrowRight"] {
-            grid-column: 3; /* Columna derecha */
-            grid-row: 2;    /* Fila central */
+            grid-column: 3; 
+            grid-row: 2;    
             background-color: #6a006a;
             border: 3px solid #ff00ff;
             box-shadow: 3px 3px #ff00ff;
         }
         .botonControl[data-key="ArrowDown"] {
-            grid-column: 2; /* Columna central */
-            grid-row: 3;    /* Fila inferior */
+            grid-column: 2; 
+            grid-row: 3;    
             background-color: #ff8c00;
             border: 3px solid #ffa500;
             box-shadow: 3px 3px #ffa500;
         }
 
         /* Ocultar los espacios vacíos para que solo se vean los botones */
+        /* Nota: Necesitamos que existan los divs vacíos para mantener la estructura de la cuadrícula 3x3 */
         .grid-cell-empty {
             visibility: hidden;
         }
@@ -133,12 +138,23 @@
     <h2>DONKEY KONG CLÁSICO</h2>
     <canvas id="juegoCanvas" width="320" height="400"></canvas>
     <div id="controlesTactiles">
-        <!-- Fila 1 --><div class="grid-cell-empty"></div> <!-- Esquina superior izquierda vacía --><button class="botonControl" data-key="ArrowUp">↑</button>
-        <div class="grid-cell-empty"></div> <!-- Esquina superior derecha vacía --><!-- Fila 2 (Centro) --><button class="botonControl" data-key="ArrowLeft">←</button>
-        <button class="botonControl" data-key=" ">SALTO</button> <!-- Botón de Salto central --><button class="botonControl" data-key="ArrowRight">→</button>
         
-        <!-- Fila 3 --><div class="grid-cell-empty"></div> <!-- Esquina inferior izquierda vacía --><button class="botonControl" data-key="ArrowDown">↓</button>
-        <div class="grid-cell-empty"></div> <!-- Esquina inferior derecha vacía --></div>
+        <!-- Fila 1 -->
+        <div class="grid-cell-empty"></div> 
+        <button class="botonControl" data-key="ArrowUp">↑</button>
+        <div class="grid-cell-empty"></div> 
+
+        <!-- Fila 2 (Movimiento lateral y salto central) -->
+        <button class="botonControl" data-key="ArrowLeft">←</button>
+        <button class="botonControl" data-key=" ">SALTO</button> 
+        <button class="botonControl" data-key="ArrowRight">→</button>
+        
+        <!-- Fila 3 -->
+        <div class="grid-cell-empty"></div> 
+        <button class="botonControl" data-key="ArrowDown">↓</button>
+        <div class="grid-cell-empty"></div> 
+
+    </div>
 
     <script>
         // Game variables and setup
@@ -166,7 +182,6 @@
         };
 
         let carla = { ...ESTADO_INICIAL_CARLA };
-        let barriles = [];
 
         const donkeyKong = {
             ancho: 30,
@@ -180,6 +195,9 @@
             intervaloBarril: 2000,
             ultimoBarril: Date.now()
         };
+        
+        let barriles = [];
+
 
         const meta = {
             x: ancho - 50,
@@ -283,12 +301,26 @@
             const w = donkeyKong.ancho;
             const h = donkeyKong.alto;
 
-            dibujarRect(x, y, w, h, '#5D4037');
-            dibujarRect(x + 5, y + 5, w - 10, 10, '#BCAAA4');
-            dibujarRect(x - 5, y + 10, 5, 15, '#5D4037');
-            dibujarRect(x + w, y + 10, 5, 15, '#5D4037');
-            dibujarRect(x + 8, y + 8, 3, 3, '#000000');
-            dibujarRect(x + w - 11, y + 8, 3, 3, '#000000');
+            const DK_COLOR_PELO = '#61412A'; // Dark Brown
+            const DK_COLOR_CARA = '#D4A06A'; // Beige/Skin Tone
+            const DK_COLOR_BOCA = '#9E2A2A'; // Reddish
+
+            // Cuerpo principal (Pelaje)
+            dibujarRect(x, y, w, h, DK_COLOR_PELO);
+
+            // Brazos
+            dibujarRect(x - 5, y + 10, 5, 20, DK_COLOR_PELO);
+            dibujarRect(x + w, y + 10, 5, 20, DK_COLOR_PELO);
+
+            // Area de la cara (Beige)
+            dibujarRect(x + 5, y + 5, w - 10, 15, DK_COLOR_CARA);
+
+            // Boca (Detalle Rojo)
+            dibujarRect(x + 10, y + 15, w - 20, 3, DK_COLOR_BOCA);
+
+            // Ojos
+            dibujarRect(x + 7, y + 8, 3, 3, '#000000');
+            dibujarRect(x + w - 10, y + 8, 3, 3, '#000000');
         }
 
         function dibujarBarril(b) {
@@ -457,7 +489,9 @@
             escaleras.forEach(e => {
                 const topY = e.y - e.alto;
                 
+                // Comprueba si Carla está horizontalmente centrada sobre la escalera
                 if (carla.x + carla.ancho / 2 > e.x && carla.x + carla.ancho / 2 < e.x + ANCHO_ESCALERA) {
+                    // Comprueba si Carla está verticalmente en el rango de la escalera
                     if (carla.y + carla.alto > topY && carla.y < e.y) {
                         tocandoEscalera = true;
                     }
@@ -469,32 +503,45 @@
 
         function manejarControles() {
             carla.velocidadX = 0;
-            let intentarEscalar = false;
+            const cercaDeEscalera = estaCercaDeEscalera();
 
-            carla.enEscalera = estaCercaDeEscalera();
-            
-            if (carla.enEscalera && (teclasPresionadas['ArrowUp'] || teclasPresionadas['ArrowDown'])) {
-                intentarEscalar = true;
+            // Determinar si Carla debe entrar/permanecer en modo Escalera
+            if (cercaDeEscalera && (teclasPresionadas['ArrowUp'] || teclasPresionadas['ArrowDown'])) {
+                carla.enEscalera = true;
                 carla.enElSuelo = false;
-                carla.velocidadY = 0;
+                carla.velocidadY = 0; // Detiene la caída por gravedad
+            } else if (carla.enEscalera && !cercaDeEscalera) {
+                // Si estaba en la escalera pero ya no está cerca, cae
+                carla.enEscalera = false;
+            } else if (carla.enEscalera && !teclasPresionadas['ArrowUp'] && !teclasPresionadas['ArrowDown']) {
+                 // Si está en la escalera pero el usuario no presiona nada, se queda quieta verticalmente
+                 carla.velocidadY = 0;
             }
 
-            if (intentarEscalar) {
+            if (carla.enEscalera) {
+                // Modo Escalera: Movimiento vertical manual
                 if (teclasPresionadas['ArrowUp']) {
                     carla.velocidadY = -carla.velocidadEscalada;
                 } else if (teclasPresionadas['ArrowDown']) {
                     carla.velocidadY = carla.velocidadEscalada;
+                } else {
+                    carla.velocidadY = 0; // Se queda quieta si no se presiona nada
                 }
-                if (teclasPresionadas['ArrowLeft']) carla.velocidadX = -carla.velocidadMovimiento / 2;
-                if (teclasPresionadas['ArrowRight']) carla.velocidadX = carla.velocidadMovimiento / 2;
+                
+                // Permite un pequeño movimiento lateral para alinearse si es necesario
+                if (teclasPresionadas['ArrowLeft']) carla.velocidadX = -carla.velocidadMovimiento / 3;
+                if (teclasPresionadas['ArrowRight']) carla.velocidadX = carla.velocidadMovimiento / 3;
                 
             } else {
-                if (teclasPresionadas['ArrowLeft'] || teclasPresionadas['a']) {
+                // Modo Plataforma: Movimiento lateral y Salto
+                if (teclasPresionadas['ArrowLeft']) {
                     carla.velocidadX = -carla.velocidadMovimiento;
                 }
-                if (teclasPresionadas['ArrowRight'] || teclasPresionadas['d']) {
+                if (teclasPresionadas['ArrowRight']) {
                     carla.velocidadX = carla.velocidadMovimiento;
                 }
+                // El salto se maneja en el evento touchstart/mousedown para un solo toque
+                // o aquí si se usa teclado.
                 if (teclasPresionadas[' '] && carla.enElSuelo) {
                     carla.velocidadY = carla.fuerzaSalto;
                     carla.enElSuelo = false;
@@ -505,10 +552,8 @@
         function aplicarFisica() {
             if (!carla.enElSuelo && !carla.enEscalera) {
                 carla.velocidadY += GRAVEDAD;
-            } else if (carla.enEscalera && !estaCercaDeEscalera()) {
-                 carla.enEscalera = false;
-                 carla.velocidadY = 0;
             }
+            // Si está en escalera, la velocidadY es controlada por el input
             
             carla.x += carla.velocidadX;
             carla.y += carla.velocidadY;
@@ -533,11 +578,14 @@
                     carla.x < p.x + p.ancho && carla.x + carla.ancho > p.x &&
                     carla.y + carla.alto > p.y && carla.y < p.y + p.alto
                 ) {
+                    // Colisión por encima (aterrizaje)
                     if (carla.velocidadY >= 0 && carla.y + carla.alto <= p.y + 5) {
                         carla.y = p.y - carla.alto;
                         carla.velocidadY = 0;
                         colisionEnSuelo = true;
+                        carla.enEscalera = false; // Sale de la escalera si aterriza
                     } 
+                    // Colisión por debajo (salto)
                     else if (carla.velocidadY < 0 && !carla.enEscalera) {
                         carla.y = p.y + p.alto;
                         carla.velocidadY = 0;
@@ -547,6 +595,7 @@
 
             carla.enElSuelo = colisionEnSuelo;
 
+            // Colisiones con bordes del canvas
             if (carla.x < 0) carla.x = 0;
             if (carla.x + carla.ancho > ancho) carla.x = ancho - carla.ancho;
             if (carla.y > alto) manejarDerrota();
@@ -583,7 +632,8 @@
             const startEvent = (e) => {
                 e.preventDefault();
                 teclasPresionadas[key] = true;
-                // El salto solo se activa con el toque inicial si Carla está en el suelo
+                
+                // El salto (espacio) solo se activa con el toque inicial si Carla está en el suelo
                 if (key === ' ' && carla.enElSuelo) {
                     carla.velocidadY = carla.fuerzaSalto;
                     carla.enElSuelo = false;
@@ -595,8 +645,11 @@
                 teclasPresionadas[key] = false;
             };
 
+            // Touch events for mobile
             button.addEventListener('touchstart', startEvent);
             button.addEventListener('touchend', endEvent);
+            
+            // Mouse events for desktop
             button.addEventListener('mousedown', startEvent);
             button.addEventListener('mouseup', endEvent);
         });
