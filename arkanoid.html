@@ -3,7 +3,7 @@
 <head>
     <title>Arcanoid Táctil Básico</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <<style>
+    <style>
     body {
         margin: 0;
         background: #202020;
@@ -19,11 +19,10 @@
         background: #000;
         display: block;
         width: 100vw;
-        height: calc(100vh - 80px); /* deja espacio para la barra del navegador */
-        max-height: 400px; /* límite para evitar que se esconda la paleta */
+        height: calc(100vh - 80px);
+        max-height: 400px;
     }
-</style>
-    
+    </style>
 </head>
 <body>
     <canvas id="juegoCanvas" width="320" height="480"></canvas>
@@ -31,7 +30,6 @@
         const canvas = document.getElementById("juegoCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Escalado visual para ocupar toda la pantalla
         function ajustarCanvas() {
             canvas.style.width = window.innerWidth + "px";
             canvas.style.height = window.innerHeight + "px";
@@ -43,14 +41,14 @@
         const alto = canvas.height;
 
         const paletaAltura = 10;
-        const paletaAncho = 75;
+        const paletaAncho = 64; // reducido un 15%
         let paletaX = (ancho - paletaAncho) / 2;
 
         let bolaRadio = 5;
         let bolaX = ancho / 2;
         let bolaY = alto - 30;
-        let velocidadX = 2;
-        let velocidadY = -2;
+        let velocidadX = 3; // velocidad aumentada
+        let velocidadY = -3;
 
         const ladrilloFila = 5;
         const ladrilloColumna = 8;
