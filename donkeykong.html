@@ -1,387 +1,608 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Donkey Kong con Carla</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: #222;
-      font-family: monospace;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donkey Kong con Carla</title>
+    <style>
+        /* Importamos una fuente retro para la interfaz */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-    canvas {
-      border: 5px solid #ff0077;
-      background: #000;
-      display: block;
-      width: 100%;
-      max-width: 360px;
-      height: auto;
-      aspect-ratio: 4 / 5;
-    }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            font-family: 'Press Start 2P', monospace;
+            color: #eeeeee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            text-align: center;
+        }
 
-    #controlesTactiles {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      max-width: 360px;
-      padding: 8px;
-      box-sizing: border-box;
-    }
+        canvas {
+            /* Estilo de máquina arcade para el canvas */
+            border: 4px solid #cc0000;
+            background: linear-gradient(to bottom, #000033, #000000); /* Fondo oscuro con degradado */
+            display: block;
+            width: 90%;
+            max-width: 380px;
+            height: auto;
+            aspect-ratio: 4 / 5;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), 0 0 5px rgba(255, 255, 255, 0.8) inset;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
 
-    .botonControl {
-      padding: 12px 8px;
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      background-color: #4CAF50;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      user-select: none;
-      flex-grow: 1;
-      margin: 0 4px;
-    }
+        h2 {
+            font-size: 18px; /* Un poco más grande para el título */
+            margin: 12px 0 8px 0;
+            text-shadow: 2px 2px #ff0077;
+        }
 
-    .botonControl.salto {
-      flex-grow: 2;
-      background-color: #2196F3;
-    }
+        #controlesTactiles {
+            /* Contenedor principal para el D-Pad */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+            grid-template-rows: repeat(3, 1fr);    /* 3 filas */
+            gap: 5px; /* Pequeño espacio entre los botones */
+            width: 180px; /* Ancho fijo para el conjunto del D-Pad */
+            height: 180px; /* Alto fijo para el conjunto del D-Pad */
+            max-width: 200px; /* Máximo ancho */
+            max-height: 200px; /* Máximo alto */
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #333; /* Fondo para que el D-Pad destaque */
+            border-radius: 15px;
+            border: 3px solid #666;
+            margin-top: 10px;
+        }
 
-    h2 {
-      font-size: 18px;
-      margin: 8px 0;
-    }
-  </style>
+        .botonControl {
+            font-family: 'Press Start 2P', monospace;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #6a006a;
+            border: 3px solid #ff00ff; 
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 3px 3px #ff00ff;
+            transition: all 0.1s;
+            touch-action: manipulation;
+            display: flex; /* Para centrar el contenido (flecha/texto) */
+            align-items: center;
+            justify-content: center;
+            font-size: 24px; /* Tamaño de las flechas */
+            line-height: 1; /* Asegura que la flecha no se salga */
+        }
+
+        /* Posicionamiento específico para cada botón dentro del grid */
+        .botonControl[data-key="ArrowUp"] {
+            grid-column: 2; /* Columna central */
+            grid-row: 1;    /* Fila superior */
+            background-color: #ff8c00;
+            border: 3px solid #ffa500;
+            box-shadow: 3px 3px #ffa500;
+        }
+        .botonControl[data-key="ArrowLeft"] {
+            grid-column: 1; /* Columna izquierda */
+            grid-row: 2;    /* Fila central */
+            background-color: #6a006a;
+            border: 3px solid #ff00ff;
+            box-shadow: 3px 3px #ff00ff;
+        }
+        .botonControl[data-key=" "] { /* Botón de SALTO */
+            grid-column: 2; /* Columna central */
+            grid-row: 2;    /* Fila central */
+            background-color: #004d40;
+            border: 3px solid #00ff80;
+            box-shadow: 3px 3px #00ff80;
+            font-size: 14px; /* Texto de SALTO */
+        }
+        .botonControl[data-key="ArrowRight"] {
+            grid-column: 3; /* Columna derecha */
+            grid-row: 2;    /* Fila central */
+            background-color: #6a006a;
+            border: 3px solid #ff00ff;
+            box-shadow: 3px 3px #ff00ff;
+        }
+        .botonControl[data-key="ArrowDown"] {
+            grid-column: 2; /* Columna central */
+            grid-row: 3;    /* Fila inferior */
+            background-color: #ff8c00;
+            border: 3px solid #ffa500;
+            box-shadow: 3px 3px #ffa500;
+        }
+
+        /* Ocultar los espacios vacíos para que solo se vean los botones */
+        .grid-cell-empty {
+            visibility: hidden;
+        }
+
+        .botonControl:active {
+            box-shadow: 0 0 #ff00ff;
+            transform: translateY(3px);
+        }
+    </style>
 </head>
 <body>
-  <h2>Donkey Kong con Carla 🦍</h2>
-  <canvas id="juegoCanvas" width="320" height="400"></canvas>
-  <div id="controlesTactiles">
-    <button class="botonControl" data-key="ArrowLeft">◀️ IZQ</button>
-    <button class="botonControl salto" data-key=" ">⬆️ SALTAR</button>
-    <button class="botonControl" data-key="ArrowRight">DER ▶️</button>
-  </div>
-  <script>
-    const canvas = document.getElementById("juegoCanvas");
-    const ctx = canvas.getContext("2d");
-    const ancho = canvas.width;
-    const alto = canvas.height;
+    <h2>DONKEY KONG CLÁSICO</h2>
+    <canvas id="juegoCanvas" width="320" height="400"></canvas>
+    <div id="controlesTactiles">
+        <!-- Fila 1 --><div class="grid-cell-empty"></div> <!-- Esquina superior izquierda vacía --><button class="botonControl" data-key="ArrowUp">↑</button>
+        <div class="grid-cell-empty"></div> <!-- Esquina superior derecha vacía --><!-- Fila 2 (Centro) --><button class="botonControl" data-key="ArrowLeft">←</button>
+        <button class="botonControl" data-key=" ">SALTO</button> <!-- Botón de Salto central --><button class="botonControl" data-key="ArrowRight">→</button>
+        
+        <!-- Fila 3 --><div class="grid-cell-empty"></div> <!-- Esquina inferior izquierda vacía --><button class="botonControl" data-key="ArrowDown">↓</button>
+        <div class="grid-cell-empty"></div> <!-- Esquina inferior derecha vacía --></div>
 
-    let teclasPresionadas = {};
-    const GRAVEDAD = 0.3;
-    let juegoActivo = true;
+    <script>
+        // Game variables and setup
+        const canvas = document.getElementById("juegoCanvas");
+        const ctx = canvas.getContext("2d");
+        const ancho = canvas.width;
+        const alto = canvas.height;
 
-    const ESTADO_INICIAL_CARLA = {
-      ancho: 12,
-      alto: 20,
-      x: ancho / 2 - 6,
-      y: alto - 30,
-      velocidadX: 0,
-      velocidadY: 0,
-      velocidadMovimiento: 3,
-      fuerzaSalto: -8.5,
-      enElSuelo: true
-    };
+        let teclasPresionadas = {};
+        const GRAVEDAD = 0.3;
+        let juegoActivo = true;
 
-    let carla = { ...ESTADO_INICIAL_CARLA };
-    let barriles = [];
+        const ESTADO_INICIAL_CARLA = {
+            ancho: 16, 
+            alto: 24, 
+            x: 20,
+            y: alto - 34,
+            velocidadX: 0,
+            velocidadY: 0,
+            velocidadMovimiento: 3,
+            velocidadEscalada: 2,
+            fuerzaSalto: -8.5,
+            enElSuelo: true,
+            enEscalera: false
+        };
 
-    const donkeyKong = {
-      ancho: 30,
-      alto: 40,
-      x: 20,
-      y: 40,
-      dirX: 1,
-      velocidadMovimiento: 0.5,
-      limiteDerecho: ancho - 50,
-      limiteIzquierdo: 20,
-      intervaloBarril: 2000,
-      ultimoBarril: Date.now()
-    };
+        let carla = { ...ESTADO_INICIAL_CARLA };
+        let barriles = [];
 
-    const meta = {
-      x: ancho - 40,
-      y: 35,
-      ancho: 30,
-      alto: 45
-    };
+        const donkeyKong = {
+            ancho: 30,
+            alto: 40,
+            x: 50,
+            y: 35,
+            dirX: 1,
+            velocidadMovimiento: 0.5,
+            limiteDerecho: ancho - 50,
+            limiteIzquierdo: 20,
+            intervaloBarril: 2000,
+            ultimoBarril: Date.now()
+        };
 
-    const plataformas = [
-      { x: 0, y: alto - 10, ancho: ancho, alto: 10 },
-      { x: 0, y: 80, ancho: 70, alto: 10 },
-      { x: 120, y: 80, ancho: 70, alto: 10 },
-      { x: 240, y: 80, ancho: ancho - 240, alto: 10 },
-      { x: 50, y: alto - 100, ancho: 200, alto: 10 },
-      { x: 0, y: alto - 200, ancho: 150, alto: 10 }
-      // Última viga eliminada
-    ];
+        const meta = {
+            x: ancho - 50,
+            y: 8,
+            ancho: 40,
+            alto: 60
+        };
 
-    function reiniciarJuego() {
-      carla = { ...ESTADO_INICIAL_CARLA };
-      barriles = [];
-      donkeyKong.intervaloBarril = 2000;
-      donkeyKong.velocidadMovimiento = 0.5;
-      juegoActivo = true;
-    }
+        const plataformas = [
+            { x: 0, y: alto - 10, ancho: ancho, alto: 10 },
+            { x: 0, y: alto - 80, ancho: ancho - 20, alto: 10 },
+            { x: 20, y: alto - 160, ancho: ancho, alto: 10 },
+            { x: 0, y: alto - 240, ancho: ancho - 20, alto: 10 },
+            { x: ancho - 150, y: 140, ancho: 150, alto: 10 },
+            { x: 0, y: 70, ancho: ancho, alto: 10 },
+        ];
+        
+        const escaleras = [
+            { x: 50, y: alto - 10, alto: 70 },
+            { x: ancho - 60, y: alto - 80, alto: 80 },
+            { x: 30, y: alto - 160, alto: 80 },
+            { x: ancho - 40, y: alto - 240, alto: 100 }
+        ];
 
-    function manejarDerrota() {
-      alert("¡Fin del Juego! Presiona OK para continuar.");
-      reiniciarJuego();
-    }
+        // --- FUNCIONES DE DIBUJO RETRO PIXEL ART ---
 
-    function crearBarril() {
-      const esRebotador = Math.random() < 0.3;
-      barriles.push({
-        x: donkeyKong.x + donkeyKong.ancho / 2,
-        y: donkeyKong.y + donkeyKong.alto,
-        radio: 6,
-        velocidadX: 0,
-        velocidadY: 0,
-        rodando: false,
-        dirRodamiento: donkeyKong.dirX,
-        velocidadRodamiento: 1.5,
-        rebotador: esRebotador
-      });
-      donkeyKong.ultimoBarril = Date.now();
-    }
-
-    function actualizarBarriles() {
-      barriles = barriles.filter(b => b.y < alto + b.radio);
-
-      barriles.forEach(b => {
-        let enSuelo = false;
-
-        if (b.rodando) {
-          b.velocidadX = b.dirRodamiento * b.velocidadRodamiento;
-          b.velocidadY = 0;
-        } else {
-          b.velocidadX = 0;
-          b.velocidadY += GRAVEDAD;
+        function dibujarRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
         }
 
-        plataformas.forEach(p => {
-          if (b.x > p.x && b.x < p.x + p.ancho) {
-            if (b.y + b.radio >= p.y && b.y + b.radio <= p.y + 5 && b.velocidadY >= 0) {
-              b.y = p.y - b.radio;
-              if (b.rebotador) {
-                b.velocidadY = -5;
-                b.rodando = false;
-              } else {
-                b.velocidadY = 0;
-                b.rodando = true;
-              }
-              enSuelo = true;
+        function dibujarSombra(x, y, w, h, desplazamiento = 2, color = 'rgba(0,0,0,0.7)') {
+            dibujarRect(x + desplazamiento, y + desplazamiento, w, h, color);
+        }
+
+        function dibujarPlataformas() {
+            plataformas.forEach(p => {
+                dibujarSombra(p.x, p.y, p.ancho, p.alto + 2, 2, 'rgba(0,0,0,0.7)');
+                dibujarRect(p.x, p.y, p.ancho, p.alto, '#666666');
+                dibujarRect(p.x, p.y, p.ancho, 2, '#aaaaaa');
+                dibujarRect(p.x, p.y + p.alto - 2, p.ancho, 2, '#444444');
+            });
+        }
+        
+        function dibujarEscaleras() {
+            const ANCHO_ESCALERA = 12;
+            const ALTURA_PELDAÑO = 8;
+            const COLOR_MADERA = '#A0522D';
+
+            escaleras.forEach(e => {
+                const topY = e.y - e.alto;
+                
+                dibujarRect(e.x, topY, 2, e.alto, COLOR_MADERA);
+                dibujarRect(e.x + ANCHO_ESCALERA - 2, topY, 2, e.alto, COLOR_MADERA);
+
+                for (let y = e.y - ALTURA_PELDAÑO; y > topY; y -= ALTURA_PELDAÑO) {
+                    dibujarRect(e.x + 2, y, ANCHO_ESCALERA - 4, 2, COLOR_MADERA);
+                }
+            });
+        }
+
+        function dibujarCarlaPixel() {
+            const x = carla.x;
+            const y = carla.y;
+            const w = carla.ancho;
+            const h = carla.alto;
+            const COLOR_VESTIDO = '#F87060';
+            const COLOR_PIEL = '#FFDBAC';
+            const COLOR_PELO = '#993300';
+            const COLOR_ZAPATOS = '#444';
+            
+            // Head (piel)
+            dibujarRect(x + 4, y, 8, 8, COLOR_PIEL); 
+            
+            // Hair
+            dibujarRect(x + 3, y, 10, 4, COLOR_PELO);
+
+            // Body (vestido/overol)
+            dibujarRect(x + 3, y + 8, 10, 10, COLOR_VESTIDO);
+
+            // Legs (simulated)
+            dibujarRect(x + 4, y + 18, 3, 6, COLOR_ZAPATOS); 
+            dibujarRect(x + 9, y + 18, 3, 6, COLOR_ZAPATOS);
+            
+            // Arms
+            if (carla.enEscalera) {
+                 dibujarRect(x + 6, y + 10, 4, 3, COLOR_PIEL);
+            } else {
+                 dibujarRect(x + 1, y + 10, 3, 3, COLOR_PIEL);
+                 dibujarRect(x + w - 4, y + 10, 3, 3, COLOR_PIEL); 
             }
-          }
+
+            // Eyes
+            dibujarRect(x + 5, y + 3, 2, 2, '#000000');
+            dibujarRect(x + 9, y + 3, 2, 2, '#000000');
+        }
+
+        function dibujarDonkeyKongPixel() {
+            const x = donkeyKong.x;
+            const y = donkeyKong.y;
+            const w = donkeyKong.ancho;
+            const h = donkeyKong.alto;
+
+            dibujarRect(x, y, w, h, '#5D4037');
+            dibujarRect(x + 5, y + 5, w - 10, 10, '#BCAAA4');
+            dibujarRect(x - 5, y + 10, 5, 15, '#5D4037');
+            dibujarRect(x + w, y + 10, 5, 15, '#5D4037');
+            dibujarRect(x + 8, y + 8, 3, 3, '#000000');
+            dibujarRect(x + w - 11, y + 8, 3, 3, '#000000');
+        }
+
+        function dibujarBarril(b) {
+            // Barrel Drawing (Always Brown)
+            dibujarRect(b.x - b.radio + 1, b.y - b.radio + 1, b.radio * 2, b.radio * 2, 'rgba(0, 0, 0, 0.4)');
+            
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radio, 0, 2 * Math.PI);
+            ctx.fillStyle = '#8B4513';
+            ctx.fill();
+
+            // Bands
+            dibujarRect(b.x - b.radio, b.y - b.radio + 1, b.radio * 2, 2, '#aaaaaa');
+            dibujarRect(b.x - b.radio, b.y + b.radio - 3, b.radio * 2, 2, '#aaaaaa');
+        }
+
+        function dibujarMeta() {
+            dibujarSombra(meta.x, meta.y, meta.ancho, meta.alto, 2, 'rgba(0,0,0,0.7)');
+            dibujarRect(meta.x, meta.y, meta.ancho, meta.alto, '#B8860B');
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(meta.x, meta.y, meta.ancho, meta.alto);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '10px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            ctx.fillText('EXIT', meta.x + meta.ancho / 2, meta.y + 20);
+            ctx.textAlign = 'start';
+        }
+
+        function dibujar() {
+            if (!juegoActivo) return;
+
+            ctx.clearRect(0, 0, ancho, alto);
+
+            dibujarPlataformas();
+            dibujarEscaleras(); 
+            dibujarMeta();
+            dibujarDonkeyKongPixel();
+            barriles.forEach(dibujarBarril);
+            dibujarCarlaPixel();
+        }
+
+        // --- GAME LOGIC ---
+
+        function reiniciarJuego() {
+            carla = { ...ESTADO_INICIAL_CARLA };
+            barriles = [];
+            donkeyKong.intervaloBarril = 2000;
+            donkeyKong.velocidadMovimiento = 0.5;
+            juegoActivo = true;
+        }
+
+        function mostrarMensaje(mensaje) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0, 0, 0, 0.85);
+                color: white;
+                font-family: 'Press Start 2P', monospace;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                z-index: 1000;
+            `;
+
+            overlay.innerHTML = `
+                <div style="padding: 20px; border: 4px solid #FF0077; background: #333; border-radius: 8px; box-shadow: 0 0 15px #FF0077;">
+                    <p style="margin: 0 0 20px 0; font-size: 14px;">${mensaje}</p>
+                    <button id="okBtn" style="padding: 10px 20px; font-family: 'Press Start 2P', monospace; background: #00FF80; border: none; border-radius: 4px; cursor: pointer; color: black; font-size: 10px;">OK</button>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            document.getElementById('okBtn').onclick = () => {
+                document.body.removeChild(overlay);
+                if (!juegoActivo) {
+                    reiniciarJuego();
+                }
+            };
+        }
+
+        function manejarDerrota() {
+            juegoActivo = false;
+            mostrarMensaje("¡Carla ha sido aplastada! Fin del Juego.");
+        }
+
+        function crearBarril() {
+            // Only brown rolling barrels are created
+            barriles.push({
+                x: donkeyKong.x + donkeyKong.ancho / 2,
+                y: donkeyKong.y + donkeyKong.alto,
+                radio: 6,
+                velocidadX: 0,
+                velocidadY: 0,
+                rodando: false,
+                dirRodamiento: donkeyKong.dirX,
+                velocidadRodamiento: 1.5,
+                rebotador: false
+            });
+            donkeyKong.ultimoBarril = Date.now();
+        }
+
+        function actualizarBarriles() {
+            barriles = barriles.filter(b => b.y < alto + b.radio);
+
+            barriles.forEach(b => {
+                b.velocidadY += GRAVEDAD;
+
+                let colisionEnSuelo = false;
+                plataformas.forEach(p => {
+                    if (
+                        b.x > p.x && b.x < p.x + p.ancho &&
+                        b.y + b.radio >= p.y && b.y + b.radio <= p.y + 5 && b.velocidadY >= 0
+                    ) {
+                        b.y = p.y - b.radio;
+                        b.velocidadY = 0;
+                        b.rodando = true;
+                        colisionEnSuelo = true;
+                    }
+                });
+
+                if (b.rodando && colisionEnSuelo) {
+                    b.velocidadX = b.dirRodamiento * b.velocidadRodamiento;
+                } else {
+                    b.velocidadX = 0;
+                }
+
+                if (b.rodando && !colisionEnSuelo) {
+                    b.rodando = false;
+                    b.velocidadX = 0;
+                    b.dirRodamiento *= -1; 
+                }
+
+                b.x += b.velocidadX;
+                b.y += b.velocidadY;
+            });
+        }
+
+        function comprobarColisionCarla() {
+            barriles.forEach(b => {
+                const dx = Math.abs((carla.x + carla.ancho / 2) - b.x);
+                const dy = Math.abs((carla.y + carla.alto / 2) - b.y);
+
+                if (dx < (carla.ancho / 2 + b.radio) && dy < (carla.alto / 2 + b.radio)) {
+                    manejarDerrota();
+                }
+            });
+
+            if (
+                carla.x < meta.x + meta.ancho && carla.x + carla.ancho > meta.x &&
+                carla.y + carla.alto > meta.y && carla.y < meta.y + meta.alto
+            ) {
+                juegoActivo = false;
+                mostrarMensaje("¡Carla ha alcanzado la puerta! ¡Has ganado!");
+            }
+        }
+        
+        function estaCercaDeEscalera() {
+            const ANCHO_ESCALERA = 12;
+            let tocandoEscalera = false;
+            
+            escaleras.forEach(e => {
+                const topY = e.y - e.alto;
+                
+                if (carla.x + carla.ancho / 2 > e.x && carla.x + carla.ancho / 2 < e.x + ANCHO_ESCALERA) {
+                    if (carla.y + carla.alto > topY && carla.y < e.y) {
+                        tocandoEscalera = true;
+                    }
+                }
+            });
+            return tocandoEscalera;
+        }
+
+
+        function manejarControles() {
+            carla.velocidadX = 0;
+            let intentarEscalar = false;
+
+            carla.enEscalera = estaCercaDeEscalera();
+            
+            if (carla.enEscalera && (teclasPresionadas['ArrowUp'] || teclasPresionadas['ArrowDown'])) {
+                intentarEscalar = true;
+                carla.enElSuelo = false;
+                carla.velocidadY = 0;
+            }
+
+            if (intentarEscalar) {
+                if (teclasPresionadas['ArrowUp']) {
+                    carla.velocidadY = -carla.velocidadEscalada;
+                } else if (teclasPresionadas['ArrowDown']) {
+                    carla.velocidadY = carla.velocidadEscalada;
+                }
+                if (teclasPresionadas['ArrowLeft']) carla.velocidadX = -carla.velocidadMovimiento / 2;
+                if (teclasPresionadas['ArrowRight']) carla.velocidadX = carla.velocidadMovimiento / 2;
+                
+            } else {
+                if (teclasPresionadas['ArrowLeft'] || teclasPresionadas['a']) {
+                    carla.velocidadX = -carla.velocidadMovimiento;
+                }
+                if (teclasPresionadas['ArrowRight'] || teclasPresionadas['d']) {
+                    carla.velocidadX = carla.velocidadMovimiento;
+                }
+                if (teclasPresionadas[' '] && carla.enElSuelo) {
+                    carla.velocidadY = carla.fuerzaSalto;
+                    carla.enElSuelo = false;
+                }
+            }
+        }
+
+        function aplicarFisica() {
+            if (!carla.enElSuelo && !carla.enEscalera) {
+                carla.velocidadY += GRAVEDAD;
+            } else if (carla.enEscalera && !estaCercaDeEscalera()) {
+                 carla.enEscalera = false;
+                 carla.velocidadY = 0;
+            }
+            
+            carla.x += carla.velocidadX;
+            carla.y += carla.velocidadY;
+
+            donkeyKong.x += donkeyKong.dirX * donkeyKong.velocidadMovimiento;
+            if (donkeyKong.x > donkeyKong.limiteDerecho || donkeyKong.x < donkeyKong.limiteIzquierdo) {
+                donkeyKong.dirX *= -1;
+            }
+
+            if (Date.now() - donkeyKong.ultimoBarril > donkeyKong.intervaloBarril) {
+                crearBarril();
+                donkeyKong.intervaloBarril = Math.max(500, donkeyKong.intervaloBarril - 30);
+                donkeyKong.velocidadMovimiento = Math.min(2.5, donkeyKong.velocidadMovimiento + 0.05);
+            }
+        }
+
+        function manejarColisiones() {
+            let colisionEnSuelo = false;
+
+            plataformas.forEach(p => {
+                if (
+                    carla.x < p.x + p.ancho && carla.x + carla.ancho > p.x &&
+                    carla.y + carla.alto > p.y && carla.y < p.y + p.alto
+                ) {
+                    if (carla.velocidadY >= 0 && carla.y + carla.alto <= p.y + 5) {
+                        carla.y = p.y - carla.alto;
+                        carla.velocidadY = 0;
+                        colisionEnSuelo = true;
+                    } 
+                    else if (carla.velocidadY < 0 && !carla.enEscalera) {
+                        carla.y = p.y + p.alto;
+                        carla.velocidadY = 0;
+                    }
+                }
+            });
+
+            carla.enElSuelo = colisionEnSuelo;
+
+            if (carla.x < 0) carla.x = 0;
+            if (carla.x + carla.ancho > ancho) carla.x = ancho - carla.ancho;
+            if (carla.y > alto) manejarDerrota();
+        }
+
+        // --- BUCLE PRINCIPAL DEL JUEGO ---
+
+        function bucleJuego() {
+            if (juegoActivo) {
+                manejarControles();
+                aplicarFisica();
+                manejarColisiones();
+                actualizarBarriles();
+                comprobarColisionCarla();
+                dibujar();
+            }
+            requestAnimationFrame(bucleJuego);
+        }
+
+        // --- EVENTOS ---
+
+        document.addEventListener('keydown', (e) => {
+            if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault();
+            teclasPresionadas[e.key] = true;
         });
 
-        if (b.rodando) {
-          let estaSobrePlataforma = false;
-          plataformas.forEach(p => {
-            if (p.y === b.y + b.radio && b.x > p.x && b.x < p.x + p.ancho) {
-              estaSobrePlataforma = true;
-            }
-          });
+        document.addEventListener('keyup', (e) => {
+            teclasPresionadas[e.key] = false;
+        });
 
-          if (!estaSobrePlataforma) {
-            b.rodando = false;
-            b.velocidadX = 0;
-            b.dirRodamiento *= -1;
-            b.velocidadRodamiento += 0.2;
-          }
-        }
+        document.querySelectorAll('.botonControl').forEach(button => {
+            const key = button.getAttribute('data-key');
+            
+            const startEvent = (e) => {
+                e.preventDefault();
+                teclasPresionadas[key] = true;
+                // El salto solo se activa con el toque inicial si Carla está en el suelo
+                if (key === ' ' && carla.enElSuelo) {
+                    carla.velocidadY = carla.fuerzaSalto;
+                    carla.enElSuelo = false;
+                }
+            };
 
-        b.x += b.velocidadX;
-        b.y += b.velocidadY;
-      });
-    }
+            const endEvent = (e) => {
+                e.preventDefault();
+                teclasPresionadas[key] = false;
+            };
 
-    function comprobarColisionCarla() {
-      barriles.forEach(b => {
-        const dx = Math.abs((carla.x + carla.ancho / 2) - b.x);
-        const dy = Math.abs((carla.y + carla.alto / 2) - b.y);
-        if (dx < (carla.ancho / 2 + b.radio) && dy < (carla.alto / 2 + b.radio)) {
-          manejarDerrota();
-        }
-      });
+            button.addEventListener('touchstart', startEvent);
+            button.addEventListener('touchend', endEvent);
+            button.addEventListener('mousedown', startEvent);
+            button.addEventListener('mouseup', endEvent);
+        });
 
-      if (
-        carla.x < meta.x + meta.ancho && carla.x + carla.ancho > meta.x &&
-        carla.y + carla.alto > meta.y && carla.y < meta.y + meta.alto
-      ) {
-        juegoActivo = false;
-        alert("¡Carla ha alcanzado la puerta! ¡Has ganado!");
-        reiniciarJuego();
-      }
-    }
+        window.onload = bucleJuego;
 
-    function manejarControles() {
-      carla.velocidadX = 0;
-      if (teclasPresionadas['ArrowLeft'] || teclasPresionadas['a']) {
-        carla.velocidadX = -carla.velocidadMovimiento;
-      }
-      if (teclasPresionadas['ArrowRight'] || teclasPresionadas['d']) {
-        carla.velocidadX = carla.velocidadMovimiento;
-      }
-      if (teclasPresionadas[' '] && carla.enElSuelo) {
-        carla.velocidadY = carla.fuerzaSalto;
-        carla.enElSuelo = false;
-      }
-    }
-
-    function aplicarFisica() {
-      if (!carla.enElSuelo) {
-        carla.velocidadY += GRAVEDAD;
-      }
-      carla.x += carla.velocidadX;
-      carla.y += carla.velocidadY;
-
-      donkeyKong.x += donkeyKong.dirX * donkeyKong.velocidadMovimiento;
-      if (donkeyKong.x > donkeyKong.limiteDerecho || donkeyKong.x < donkeyKong.limiteIzquierdo) {
-        donkeyKong.dirX *= -1;
-      }
-
-      if (Date.now() - donkeyKong.ultimoBarril > donkeyKong.intervaloBarril) {
-        crearBarril();
-        donkeyKong.intervaloBarril = Math.max(500, donkeyKong.intervaloBarril - 50);
-        donkeyKong.velocidadMovimiento = Math.min(2.5, donkeyKong.velocidadMovimiento + 0.05);
-      }
-    }
-
-    function manejarColisiones() {
-      let colisionEnSuelo = false;
-
-      plataformas.forEach(p => {
-        if (
-          carla.x < p.x + p.ancho && carla.x + carla.ancho > p.x &&
-          carla.y + carla.alto > p.y && carla.y < p.y + p.alto
-        ) {
-          if (carla.velocidadY >= 0 && carla.y + carla.alto <= p.y + 5) {
-            carla.y = p.y - carla.alto;
-            carla.velocidadY = 0;
-            colisionEnSuelo = true;
-          } else if (carla.velocidadY < 0) {
-            carla.y = p.y + p.alto;
-            carla.velocidadY = 0;
-          }
-        }
-      });
-
-      carla.enElSuelo = colisionEnSuelo;
-
-      if (carla.x < 0) carla.x = 0;
-      if (carla.x + carla.ancho > ancho) carla.x = ancho - carla.ancho;
-      if (carla.y > alto) manejarDerrota();
-    }
-    function dibujarCarla() {
-      const x = carla.x;
-      const y = carla.y;
-      const w = carla.ancho / 3;
-      const h = carla.alto / 5;
-      ctx.fillStyle = "#00BFFF";
-      ctx.fillRect(x, y + h * 3, w * 3, h * 2);
-      ctx.strokeStyle = "#000";
-      ctx.strokeRect(x, y + h * 3, w * 3, h * 2);
-      ctx.font = "24px Arial";
-      ctx.fillText("👧", carla.x - 6, carla.y + carla.alto - 2);
-    }
-
-    function dibujarDonkeyKong() {
-      ctx.font = "36px Arial";
-      ctx.fillText("🦍", donkeyKong.x - 6, donkeyKong.y + donkeyKong.alto - 5);
-    }
-
-    function dibujarMeta() {
-      ctx.fillStyle = "#FFD700";
-      ctx.fillRect(meta.x, meta.y, meta.ancho, meta.alto);
-      ctx.strokeStyle = "#000";
-      ctx.strokeRect(meta.x, meta.y, meta.ancho, meta.alto);
-      ctx.fillStyle = "#000";
-      ctx.font = "12px monospace";
-      ctx.fillText("META", meta.x + 4, meta.y + meta.alto / 2 + 4);
-    }
-
-    function dibujarBarriles() {
-      barriles.forEach(b => {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.radio, 0, Math.PI * 2);
-        ctx.fillStyle = b.rebotador ? "#FF69B4" : "#FF8C00";
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#000";
-        ctx.stroke();
-        ctx.closePath();
-      });
-    }
-
-    function dibujarPlataformas() {
-      ctx.fillStyle = "#A9A9A9";
-      plataformas.forEach(p => {
-        ctx.fillRect(p.x, p.y, p.ancho, p.alto);
-      });
-    }
-
-    function dibujar() {
-      if (!juegoActivo) return;
-
-      ctx.clearRect(0, 0, ancho, alto);
-
-      dibujarPlataformas();
-      dibujarMeta();
-      dibujarDonkeyKong();
-      dibujarBarriles();
-      dibujarCarla();
-
-      manejarControles();
-      aplicarFisica();
-      manejarColisiones();
-      actualizarBarriles();
-      comprobarColisionCarla();
-
-      requestAnimationFrame(dibujar);
-    }
-
-    // Entradas de teclado
-    document.addEventListener('keydown', (e) => {
-      if ([' ', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
-      teclasPresionadas[e.key] = true;
-    });
-
-    document.addEventListener('keyup', (e) => {
-      teclasPresionadas[e.key] = false;
-    });
-
-    // Entradas táctiles
-    const botones = document.querySelectorAll('.botonControl');
-    botones.forEach(boton => {
-      const key = boton.dataset.key;
-      boton.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        teclasPresionadas[key] = true;
-      });
-      boton.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        teclasPresionadas[key] = false;
-      });
-      boton.addEventListener('mousedown', () => {
-        teclasPresionadas[key] = true;
-      });
-      boton.addEventListener('mouseup', () => {
-        teclasPresionadas[key] = false;
-      });
-    });
-
-    reiniciarJuego();
-    dibujar();
-  </script>
+    </script>
 </body>
 </html>
