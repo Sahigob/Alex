@@ -69,8 +69,8 @@ html, body {
     const PADDLE_HEIGHT = 15;
     const BALL_RADIUS = 8;
     
-    // ⭐ NUEVA CONSTANTE: Separación vertical desde los bordes
-    const VERTICAL_OFFSET = 50; 
+    // ⭐ VALOR AUMENTADO: Separación vertical desde los bordes (ahora 100)
+    const VERTICAL_OFFSET = 100; 
 
     const WIN_SCORE = 10;
 
@@ -134,9 +134,9 @@ html, body {
 
     function draw() {
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
-        // ⭐ Coordenada Y de paleta superior ajustada
+        // Coordenada Y de paleta superior ajustada
         drawPaddle(paddleTopX, VERTICAL_OFFSET); 
-        // ⭐ Coordenada Y de paleta inferior ajustada
+        // Coordenada Y de paleta inferior ajustada
         drawPaddle(paddleBottomX, HEIGHT - PADDLE_HEIGHT - VERTICAL_OFFSET);
         drawBall();
     }
@@ -164,7 +164,6 @@ html, body {
         }
 
         // Paleta IA (Superior)
-        // ⭐ Ajuste del punto de colisión superior
         const topPaddleY = VERTICAL_OFFSET;
         if (ballY - BALL_RADIUS <= topPaddleY + PADDLE_HEIGHT) {
             if (ballX >= paddleTopX && ballX <= paddleTopX + PADDLE_WIDTH) {
@@ -184,7 +183,6 @@ html, body {
         }
 
         // Paleta jugador (Inferior)
-        // ⭐ Ajuste del punto de colisión inferior
         const bottomPaddleY = HEIGHT - PADDLE_HEIGHT - VERTICAL_OFFSET;
         if (ballY + BALL_RADIUS >= bottomPaddleY) {
             if (ballX >= paddleBottomX && ballX <= paddleBottomX + PADDLE_WIDTH) {
