@@ -52,7 +52,7 @@ html, body {
     <div>Jugador: <span id="scoreBottom">0</span></div>
 </div>
 
-<canvas id="pongCanvas" width="600" height="400"></canvas>
+<canvas id="pongCanvas" width="600" height="600"></canvas>
 
 <script>
 (() => {
@@ -63,14 +63,15 @@ html, body {
 
     // Las dimensiones lógicas del juego (internas)
     const WIDTH = canvas.width;
+    // ⭐ El valor HEIGHT ahora es 600
     const HEIGHT = canvas.height;
 
     const PADDLE_WIDTH = 120;
     const PADDLE_HEIGHT = 15;
     const BALL_RADIUS = 8;
     
-    // ⭐ VALOR AUMENTADO: Separación vertical desde los bordes (ahora 100)
-    const VERTICAL_OFFSET = 100; 
+    // ⭐ VALOR AUMENTADO: Separación vertical desde los bordes (ahora 150)
+    const VERTICAL_OFFSET = 150; 
 
     const WIN_SCORE = 10;
 
@@ -87,6 +88,7 @@ html, body {
 
     let gameOver = false;
 
+    // La velocidad de la IA debe escalarse si cambiamos HEIGHT. Mantenemos el valor base.
     const AI_SPEED = 4;
 
     function notifyParent(playerWon) {
