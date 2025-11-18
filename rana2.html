@@ -17,9 +17,17 @@
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
+  /* Contenedor principal para centrar la experiencia de juego en pantallas grandes */
+  #gameContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 550px; /* Ancho máximo para el juego */
+  }
+
   #scoreboard {
     width: 100%;
-    max-width: 550px; /* Limita la puntuación al ancho máximo del canvas */
     display: flex;
     justify-content: space-between;
     font-size: 1.4rem;
@@ -48,21 +56,110 @@
     width: 100vw; 
     max-width: 100vw;
     height: 100vw; /* Mantiene 1:1, ya que el ancho es 100vw */
-    max-height: 550px; 
+    max-height: 550px; 
     display: block;
   }
+
+  /* --- Estilos para el Teclado Móvil --- */
+  #mobile-controls {
+    width: 100%;
+    max-width: 550px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background: #234;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .control-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 5px;
+  }
+
+  .control-row:first-child {
+    margin-top: 0;
+  }
+
+  .control-button {
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    background-color: #4a4a4a;
+    color: #fff;
+    border: 3px solid #666;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    user-select: none;
+    box-shadow: 0 4px 0 #222;
+  }
+
+  .control-button:active {
+    background-color: #6a6a6a;
+    box-shadow: 0 1px 0 #222;
+    transform: translateY(3px);
+  }
+
+  #btn-up {
+    margin-bottom: 5px;
+  }
+
+  #btn-left, #btn-right {
+    margin-top: 0;
+  }
+
+  /* Distribución de la Cruceta */
+  #dpad-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: 20px; /* Espacio para separar de otros posibles controles */
+  }
+
+  /* Escondemos los controles en pantallas muy grandes si quieres mantener el teclado */
+  @media (min-width: 600px) {
+    #mobile-controls {
+      /* Puedes ocultarlo o dejarlo, decidí dejarlo por si se juega en desktop con táctil */
+      /* display: none; */ 
+    }
+  }
+
 </style>
 </head>
 <body>
 
-<div id="scoreboard" aria-live="polite" aria-atomic="true">
-  <div>Vidas: <span id="livesDisplay">💚💚💚</span></div>
-  <div>Metas: <span id="goalsCompleted">0/5</span></div>
+<div id="gameContainer">
+  <div id="scoreboard" aria-live="polite" aria-atomic="true">
+    <div>Vidas: <span id="livesDisplay">💚💚💚</span></div>
+    <div>Metas: <span id="goalsCompleted">0/5</span></div>
+  </div>
+
+  <canvas id="gameCanvas" width="550" height="550" aria-label="Área de juego de la rana con tráfico denso y zona de seguridad intermedia" role="img" tabindex="0"></canvas>
+
+  <div id="completionMessage" aria-live="assertive" aria-atomic="true"></div>
+
+  <div id="mobile-controls">
+    <div id="dpad-container">
+      <div class="control-row">
+        <button id="btn-up" class="control-button" data-move="up">▲</button>
+      </div>
+      <div class="control-row">
+        <button id="btn-left" class="control-button" data-move="left">◄</button>
+        <div style="width: 70px;"></div> <button id="btn-right" class="control-button" data-move="right">►</button>
+      </div>
+      <div class="control-row">
+        <button id="btn-down" class="control-button" data-move="down">▼</button>
+      </div>
+    </div>
+  </div>
 </div>
-
-<canvas id="gameCanvas" width="550" height="550" aria-label="Área de juego de la rana con tráfico denso y zona de seguridad intermedia" role="img" tabindex="0"></canvas>
-
-<div id="completionMessage" aria-live="assertive" aria-atomic="true"></div>
 
 <script>
 (() => {
@@ -73,7 +170,7 @@
   const goalsCompletedElem = document.getElementById('goalsCompleted');
 
   // Dimensiones LÓGICAS del Canvas (Internas)
-  const LOGICAL_WIDTH = 550; 
+  const LOGICAL_WIDTH = 550; 
   const LOGICAL_HEIGHT = 550;
 
   // DPI fix y escalado
@@ -100,48 +197,48 @@
   const WIDTH = LOGICAL_WIDTH;
   const HEIGHT = LOGICAL_HEIGHT;
 
-  const SAFE_ZONE_TOP_HEIGHT = 50; 
-  const SAFE_ZONE_BOTTOM_HEIGHT = 50; 
+  const SAFE_ZONE_TOP_HEIGHT = 50; 
+  const SAFE_ZONE_BOTTOM_HEIGHT = 50; 
   const MEDIAN_HEIGHT = 50; 
-   
+    
   const ROAD_LANES_COUNT = 4;
   const RIVER_LANES_COUNT = 4;
   const TOTAL_LANES = ROAD_LANES_COUNT + RIVER_LANES_COUNT;
-   
+    
   const LANE_HEIGHT = (HEIGHT - SAFE_ZONE_BOTTOM_HEIGHT - SAFE_ZONE_TOP_HEIGHT - MEDIAN_HEIGHT) / TOTAL_LANES; // 50px
 
   const ROAD_HEIGHT = LANE_HEIGHT * ROAD_LANES_COUNT;
   const RIVER_HEIGHT = LANE_HEIGHT * RIVER_LANES_COUNT;
-   
+    
   // Frog constants
-  const FROG_SIZE = 25; 
+  const FROG_SIZE = 25; 
   const FROG_STEP = LANE_HEIGHT;
   const FROG_START_X = WIDTH / 2 - FROG_SIZE / 2;
   const FROG_START_Y = HEIGHT - FROG_STEP + (FROG_STEP - FROG_SIZE) / 2;
-   
+    
   // Velocidades y dimensiones de objetos
-  const VEHICLE_HEIGHT = FROG_SIZE + 5; 
-  const VEHICLE_SPEED_MIN = 1.0; 
-  const VEHICLE_SPEED_MAX = 2.8; 
+  const VEHICLE_HEIGHT = FROG_SIZE + 5; 
+  const VEHICLE_SPEED_MIN = 1.0; 
+  const VEHICLE_SPEED_MAX = 2.8; 
 
-  const LOG_WIDTH = 100; 
+  const LOG_WIDTH = 100; 
   const LOG_HEIGHT = FROG_SIZE + 5;
-  const LOG_SPEED_MIN = 1.2; 
-  const LOG_SPEED_MAX = 2.2; 
+  const LOG_SPEED_MIN = 1.2; 
+  const LOG_SPEED_MAX = 2.2; 
 
-  const CROCODILE_WIDTH = 70; 
+  const CROCODILE_WIDTH = 70; 
   const CROCODILE_HEIGHT = FROG_SIZE + 5;
-  const CROCODILE_SPEED_MIN = 1.1; 
-  const CROCODILE_SPEED_MAX = 2.0; 
-   
+  const CROCODILE_SPEED_MIN = 1.1; 
+  const CROCODILE_SPEED_MAX = 2.0; 
+    
   // Goal constants
   const GOAL_COUNT = 5;
   const GOAL_WIDTH = FROG_SIZE + 10;
-  let goals = []; 
-  let goalPositions = []; 
+  let goals = []; 
+  let goalPositions = []; 
 
   // Game state
-  let lives = 3; 
+  let lives = 3; 
   let gameEnded = false;
   let isRespawning = false;
   let frogX = FROG_START_X;
@@ -175,9 +272,9 @@
         const x = goalSpacing * (i + 1) + i * GOAL_WIDTH;
         goalPositions.push({
           x: x,
-          y: 0, 
+          y: 0, 
           width: GOAL_WIDTH,
-          height: SAFE_ZONE_TOP_HEIGHT 
+          height: SAFE_ZONE_TOP_HEIGHT 
         });
     }
   }
@@ -186,31 +283,31 @@
   // Función genérica para inicializar objetos SIN SOLAPAMIENTO
   function initLaneObjects(laneYs, objHeight, minW, maxW, minS, maxS, type) {
     let objects = [];
-     
+      
     laneYs.forEach((laneCenterY, i) => {
       let laneY = laneCenterY - objHeight / 2;
       let direction = i % 2 === 0 ? 1 : -1; // Dirección alterna
-       
+        
       const desiredCount = 4 + Math.floor(Math.random() * 2);
       const buffer = 20;
-       
+        
       let currentX = direction > 0 ? -100 : WIDTH + 100;
-       
+        
       for (let j = 0; j < desiredCount; j++) {
         let width = getRandomRange(minW, maxW);
         let speed = getRandomRange(minS, maxS);
-         
+          
         const minGap = width + buffer;
-         
+          
         if (direction > 0) {
             currentX -= getRandomRange(minGap, minGap + 150) + width;
             if (j === 0) currentX = getRandomRange(-WIDTH, -WIDTH / 2);
-             
+            
         } else {
             currentX += getRandomRange(minGap, minGap + 150) + width;
             if (j === 0) currentX = getRandomRange(WIDTH * 1.5, WIDTH * 2);
         }
-         
+          
         objects.push({
           x: currentX,
           y: laneY,
@@ -223,7 +320,7 @@
         });
       }
     });
-     
+      
     return objects;
   }
 
@@ -243,7 +340,7 @@
       goals = new Array(GOAL_COUNT).fill(false);
       updateGoalsDisplay();
   }
-   
+    
   // --- Funciones de Dibujo ---
 
   function drawSafeZoneTop() {
@@ -262,7 +359,7 @@
         } else {
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 3;
-            ctx.setLineDash([5, 5]); 
+            ctx.setLineDash([5, 5]); 
             ctx.strokeRect(g.x, g.y, g.width, g.height);
             ctx.setLineDash([]);
         }
@@ -280,12 +377,12 @@
     ctx.fillStyle = '#0077bb';
     ctx.fillRect(0, SAFE_ZONE_TOP_HEIGHT, WIDTH, RIVER_HEIGHT);
   }
-   
+    
   function drawMedian() {
       ctx.fillStyle = '#084d00';
       const medianY = SAFE_ZONE_TOP_HEIGHT + RIVER_HEIGHT;
       ctx.fillRect(0, medianY, WIDTH, MEDIAN_HEIGHT);
-       
+        
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -312,7 +409,7 @@
   }
 
   function drawSafeZoneBottom() {
-      ctx.fillStyle = '#084d00'; 
+      ctx.fillStyle = '#084d00'; 
       ctx.fillRect(0, HEIGHT - SAFE_ZONE_BOTTOM_HEIGHT, WIDTH, SAFE_ZONE_BOTTOM_HEIGHT);
   }
 
@@ -346,7 +443,7 @@
 
     ctx.restore();
   }
-   
+    
   function drawVehicles() {
     vehicles.forEach(v => {
       ctx.save();
@@ -371,7 +468,7 @@
       ctx.restore();
     });
   }
-   
+    
   function drawLogs() {
     logs.forEach(log => {
       ctx.save();
@@ -388,7 +485,7 @@
       ctx.restore();
     });
   }
-   
+    
   function drawCrocodiles() {
     crocodiles.forEach(croc => {
       ctx.save();
@@ -407,7 +504,7 @@
       ctx.fillStyle = '#fff';
       ctx.fillRect(croc.x + 8, croc.y + 4, 4, 4);
       ctx.fillRect(croc.x + croc.width - 12, croc.y + 4, 4, 4);
-       
+        
       ctx.restore();
     });
   }
@@ -427,7 +524,7 @@
       }
     });
   }
-   
+    
   function updateVehicles() { updateObjects(vehicles); }
   function updateLogs() { updateObjects(logs); }
   function updateCrocodiles() { updateObjects(crocodiles); }
@@ -442,17 +539,17 @@
   function checkRoadCollisions() {
     const roadTop = SAFE_ZONE_TOP_HEIGHT + RIVER_HEIGHT + MEDIAN_HEIGHT;
     const roadBottom = HEIGHT - SAFE_ZONE_BOTTOM_HEIGHT;
-     
+      
     // Si la rana está en la zona de la carretera
     if (frogY >= roadTop && frogY < roadBottom) {
-        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
-        for (let v of vehicles) {
-            let vehicleRect = { x: v.x, y: v.y, width: v.width, height: v.height };
-            if (isColliding(frogRect, vehicleRect)) {
-                loseLife('hit'); 
-                return;
-            }
-        }
+        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
+        for (let v of vehicles) {
+            let vehicleRect = { x: v.x, y: v.y, width: v.width, height: v.height };
+            if (isColliding(frogRect, vehicleRect)) {
+                loseLife('hit'); 
+                return;
+            }
+        }
     }
   }
 
@@ -462,45 +559,45 @@
 
     // Si la rana está en la zona del río
     if (frogY >= riverTop && frogY < riverBottom) {
-        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
-        let carryingObject = null;
+        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
+        let carryingObject = null;
 
-        // Verificar si está sobre un objeto transportador
-        const transportObjects = [...logs, ...crocodiles];
-        for (let obj of transportObjects) {
-            let objRect = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
-            if (isColliding(frogRect, objRect)) {
-                carryingObject = obj;
-                break;
-            }
-        }
+        // Verificar si está sobre un objeto transportador
+        const transportObjects = [...logs, ...crocodiles];
+        for (let obj of transportObjects) {
+            let objRect = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
+            if (isColliding(frogRect, objRect)) {
+                carryingObject = obj;
+                break;
+            }
+        }
 
-        if (carryingObject) {
-            if (carryingObject.type === 'croc' && checkCrocodileMouthCollision(frogRect, carryingObject)) {
-                loseLife('croc');
-                return;
-            }
-            // Mover la rana con el objeto
-            frogX += carryingObject.speed * carryingObject.direction;
-        } else {
-             // Ahogado
-             loseLife('drown');
-             return;
-        }
-       
-        constrainFrog();
+        if (carryingObject) {
+            if (carryingObject.type === 'croc' && checkCrocodileMouthCollision(frogRect, carryingObject)) {
+                loseLife('croc');
+                return;
+            }
+            // Mover la rana con el objeto
+            frogX += carryingObject.speed * carryingObject.direction;
+        } else {
+             // Ahogado
+             loseLife('drown');
+             return;
+        }
+        
+        constrainFrog();
     }
   }
 
   function checkCrocodileMouthCollision(frogRect, croc) {
-     const dangerZoneWidth = croc.width * 0.2; 
-     const dangerZone = {
-         x: croc.direction === 1 ? croc.x : croc.x + croc.width - dangerZoneWidth,
-         y: croc.y,
-         width: dangerZoneWidth,
-         height: croc.height
-     };
-     return isColliding(frogRect, dangerZone);
+      const dangerZoneWidth = croc.width * 0.2; 
+      const dangerZone = {
+          x: croc.direction === 1 ? croc.x : croc.x + croc.width - dangerZoneWidth,
+          y: croc.y,
+          width: dangerZoneWidth,
+          height: croc.height
+      };
+      return isColliding(frogRect, dangerZone);
   }
 
 
@@ -512,36 +609,36 @@
   function checkGoal() {
     // Si la rana está en la zona superior de metas
     if (frogY < SAFE_ZONE_TOP_HEIGHT) {
-        let completed = false;
-        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
+        let completed = false;
+        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
 
-        for (let i = 0; i < GOAL_COUNT; i++) {
-            const goalRect = goalPositions[i];
-             
-            if (isColliding(frogRect, goalRect)) {
-                if (!goals[i]) {
-                    goals[i] = true; 
-                    completed = true;
-                    updateGoalsDisplay();
-                    break;
-                } else {
-                    // Chocó con una rana ya colocada
-                    loseLife('squish');
-                    return;
-                }
-            }
-        }
+        for (let i = 0; i < GOAL_COUNT; i++) {
+            const goalRect = goalPositions[i];
+            
+            if (isColliding(frogRect, goalRect)) {
+                if (!goals[i]) {
+                    goals[i] = true; 
+                    completed = true;
+                    updateGoalsDisplay();
+                    break;
+                } else {
+                    // Chocó con una rana ya colocada
+                    loseLife('squish');
+                    return;
+                }
+            }
+        }
 
-        if (completed) {
-            if (goals.every(g => g)) {
-                endGame(true);
-            } else {
-                respawnFrog();
-            }
-        } else {
-            // Cayó en el pasto sin meta
-            loseLife('miss');
-        }
+        if (completed) {
+            if (goals.every(g => g)) {
+                endGame(true);
+            } else {
+                respawnFrog();
+            }
+        } else {
+            // Cayó en el pasto sin meta
+            loseLife('miss');
+        }
     }
   }
 
@@ -556,7 +653,7 @@
 
     lives--;
     updateLivesDisplay();
-     
+      
     let msg = '';
     if (reason === 'hit') msg = '🚗 Atropellado en la carretera.';
     else if (reason === 'drown') msg = '🌊 Ahogado en el río.';
@@ -565,10 +662,10 @@
     else if (reason === 'squish') msg = '🐸 Aplastado por otra rana.';
 
     completionMessageElem.textContent = msg;
-     
+      
     if (lives <= 0) {
-        endGame(false);
-        return;
+        endGame(false);
+        return;
     }
 
     setTimeout(() => {
@@ -579,33 +676,33 @@
   }
 
   function updateLivesDisplay() {
-      let display = '';
-      for (let i = 0; i < 3; i++) {
-          display += i < lives ? '💚' : '💔';
-      }
-      livesDisplayElem.textContent = display;
+      let display = '';
+      for (let i = 0; i < 3; i++) {
+          display += i < lives ? '💚' : '💔';
+      }
+      livesDisplayElem.textContent = display;
   }
 
   function updateGoalsDisplay() {
-      const completedCount = goals.filter(g => g).length;
-      goalsCompletedElem.textContent = `${completedCount}/${GOAL_COUNT}`;
+      const completedCount = goals.filter(g => g).length;
+      goalsCompletedElem.textContent = `${completedCount}/${GOAL_COUNT}`;
   }
 
 
   function endGame(win) {
     if (gameEnded) return;
     gameEnded = true;
-    completionMessageElem.textContent = win ? '🎉 ¡VICTORIA! Todas las metas completadas.' : '💀 JUEGO TERMINADO. Presiona una tecla para reiniciar.';
+    completionMessageElem.textContent = win ? '🎉 ¡VICTORIA! Todas las metas completadas.' : '💀 JUEGO TERMINADO. Presiona una tecla o toca la pantalla para reiniciar.';
   }
 
   function resetGame(fullReset = false) {
     if (fullReset) {
-        lives = 3;
-        initGoals();
-        updateLivesDisplay();
+        lives = 3;
+        initGoals();
+        updateLivesDisplay();
     }
-     
-    respawnFrog(); 
+      
+    respawnFrog(); 
     initVehicles();
     initLogs();
     initCrocodiles();
@@ -634,8 +731,8 @@
     }
   }
 
-  initGoalPositions(); 
-  resetGame(true); 
+  initGoalPositions(); 
+  resetGame(true); 
 
   function gameLoop() {
     if (gameEnded) return;
@@ -647,7 +744,7 @@
     drawRiver();
     drawMedian();
     drawRoad();
-    drawSafeZoneBottom(); 
+    drawSafeZoneBottom(); 
 
     // LÓGICA DE MOVIMIENTO
     updateVehicles();
@@ -660,10 +757,10 @@
     drawVehicles();
 
     // Comprobación de Colisiones (Solo si no está reapareciendo)
-    if (!isRespawning) { 
-        checkRiverLogic(); 
-        checkRoadCollisions();
-        checkGoal(); 
+    if (!isRespawning) { 
+        checkRiverLogic(); 
+        checkRoadCollisions();
+        checkGoal(); 
     }
 
     drawFrog();
@@ -671,7 +768,7 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // --- Input handlers (Teclado) ---
+  // --- Input handlers (Teclado y Táctil) ---
 
   function attemptMove(dir) {
     if (gameEnded || isRespawning) return;
@@ -688,28 +785,28 @@
     // Límite Horizontal
     if (newX < 0) newX = 0;
     if (newX + FROG_SIZE > WIDTH) newX = WIDTH - FROG_SIZE;
-     
+      
     // Límite Vertical y ajuste de posición
     if (dir === 'up' || dir === 'down') {
-        const currentLaneY = Math.round((frogY - (FROG_STEP - FROG_SIZE) / 2) / FROG_STEP) * FROG_STEP;
-        const nextY = dir === 'up' ? currentLaneY - FROG_STEP : currentLaneY + FROG_STEP;
-         
-        // Ajustamos la posición Y al centro del nuevo carril
-        newY = nextY + (LANE_HEIGHT - FROG_SIZE) / 2;
+        const currentLaneY = Math.round((frogY - (FROG_STEP - FROG_SIZE) / 2) / FROG_STEP) * FROG_STEP;
+        const nextY = dir === 'up' ? currentLaneY - FROG_STEP : currentLaneY + FROG_STEP;
+          
+        // Ajustamos la posición Y al centro del nuevo carril
+        newY = nextY + (LANE_HEIGHT - FROG_SIZE) / 2;
 
-        // Limites absolutos
-        if (newY < 0) newY = 0; 
-        if (newY > HEIGHT - FROG_STEP) newY = HEIGHT - FROG_STEP + (FROG_STEP - FROG_SIZE) / 2;
+        // Limites absolutos
+        if (newY < 0) newY = 0; 
+        if (newY > HEIGHT - FROG_STEP) newY = HEIGHT - FROG_STEP + (FROG_STEP - FROG_SIZE) / 2;
     }
 
 
     frogX = newX;
     frogY = newY;
-     
+      
     constrainFrog();
   }
-   
-  // Eventos de teclado
+    
+  // Eventos de teclado (manteniendo la funcionalidad original)
   window.addEventListener('keydown', e => {
     if (gameEnded && e.key) { // Presionar cualquier tecla reinicia
       resetGame(true);
@@ -718,13 +815,37 @@
     if (isRespawning) return;
     const key = e.key.toLowerCase();
     if (['arrowup', 'w', 'arrowdown', 's', 'arrowleft', 'a', 'arrowright', 'd'].includes(key)) {
-        e.preventDefault(); 
-        if (key === 'arrowup' || key === 'w') attemptMove('up');
-        else if (key === 'arrowdown' || key === 's') attemptMove('down');
-        else if (key === 'arrowleft' || key === 'a') attemptMove('left');
-        else if (key === 'arrowright' || key === 'd') attemptMove('right');
+        e.preventDefault(); 
+        if (key === 'arrowup' || key === 'w') attemptMove('up');
+        else if (key === 'arrowdown' || key === 's') attemptMove('down');
+        else if (key === 'arrowleft' || key === 'a') attemptMove('left');
+        else if (key === 'arrowright' || key === 'd') attemptMove('right');
     }
   });
+
+  // Eventos Táctiles para los nuevos botones
+  document.querySelectorAll('#mobile-controls .control-button').forEach(button => {
+    button.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Evita el zoom y el comportamiento predeterminado
+      if (gameEnded) {
+        resetGame(true);
+        return;
+      }
+      if (isRespawning) return;
+
+      const direction = button.getAttribute('data-move');
+      attemptMove(direction);
+    });
+    // Puedes añadir 'touchend' si deseas controlar el estado 'active' de forma más precisa
+  });
+
+  // Para reiniciar al tocar el mensaje de fin de juego
+  completionMessageElem.addEventListener('click', () => {
+    if (gameEnded) {
+      resetGame(true);
+    }
+  });
+
 
 })();
 </script>
