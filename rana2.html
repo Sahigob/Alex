@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>Juego de la Rana Corregido y Seguro</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #112;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #eee;
+    font-family: 'Inter', Arial, sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #scoreboard {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.4rem;
+    padding: 10px 15px;
+    box-sizing: border-box;
+    background: #234;
+    border-radius: 8px 8px 0 0;
+  }
+  #livesDisplay {
+    color: #f00;
+  }
+  #completionMessage {
+    margin-top: 10px;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #0ff;
+    text-align: center;
+    min-height: 44px;
+    user-select: text;
+  }
+  canvas {
+    background: #045; /* Río/Carretera base */
+    border: 3px solid #444;
+    touch-action: none;
+    max-width: 100vw;
+    height: 90vw;
+    max-height: 550px;
+    width: 100%;
+    display: block;
+  }
+  /* Estilos para el D-Pad */
+  #controls {
+    display: grid;
+    grid-template-areas: ". up ." "left center right" ". down .";
+    width: 100%;
+    max-width: 260px; /* Ajustado para móvil */
+    margin-top: 15px;
+    gap: 6px;
+    user-select: none;
+    justify-content: center;
+  }
+  .d-pad-btn {
+    background-color: #4a5c88;
+    color: white;
+    font-size: 1.1rem;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px #2b395b;
+    cursor: pointer;
+    transition: background-color 0.1s, box-shadow 0.1s;
+    touch-action: manipulation;
+    width: 60px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .d-pad-btn:active {
+    background-color: #3e4d70;
+    box-shadow: 0 1px #2b395b;
+    transform: translateY(3px);
+  }
+  #btn-up { grid-area: up; }
+  #btn-down { grid-area: down; }
+  #btn-left { grid-area: left; }
+  #btn-right { grid-area: right; }
+  #btn-center { grid-area: center; visibility: hidden; }
+
+  /* Iconos de flecha (Font Awesome) */
+  .arrow::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+  }
+  #btn-up::before { content: "\f0d8"; }
+  #btn-down::before { content: "\f0d7"; }
+  #btn-left::before { content: "\f0d9"; }
+  #btn-right::before { content: "\f0da"; }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+
+<div id="scoreboard" aria-live="polite" aria-atomic="true">
+  <div>Vidas: <span id="livesDisplay">💚💚💚</span></div>
+  <div>Metas: <span id="goalsCompleted">0/5</span></div>
+</div>
+
+<canvas id="gameCanvas" width="550" height="550" aria-label="Área de juego de la rana con tráfico denso y zona de seguridad intermedia" role="img" tabindex="0"></canvas>
+
+<div id="completionMessage" aria-live="assertive" aria-atomic="true"></div>
+
+<div id="controls" role="group" aria-label="Controles de dirección táctiles para la rana">
+  <button id="btn-up" class="d-pad-btn arrow" data-direction="up" aria-label="Mover arriba" tabindex="0"></button>
+  <button id="btn-left" class="d-pad-btn arrow" data-direction="left" aria-label="Mover izquierda" tabindex="0"></button>
+  <div id="btn-center"></div>
+  <button id="btn-right" class="d-pad-btn arrow" data-direction="right" aria-label="Mover derecha" tabindex="0"></button>
+  <button id="btn-down" class="d-pad-btn arrow" data-direction="down" aria-label="Mover abajo" tabindex="0"></button>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const completionMessageElem = document.getElementById('completionMessage');
+  const livesDisplayElem = document.getElementById('livesDisplay');
+  const goalsCompletedElem = document.getElementById('goalsCompleted');
+
+  // Dimensiones del Canvas
+  const WIDTH = 550; 
+  const HEIGHT = 550;
+
+  // DPI fix
+  function fixDPI() {
+    const dpi = window.devicePixelRatio || 1;
+    canvas.style.width = WIDTH + 'px';
+    canvas.style.height = HEIGHT + 'px';
+    if (canvas.width !== WIDTH * dpi || canvas.height !== HEIGHT * dpi) {
+      canvas.width = WIDTH * dpi;
+      canvas.height = HEIGHT * dpi;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpi, dpi);
+    }
+  }
+  fixDPI();
+
+  // --- Zonas de Juego (Ajustadas para 4 carriles de cada + Medianera de 50px) ---
+  const SAFE_ZONE_TOP_HEIGHT = 50; 
+  const SAFE_ZONE_BOTTOM_HEIGHT = 50; 
+  const MEDIAN_HEIGHT = 50; // ¡NUEVA ZONA SEGURA INTERMEDIA!
+  
+  const ROAD_LANES_COUNT = 4; // 4 carriles de carretera
+  const RIVER_LANES_COUNT = 4; // 4 carriles de río
+  const TOTAL_LANES = ROAD_LANES_COUNT + RIVER_LANES_COUNT; // 8
+  
+  // (550 - 50 - 50 - 50) / 8 = 400 / 8 = 50px
+  const LANE_HEIGHT = (HEIGHT - SAFE_ZONE_BOTTOM_HEIGHT - SAFE_ZONE_TOP_HEIGHT - MEDIAN_HEIGHT) / TOTAL_LANES; // 50px
+
+  const ROAD_HEIGHT = LANE_HEIGHT * ROAD_LANES_COUNT; // 200px
+  const RIVER_HEIGHT = LANE_HEIGHT * RIVER_LANES_COUNT; // 200px
+  
+  // Frog constants
+  const FROG_SIZE = 25; 
+  const FROG_STEP = LANE_HEIGHT; // El paso es igual a la altura del carril (50px)
+  const FROG_START_X = WIDTH / 2 - FROG_SIZE / 2;
+  const FROG_START_Y = HEIGHT - FROG_STEP + (FROG_STEP - FROG_SIZE) / 2;
+  
+  // Velocidades y dimensiones de objetos (similares a antes, pero más pequeños)
+  const VEHICLE_HEIGHT = FROG_SIZE + 5; 
+  const VEHICLE_SPEED_MIN = 1.0; 
+  const VEHICLE_SPEED_MAX = 2.8; 
+
+  const LOG_WIDTH = 100; 
+  const LOG_HEIGHT = FROG_SIZE + 5;
+  const LOG_SPEED_MIN = 1.2; 
+  const LOG_SPEED_MAX = 2.2; 
+
+  const CROCODILE_WIDTH = 70; 
+  const CROCODILE_HEIGHT = FROG_SIZE + 5;
+  const CROCODILE_SPEED_MIN = 1.1; 
+  const CROCODILE_SPEED_MAX = 2.0; 
+  
+  // Goal constants
+  const GOAL_COUNT = 5;
+  const GOAL_WIDTH = FROG_SIZE + 10;
+  let goals = []; 
+  let goalPositions = []; 
+
+  // Game state
+  let lives = 3; 
+  let gameEnded = false;
+  let isRespawning = false; // ¡NUEVO! Evita doble muerte
+  let frogX = FROG_START_X;
+  let frogY = FROG_START_Y;
+  let vehicles = [];
+  let logs = [];
+  let crocodiles = [];
+
+  // Posiciones Y de los centros de los carriles
+  let riverLaneYs = [];
+  for (let i = 0; i < RIVER_LANES_COUNT; i++) {
+    // 50 (Safe Zone Top) + (i * 50) + 25
+    riverLaneYs.push(SAFE_ZONE_TOP_HEIGHT + (i * LANE_HEIGHT) + LANE_HEIGHT / 2);
+  }
+
+  let roadLaneYs = [];
+  for (let i = 0; i < ROAD_LANES_COUNT; i++) {
+    // Comienza después de SafeZoneTop + River + Median
+    const roadStartY = SAFE_ZONE_TOP_HEIGHT + RIVER_HEIGHT + MEDIAN_HEIGHT;
+    roadLaneYs.push(roadStartY + (i * LANE_HEIGHT) + LANE_HEIGHT / 2);
+  }
+
+  // Goal Positions
+  function initGoalPositions() {
+    goalPositions = [];
+    const goalSpacing = (WIDTH - GOAL_COUNT * GOAL_WIDTH) / (GOAL_COUNT + 1);
+    for (let i = 0; i < GOAL_COUNT; i++) {
+        const x = goalSpacing * (i + 1) + i * GOAL_WIDTH;
+        goalPositions.push({
+            x: x,
+            y: 0, 
+            width: GOAL_WIDTH,
+            height: SAFE_ZONE_TOP_HEIGHT 
+        });
+    }
+  }
+
+
+  function getRandomRange(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  // Función genérica para inicializar objetos SIN SOLAPAMIENTO
+  function initLaneObjects(laneYs, objHeight, minW, maxW, minS, maxS, type) {
+    let objects = [];
+    
+    laneYs.forEach((laneCenterY, i) => {
+      let laneY = laneCenterY - objHeight / 2;
+      let direction = i % 2 === 0 ? 1 : -1; // Dirección alterna
+      
+      const desiredCount = 4 + Math.floor(Math.random() * 2); // Más objetos
+      const buffer = 20; // Espacio mínimo entre objetos
+      
+      let currentX = direction > 0 ? -100 : WIDTH + 100; // Posición inicial
+      let totalWidth = 0; // Para calcular el ancho total de los objetos en la calle
+
+      for (let j = 0; j < desiredCount; j++) {
+        let width = getRandomRange(minW, maxW);
+        let speed = getRandomRange(minS, maxS);
+        
+        // Espacio libre mínimo antes de colocar el siguiente objeto
+        const minGap = width + buffer;
+        
+        if (direction > 0) {
+            // Se mueven a la derecha: el objeto se coloca a la izquierda de 'currentX'
+            currentX -= getRandomRange(minGap, minGap + 150) + width;
+            if (j === 0) currentX = getRandomRange(-WIDTH, -WIDTH / 2); // Inicio aleatorio fuera de pantalla
+            
+        } else {
+            // Se mueven a la izquierda: el objeto se coloca a la derecha de 'currentX'
+            currentX += getRandomRange(minGap, minGap + 150) + width;
+            if (j === 0) currentX = getRandomRange(WIDTH * 1.5, WIDTH * 2); // Inicio aleatorio fuera de pantalla
+        }
+        
+        objects.push({
+          x: currentX,
+          y: laneY,
+          width: width,
+          height: objHeight,
+          speed: speed,
+          direction: direction,
+          color: (type === 'vehicle' && direction > 0) ? '#d22' : (type === 'vehicle' ? '#2a2' : (type === 'log' ? '#864c0c' : '#256622')),
+          type: type
+        });
+        totalWidth += width + buffer;
+      }
+    });
+    
+    return objects;
+  }
+
+  function initVehicles() {
+      vehicles = initLaneObjects(roadLaneYs, VEHICLE_HEIGHT, 30, 60, VEHICLE_SPEED_MIN, VEHICLE_SPEED_MAX, 'vehicle');
+  }
+
+  function initLogs() {
+      // 4 carriles de río. Troncos en los carriles 0 y 2
+      logs = initLaneObjects(riverLaneYs.filter((_, i) => i % 2 === 0), LOG_HEIGHT, LOG_WIDTH, LOG_WIDTH, LOG_SPEED_MIN, LOG_SPEED_MAX, 'log');
+  }
+
+  function initCrocodiles() {
+      // 4 carriles de río. Cocodrilos en los carriles 1 y 3
+      crocodiles = initLaneObjects(riverLaneYs.filter((_, i) => i % 2 !== 0), CROCODILE_HEIGHT, CROCODILE_WIDTH, CROCODILE_WIDTH, CROCODILE_SPEED_MIN, CROCODILE_SPEED_MAX, 'croc');
+  }
+
+  function initGoals() {
+      goals = new Array(GOAL_COUNT).fill(false);
+      updateGoalsDisplay();
+  }
+  
+  // --- Dibujo ---
+
+  function drawSafeZoneTop() {
+    ctx.fillStyle = '#084d00'; // Pasto
+    ctx.fillRect(0, 0, WIDTH, SAFE_ZONE_TOP_HEIGHT);
+
+    goalPositions.forEach((g, index) => {
+        if (goals[index]) {
+            // Rana estática en meta
+            ctx.save();
+            ctx.translate(g.x + g.width/2, g.height/2);
+            ctx.fillStyle = '#0f0';
+            ctx.beginPath();
+            ctx.arc(0, 0, FROG_SIZE / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        } else {
+            // Meta vacía
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]); 
+            ctx.strokeRect(g.x, g.y, g.width, g.height);
+            ctx.setLineDash([]);
+        }
+    });
+
+    // Línea divisoria inferior
+    ctx.strokeStyle = '#0ff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, SAFE_ZONE_TOP_HEIGHT);
+    ctx.lineTo(WIDTH, SAFE_ZONE_TOP_HEIGHT);
+    ctx.stroke();
+  }
+
+  function drawRiver() {
+    ctx.fillStyle = '#0077bb';
+    ctx.fillRect(0, SAFE_ZONE_TOP_HEIGHT, WIDTH, RIVER_HEIGHT);
+  }
+  
+  function drawMedian() {
+      // NUEVA ZONA SEGURA ENTRE RÍO Y CARRETERA
+      ctx.fillStyle = '#084d00'; // Pasto (mismo color que inicio/fin)
+      const medianY = SAFE_ZONE_TOP_HEIGHT + RIVER_HEIGHT;
+      ctx.fillRect(0, medianY, WIDTH, MEDIAN_HEIGHT);
+      
+      // Línea divisoria superior (Río) e inferior (Carretera)
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, medianY);
+      ctx.lineTo(WIDTH, medianY);
+      ctx.moveTo(0, medianY + MEDIAN_HEIGHT);
+      ctx.lineTo(WIDTH, medianY + MEDIAN_HEIGHT);
+      ctx.stroke();
+  }
+
+  function drawRoad() {
+    ctx.fillStyle = '#444';
+    const roadY = SAFE_ZONE_TOP_HEIGHT + RIVER_HEIGHT + MEDIAN_HEIGHT;
+    ctx.fillRect(0, roadY, WIDTH, ROAD_HEIGHT);
+
+    // Líneas divisorias amarillas (punteadas)
+    const gap = LANE_HEIGHT;
+    ctx.fillStyle = 'yellow';
+    for (let i = 0; i < ROAD_LANES_COUNT; i++) {
+      let y = roadY + i * gap + gap / 2;
+      for (let x = 0; x < WIDTH; x += 30) {
+        ctx.fillRect(x, y - 2, 20, 4);
+      }
+    }
+  }
+
+  function drawSafeZoneBottom() {
+      ctx.fillStyle = '#084d00'; 
+      ctx.fillRect(0, HEIGHT - SAFE_ZONE_BOTTOM_HEIGHT, WIDTH, SAFE_ZONE_BOTTOM_HEIGHT);
+  }
+
+  function drawFrog() {
+    if (gameEnded || isRespawning) return; // No dibujamos si está muriendo/reapareciendo
+
+    ctx.save();
+    ctx.translate(frogX + FROG_SIZE / 2, frogY + FROG_SIZE / 2);
+    ctx.fillStyle = '#0f0';
+    ctx.strokeStyle = '#030';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.shadowColor = '#0f0';
+    ctx.shadowBlur = 8;
+    ctx.arc(0, 0, FROG_SIZE / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.stroke();
+    // ojos
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(-4, -5, 4, 0, Math.PI * 2);
+    ctx.arc(4, -5, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(-4, -5, 2.5, 0, Math.PI * 2);
+    ctx.arc(4, -5, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+  
+  function drawVehicles() {
+    vehicles.forEach(v => {
+      ctx.save();
+      ctx.fillStyle = v.color;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = v.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.roundRect(v.x, v.y, v.width, v.height, 6);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+      // ruedas
+      let wheelRadius = 4;
+      let wheelY = v.y + v.height - wheelRadius - 2;
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.arc(v.x + wheelRadius + 2, wheelY, wheelRadius, 0, Math.PI * 2);
+      ctx.arc(v.x + v.width - wheelRadius - 2, wheelY, wheelRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+  
+  function drawLogs() {
+    logs.forEach(log => {
+      ctx.save();
+      ctx.fillStyle = log.color;
+      ctx.strokeStyle = '#532a03';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#a76b30';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.roundRect(log.x, log.y, log.width, log.height, 12);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+  
+  function drawCrocodiles() {
+    crocodiles.forEach(croc => {
+      ctx.save();
+      ctx.fillStyle = croc.color;
+      ctx.strokeStyle = '#143300';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#325012';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.roundRect(croc.x, croc.y, croc.width, croc.height, 10);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+
+      // Ojos y boca (lógica simplificada)
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(croc.x + 8, croc.y + 4, 4, 4);
+      ctx.fillRect(croc.x + croc.width - 12, croc.y + 4, 4, 4);
+      
+      ctx.restore();
+    });
+  }
+
+
+  // --- Lógica y Colisiones ---
+
+  function updateObjects(objects) {
+    objects.forEach(obj => {
+      obj.x += obj.speed * obj.direction;
+      // Reinicio del objeto cuando sale de pantalla
+      if (obj.direction === 1 && obj.x > WIDTH) {
+        obj.x = -obj.width - getRandomRange(100, 200);
+      }
+      if (obj.direction === -1 && obj.x < -obj.width) {
+        obj.x = WIDTH + getRandomRange(100, 200);
+      }
+    });
+  }
+  
+  function updateVehicles() { updateObjects(vehicles); }
+  function updateLogs() { updateObjects(logs); }
+  function updateCrocodiles() { updateObjects(crocodiles); }
+
+  function isColliding(a, b) {
+    return a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y;
+  }
+
+  function checkRoadCollisions() {
+    const roadTop = SAFE_ZONE_TOP_HEIGHT + RIVER_HEIGHT + MEDIAN_HEIGHT;
+    const roadBottom = HEIGHT - SAFE_ZONE_BOTTOM_HEIGHT;
+    
+    // Si la rana está en la zona de la carretera
+    if (frogY >= roadTop && frogY < roadBottom) {
+        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
+        for (let v of vehicles) {
+            let vehicleRect = { x: v.x, y: v.y, width: v.width, height: v.height };
+            if (isColliding(frogRect, vehicleRect)) {
+                loseLife('hit'); 
+                return;
+            }
+        }
+    }
+  }
+
+  function checkRiverLogic() {
+    const riverTop = SAFE_ZONE_TOP_HEIGHT;
+    const riverBottom = SAFE_ZONE_TOP_HEIGHT + RIVER_HEIGHT;
+
+    // Si la rana está en la zona del río
+    if (frogY >= riverTop && frogY < riverBottom) {
+        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
+        let carryingObject = null;
+
+        // Verificar si está sobre un objeto transportador
+        const transportObjects = [...logs, ...crocodiles];
+        for (let obj of transportObjects) {
+            let objRect = { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
+            if (isColliding(frogRect, objRect)) {
+                carryingObject = obj;
+                break;
+            }
+        }
+
+        if (carryingObject) {
+            // Lógica de peligro (si aterriza en la cabeza/boca del cocodrilo)
+            if (carryingObject.type === 'croc' && checkCrocodileMouthCollision(frogRect, carryingObject)) {
+                loseLife('croc');
+                return;
+            }
+            // Mover la rana con el objeto
+            frogX += carryingObject.speed * carryingObject.direction;
+        } else {
+             // No está sobre nada en el río: AHOGADO
+             loseLife('drown');
+             return;
+        }
+        
+        constrainFrog();
+    }
+  }
+
+  function checkCrocodileMouthCollision(frogRect, croc) {
+     // Definimos la zona de peligro en el 20% frontal del cocodrilo
+     const dangerZoneWidth = croc.width * 0.2; 
+     const dangerZone = {
+         x: croc.direction === 1 ? croc.x : croc.x + croc.width - dangerZoneWidth,
+         y: croc.y,
+         width: dangerZoneWidth,
+         height: croc.height
+     };
+     return isColliding(frogRect, dangerZone);
+  }
+
+
+  function constrainFrog() {
+    if (frogX < 0) frogX = 0;
+    if (frogX + FROG_SIZE > WIDTH) frogX = WIDTH - FROG_SIZE;
+  }
+
+  function checkGoal() {
+    // Si la rana está en la zona superior de metas
+    if (frogY < SAFE_ZONE_TOP_HEIGHT) {
+        let completed = false;
+        const frogRect = { x: frogX, y: frogY, width: FROG_SIZE, height: FROG_SIZE };
+
+        for (let i = 0; i < GOAL_COUNT; i++) {
+            const goalRect = goalPositions[i];
+            
+            if (isColliding(frogRect, goalRect)) {
+                if (!goals[i]) {
+                    goals[i] = true; 
+                    completed = true;
+                    updateGoalsDisplay();
+                    break;
+                } else {
+                    // Chocó con una rana ya colocada
+                    loseLife('squish');
+                    return;
+                }
+            }
+        }
+
+        if (completed) {
+            if (goals.every(g => g)) {
+                endGame(true); // ¡Victoria!
+            } else {
+                respawnFrog();
+            }
+        } else {
+            // Cayó en el pasto sin meta
+            loseLife('miss');
+        }
+    }
+  }
+
+  function respawnFrog() {
+    frogX = FROG_START_X;
+    frogY = FROG_START_Y;
+  }
+
+  function loseLife(reason) {
+    if (isRespawning || gameEnded) return;
+    isRespawning = true;
+
+    lives--;
+    updateLivesDisplay();
+
+    let msg = 'Has perdido una vida.';
+    switch(reason) {
+      case 'hit': msg = '🚗 Atropellado en la carretera.'; break;
+      case 'drown': msg = '🌊 Ahogado en el río.'; break;
+      case 'croc': msg = '🐊 Devorado por cocodrilo.'; break;
+      case 'miss': msg = '❌ Fallaste la meta.'; break;
+      case 'squish': msg = '🐸 Aplastado por otra rana.'; break;
+    }
+    completionMessageElem.textContent = msg;
+
+    if (lives <= 0){
+      endGame(false);
+      return;
+    }
+
+    setTimeout(() => {
+      completionMessageElem.textContent = '';
+      respawnFrog();
+      isRespawning = false;
+    }, 1200);
+  }
+
+  function updateLivesDisplay() {
+      let display = '';
+      // Mostramos 3 corazones (verde si tiene vida, roto si no)
+      for (let i = 0; i < 3; i++) {
+          display += i < lives ? '💚' : '💔';
+      }
+      livesDisplayElem.textContent = display;
+  }
+
+  function updateGoalsDisplay() {
+      const completedCount = goals.filter(g => g).length;
+      goalsCompletedElem.textContent = `${completedCount}/${GOAL_COUNT}`;
+  }
+
+
+  // Lógica de finalización para salir al programa padre
+  function endGame(win) {
+    if (gameEnded) return;
+    gameEnded = true;
+    completionMessageElem.textContent = win ? '🎉 ¡VICTORIA! Todas las metas completadas.' : '💀 JUEGO TERMINADO. Sin vidas.';
+
+    setTimeout(() => {
+      try {
+        if (window.parent && window.parent !== window && typeof window.parent.endGame === 'function') {
+          window.parent.endGame(win);
+        } else {
+          window.location.href = '/';
+        }
+      } catch (e) {
+        window.location.href = '/';
+      }
+    }, 3000); 
+  }
+
+  function resetGame(fullReset = false) {
+    if (fullReset) {
+        lives = 3;
+        initGoals();
+        updateLivesDisplay();
+    }
+    
+    respawnFrog(); 
+    initVehicles();
+    initLogs();
+    initCrocodiles();
+    gameEnded = false;
+    isRespawning = false;
+    completionMessageElem.textContent = '';
+    requestAnimationFrame(gameLoop);
+  }
+
+
+  // --- Inicialización y Bucle Principal ---
+
+  // roundRect polyfill
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      if (w < 2 * r) r = w / 2;
+      if (h < 2 * r) r = h / 2;
+      this.beginPath();
+      this.moveTo(x + r, y);
+      this.arcTo(x + w, y, x + w, y + h, r);
+      this.arcTo(x + w, y + h, x, y + h, r);
+      this.arcTo(x, y + h, x, y, r);
+      this.arcTo(x, y, x + w, y, r);
+      this.closePath();
+      return this;
+    }
+  }
+
+  initGoalPositions(); 
+  resetGame(true); 
+
+  function gameLoop() {
+    if (gameEnded) return;
+
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // DIBUJO DE FONDOS
+    drawSafeZoneTop();
+    drawRiver();
+    drawMedian(); // DIBUJO DE LA NUEVA ZONA SEGURA
+    drawRoad();
+    drawSafeZoneBottom(); 
+
+    // LÓGICA DE MOVIMIENTO
+    updateVehicles();
+    updateLogs();
+    updateCrocodiles();
+
+    // Dibujo de elementos en movimiento
+    drawLogs();
+    drawCrocodiles();
+    drawVehicles();
+
+    // Comprobación de Colisiones (Solo si no está reapareciendo)
+    if (!isRespawning) { 
+        checkRiverLogic(); 
+        checkRoadCollisions();
+        checkGoal(); 
+    }
+
+    drawFrog();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // --- Input handlers (Teclado y D-Pad) ---
+
+  function attemptMove(dir) {
+    if (gameEnded || isRespawning) return; // No se mueve mientras muere/reaparece
+
+    let newX = frogX;
+    let newY = frogY;
+    switch (dir) {
+      case 'left': newX -= FROG_STEP; break;
+      case 'right': newX += FROG_STEP; break;
+      case 'up': newY -= FROG_STEP; break;
+      case 'down': newY += FROG_STEP; break;
+    }
+
+    // Límite Horizontal
+    if (newX < 0) newX = 0;
+    if (newX + FROG_SIZE > WIDTH) newX = WIDTH - FROG_SIZE;
+    
+    // Límite Vertical y ajuste de posición
+    if (dir === 'up' || dir === 'down') {
+        const currentLaneY = Math.round((frogY - (FROG_STEP - FROG_SIZE) / 2) / FROG_STEP) * FROG_STEP;
+        const nextY = dir === 'up' ? currentLaneY - FROG_STEP : currentLaneY + FROG_STEP;
+        
+        // Ajustamos la posición Y al centro del nuevo carril
+        newY = nextY + (LANE_HEIGHT - FROG_SIZE) / 2;
+
+        // Limites absolutos
+        if (newY < 0) newY = 0; 
+        if (newY > HEIGHT - FROG_STEP) newY = HEIGHT - FROG_STEP + (FROG_STEP - FROG_SIZE) / 2;
+    }
+
+
+    frogX = newX;
+    frogY = newY;
+    
+    constrainFrog();
+  }
+  
+  // Eventos de teclado
+  window.addEventListener('keydown', e => {
+    if (gameEnded || isRespawning) return;
+    const key = e.key.toLowerCase();
+    if (['arrowup', 'w', 'arrowdown', 's', 'arrowleft', 'a', 'arrowright', 'd'].includes(key)) {
+        e.preventDefault(); 
+        if (key === 'arrowup' || key === 'w') attemptMove('up');
+        else if (key === 'arrowdown' || key === 's') attemptMove('down');
+        else if (key === 'arrowleft' || key === 'a') attemptMove('left');
+        else if (key === 'arrowright' || key === 'd') attemptMove('right');
+    }
+  });
+  
+  // Eventos de los botones del D-Pad
+  document.querySelectorAll('.d-pad-btn').forEach(button => {
+    button.addEventListener('click', e => {
+      e.preventDefault();
+      attemptMove(button.dataset.direction);
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
