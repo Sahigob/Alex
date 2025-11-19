@@ -1,88 +1,74 @@
 :root{
-  --bg1:#071029;
-  --panel:#0f2b3a;
-  --accent:#00dd99;
-  --pixel-border:#0b1c25;
+  --bg1:#071029;
+  --panel:#0f2b3a;
+  --accent:#00dd99;
+  --pixel-border:#0b1c25;
 }
 
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b3150 100%);font-family:monospace}
 
-/* Contenedor principal para centrar todo */
-#main-wrapper {
-    width: 100%;
-    max-width: 900px;
-    margin: 18px auto 0;
-    display: flex;
-    flex-direction: column; 
-    align-items: center;
-}
-
 #game-container{
-  width:100%;
-  max-width:900px;
-  aspect-ratio:4/3;
-  position:relative;
-  border-radius:8px;
-  box-shadow:0 12px 30px rgba(0,0,0,0.6);
-  overflow:hidden;
-  background:var(--panel);
-  /* Bloquear cualquier zoom o scroll en el área de juego */
-  touch-action: none; 
+  width:100%;
+  max-width:900px;
+  aspect-ratio:4/3;
+  margin:18px auto;
+  position:relative;
+  border-radius:8px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.6);
+  overflow:hidden;
+  background:var(--panel);
+  /* ➡️ CORRECCIÓN CLAVE: Bloquear cualquier zoom o scroll en el área de juego */
+  touch-action: none; 
 }
 
 #gameCanvas{
-  width:100%;
-  height:100%;
-  display:block;
-  image-rendering: pixelated;
-  background:linear-gradient(180deg,#1b6b5a,#125a47);
+  width:100%;
+  height:100%;
+  display:block;
+  image-rendering: pixelated;
+  background:linear-gradient(180deg,#1b6b5a,#125a47);
 }
 
-/* HUD NUEVA POSICIÓN: Debajo del Canvas */
-#hud-bottom{
-    position: relative; 
-    margin: 10px 0 10px 0; 
-    z-index:20;
-    display:flex;
-    gap:16px;
-}
-#hud-bottom div{background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:6px;color:#fff;border:2px solid rgba(255,255,255,0.04);font-weight:700}
-#hud-bottom span{color:var(--accent)}
+/* HUD */
+#hud{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:16px}
+#hud div{background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:6px;color:#fff;border:2px solid rgba(255,255,255,0.04);font-weight:700}
+#hud span{color:var(--accent)}
 
 /* Controles móviles */
 #controls-container{
-  position: fixed;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  z-index: 100;
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 100;
 }
 
 #controls-container .middle-row{
-  display:flex;
-  gap:6px;
+  display:flex;
+  gap:6px;
 }
 
 #controls-container button{
-  width: 70px;
-  height: 70px;
-  font-size: 28px;
-  font-weight: bold;
-  border:none;
-  border-radius:8px;
-  background: var(--accent);
-  color: #000;
-  cursor: pointer;
-  user-select: none;
-  touch-action: manipulation; 
+  width: 70px;
+  height: 70px;
+  font-size: 28px;
+  font-weight: bold;
+  border:none;
+  border-radius:8px;
+  background: var(--accent);
+  color: #000;
+  cursor: pointer;
+  user-select: none;
+  /* ➡️ CORRECCIÓN CLAVE: Bloquear el doble toque (zoom) en los botones */
+  touch-action: manipulation; 
 }
 #controls-container button:active{
-  transform: translateY(2px);
+  transform: translateY(2px);
 }
 
 /* Overlay */
@@ -94,28 +80,13 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
 #btn-restart{background:var(--accent);border:none;padding:10px 14px;border-radius:6px;font-weight:bold;cursor:pointer}
 #btn-restart:active{transform:translateY(1px)}
 
-/* Responsivo (AJUSTE CLAVE PARA REDUCIR EL TAMAÑO EN MÓVILES) */
+/* Responsivo */
 @media(max-width:500px){
-    #controls-container button{
-        width:60px;
-        height:60px; 
-        font-size:22px; 
-    }
-    #controls-container .middle-row{gap:4px}
-
-    /* ¡CLAVE! Reducimos el ancho del contenedor principal para forzar a que el juego se haga pequeño */
-    #game-container{
-        width: 90%; /* Reducido de 98% */
-        margin: 0 auto;
-        max-width: 100%;
-    }
-    #main-wrapper{
-        max-width: 90%; /* Limita el ancho total del área visible */
-        margin: 8px auto 0;
-    }
-    
-    /* Pequeño ajuste para que el HUD también respete el nuevo tamaño */
-    #hud-bottom {
-        max-width: 90%;
-    }
+  #controls-container button{
+    width:60px;
+    height:60px; 
+    font-size:22px; 
+  }
+  #controls-container .middle-row{gap:4px}
+  #game-container{max-width:100%;margin:8px}
 }
