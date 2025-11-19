@@ -1,5 +1,4 @@
-
-/* Frogger Retro - Pixel Canvas - Botones táctiles y teclado */
+/* Frogger Retro - Logic Refined */
 document.addEventListener('DOMContentLoaded', () => {
   // --- Canvas setup ---
   const canvas = document.getElementById('gameCanvas');
@@ -23,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let score = 0;
   let lives = 3;
   let gameOver = false;
+  
+  // ➡️ NUEVO: Array para guardar qué casillas (homes) están ocupadas
+  // Guardamos la posición X de la casilla ocupada (1, 5, 9, 13, 17)
+  let filledHomes = []; 
 
   // --- Lanes ---
   const lanes = [];
@@ -58,23 +61,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // rivers
     Object.keys(laneConfigs.rivers).forEach(r => {
       const cfg = laneConfigs.rivers[r];
-      const y = parseInt(r,10);
       const gap = Math.floor(COLS / cfg.count);
       for (let i = 0; i < cfg.count; i++) {
         const x = i * gap + Math.random() * Math.max(1, gap - cfg.length - 1);
         const type = Math.random() > 0.6 ? 'croc' : 'log';
-        obstacles.push({ x, y, length: type==='log'?cfg.length:Math.min(2,cfg.length-1), speed: cfg.speed*cfg.dir, type, zone:'river' });
+        obstacles.push({ x, y: parseInt(r), length: type==='log'?cfg.length:Math.min(2,cfg.length-1), speed: cfg.speed*cfg.dir, type, zone:'river' });
       }
     });
     // roads
     Object.keys(laneConfigs.roads).forEach(r => {
       const cfg = laneConfigs.roads[r];
-      const y = parseInt(r,10);
       const gap = Math.floor(COLS / Math.max(1,cfg.count));
       for (let i = 0; i < cfg.count; i++) {
         const x = i*gap + Math.random()*Math.max(1,gap-cfg.length-1);
         const type = Math.random() > 0.5 ? 'truck':'car';
-        obstacles.push({ x, y, length: type==='car'?Math.max(2,cfg.length-1):cfg.length, speed: cfg.speed*cfg.dir, type, zone:'road' });
+        obstacles.push({ x, y: parseInt(r), length: type==='car'?Math.max(2,cfg.length-1):cfg.length, speed: cfg.speed*cfg.dir, type, zone:'road' });
       }
     });
   }
@@ -86,12 +87,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if(stroke){ ctx.strokeStyle = stroke; ctx.strokeRect(Math.round(x)+0.5,Math.round(y)+0.5,Math.round(w)-1,Math.round(h)-1); }
   }
 
+  // Función auxiliar para dibujar una rana (usada para el jugador y las metas)
+  function renderFrogBody(cx, cy) {
+    drawPixelRect(cx-TILE*0.28, cy+TILE*0.22, TILE*0.56, TILE*0.16,'rgba(0,0,0,0.25)');
+    drawPixelRect(cx-TILE*0.28, cy-TILE*0.18, TILE*0.56, TILE*0.42,'#6fe9a0','#2f7f56');
+    drawPixelRect(cx-TILE*0.18,cy-TILE*0.32,TILE*0.12,TILE*0.12,'#fff');
+    drawPixelRect(cx+TILE*0.06,cy-TILE*0.32,TILE*0.12,TILE*0.12,'#fff');
+    drawPixelRect(cx-TILE*0.12,cy-TILE*0.28,TILE*0.06,TILE*0.06,'#001');
+    drawPixelRect(cx+TILE*0.12,cy-TILE*0.28,TILE*0.06,TILE*0.06,'#001');
+  }
+
   function drawScene(){
     for (let r=0;r<ROWS;r++){
       const lane = lanes[r];
       if(lane.type==='goal'){
         drawPixelRect(0,r*TILE,W,TILE,'#2e8b57');
-        for(let j=1;j<COLS;j+=4){ drawPixelRect(j*TILE+4,r*TILE+6,TILE*2-8,TILE-12,'#36b97a'); }
+        // Dibuja las bahías (casillas meta) en posiciones 1, 5, 9, 13, 17
+        for(let j=1;j<COLS;j+=4){ 
+            drawPixelRect(j*TILE+4,r*TILE+6,TILE*2-8,TILE-12,'#36b97a'); 
+        }
       } else if(lane.type==='river'){
         drawPixelRect(0,r*TILE,W,TILE,'#1b83b6');
       } else if(lane.type==='safe' || lane.type==='start'){
@@ -101,6 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
         for(let j=0;j<COLS;j+=2){ drawPixelRect(j*TILE + TILE*0.45, r*TILE + TILE*0.45, TILE*0.2, TILE*0.1,'rgba(255,255,255,0.15)'); }
       }
     }
+    
+    // ➡️ NUEVO: Dibujar las ranas que ya han llegado a casa
+    filledHomes.forEach(homeX => {
+        // El centro de la casilla meta. Las casillas tienen ancho 2 tiles.
+        // homeX es el inicio (ej: 1), el centro es 1 + 1 = 2 tiles en X
+        const cx = (homeX * TILE) + TILE; 
+        const cy = (0 * TILE) + TILE/2;
+        renderFrogBody(cx, cy);
+    });
   }
 
   function drawObstacles(){
@@ -117,18 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function drawFrog(){
+    if (gameOver) return;
     const cx=frog.x*TILE+TILE/2, cy=frog.y*TILE+TILE/2;
-    drawPixelRect(cx-TILE*0.28, cy+TILE*0.22, TILE*0.56, TILE*0.16,'rgba(0,0,0,0.25)');
-    drawPixelRect(cx-TILE*0.28, cy-TILE*0.18, TILE*0.56, TILE*0.42,'#6fe9a0','#2f7f56');
-    drawPixelRect(cx-TILE*0.18,cy-TILE*0.32,TILE*0.12,TILE*0.12,'#fff');
-    drawPixelRect(cx+TILE*0.06,cy-TILE*0.32,TILE*0.12,TILE*0.12,'#fff');
-    drawPixelRect(cx-TILE*0.12,cy-TILE*0.28,TILE*0.06,TILE*0.06,'#001');
-    drawPixelRect(cx+TILE*0.12,cy-TILE*0.28,TILE*0.06,TILE*0.06,'#001');
+    renderFrogBody(cx, cy);
   }
 
   // --- Movement ---
   let tween = null;
-  function jumpTo(tx,ty,duration=120){
+  function jumpTo(tx,ty,duration=100){
     if(tween) cancelAnimationFrame(tween.raf);
     const sx=frog.x, sy=frog.y;
     frog.anim=true;
@@ -166,86 +185,126 @@ document.addEventListener('DOMContentLoaded', () => {
       if(o.speed<0 && o.x<-o.length) o.x=COLS;
     });
 
+    if(frog.anim) return; // Esperar a que termine el salto para comprobar colisiones
+
     const fcx=frog.x*TILE+TILE/2;
     const fcy=frog.y*TILE+TILE/2;
-    const lane = lanes[Math.floor(frog.y)];
+    const laneIndex = Math.floor(frog.y);
+    const lane = lanes[laneIndex];
 
     if(lane.type==='road'){
-      const dead = obstacles.some(o=>o.zone==='road' && o.y===Math.floor(frog.y) && rectsOverlap(
+      const dead = obstacles.some(o=>o.zone==='road' && o.y===laneIndex && rectsOverlap(
         fcx-TILE*0.36, fcy-TILE*0.36, TILE*0.72, TILE*0.72,
         o.x*TILE, o.y*TILE+4, o.length*TILE, TILE-8
       ));
       if(dead) loseLife();
+
     } else if(lane.type==='river'){
-      const under = obstacles.find(o=>o.zone==='river' && o.y===Math.floor(frog.y) && fcx<(o.x+o.length)*TILE && fcx+TILE>o.x*TILE);
+      const under = obstacles.find(o=>o.zone==='river' && o.y===laneIndex && fcx<(o.x+o.length)*TILE && fcx+TILE>o.x*TILE);
       if(under){
         if(under.type==='log' || under.type==='croc'){ frog.x += under.speed; }
       } else { loseLife(); }
-      if(frog.x<0) frog.x=0;
-      if(frog.x>COLS-1) frog.x=COLS-1;
-    } else if(lane.type==='goal'){ score+=100; respawnFrog(); }
+      
+      // Límites laterales en el río
+      if(frog.x < 0 || frog.x > COLS-1) loseLife();
 
-    scoreValue.textContent = score;
-    livesValue.textContent = lives;
+    } else if(lane.type==='goal'){
+       // ➡️ NUEVO: Lógica de Llegada a Meta
+       // Las metas están visualmente en x = 1, 5, 9, 13, 17. Tienen ancho de 2 tiles.
+       // Comprobamos si la rana está alineada con alguna de estas "bahías".
+       const validSlots = [1, 5, 9, 13, 17];
+       let landedSafe = false;
+
+       for(let slotX of validSlots) {
+           // Margen de error: Si la rana está dentro de la casilla (ancho 2)
+           if (frog.x >= slotX - 0.5 && frog.x <= slotX + 1.5) {
+               if (filledHomes.includes(slotX)) {
+                   // Casilla ocupada -> Muerte
+                   loseLife();
+               } else {
+                   // Casilla vacía -> Éxito
+                   filledHomes.push(slotX);
+                   score += 200; // Puntos por llegar
+                   landedSafe = true;
+                   
+                   // Verificar si completó las 5 casillas
+                   if (filledHomes.length === 5) {
+                       score += 1000; // Bonus de nivel
+                       filledHomes = []; // Limpiar casillas
+                       // Aquí podrías aumentar la velocidad de los obstáculos si quisieras
+                   }
+                   respawnFrog();
+               }
+               break;
+           }
+       }
+
+       if (!landedSafe && !gameOver) {
+           // Si llegó a la fila 0 pero no entró en una bahía (chocó con el muro verde)
+           loseLife();
+       }
+    }
+
+    // ➡️ Actualizar marcadores HTML
+    if(scoreValue) scoreValue.textContent = score;
+    if(livesValue) livesValue.textContent = lives;
   }
 
   function loseLife(){
-    lives=Math.max(0,lives-1);
-    if(lives>0){ respawnFrog(); }
-    else{
-      finalScore.textContent=score;
-      overlayTitle.textContent="GAME OVER";
-      overlay.classList.remove('hidden');
-      gameOver=true;
+    lives = Math.max(0, lives-1);
+    if(livesValue) livesValue.textContent = lives;
+    
+    if(lives > 0){ 
+        respawnFrog(); 
+    } else {
+      if(finalScore) finalScore.textContent = score;
+      if(overlayTitle) overlayTitle.textContent = "GAME OVER";
+      if(overlay) overlay.classList.remove('hidden');
+      gameOver = true;
     }
-    livesValue.textContent=lives;
   }
 
-  function respawnFrog(){ frog.x=10; frog.y=14; frog.anim=false; }
+  function respawnFrog(){ 
+      frog.x = 10; 
+      frog.y = 14; 
+      frog.anim = false; 
+  }
 
   // --- Keyboard ---
   window.addEventListener('keydown', e=>{
     if(gameOver) return;
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
     if(e.key==='ArrowUp') moveFrog('UP');
     if(e.key==='ArrowDown') moveFrog('DOWN');
     if(e.key==='ArrowLeft') moveFrog('LEFT');
     if(e.key==='ArrowRight') moveFrog('RIGHT');
   });
 
-  // ➡️ CÓDIGO NUEVO Y CORREGIDO PARA PEGAR
-['up','down','left','right'].forEach(dir => {
+  // --- Touch Controls ---
+  ['up','down','left','right'].forEach(dir => {
     const btn = document.getElementById(dir);
-    
-    // 1. Usa 'touchstart' para un movimiento instantáneo en táctil.
-    // 'e.preventDefault()' es CLAVE aquí para prevenir el zoom/scroll.
+    if(!btn) return;
     btn.addEventListener('touchstart', (e) => {
         e.preventDefault(); 
         moveFrog(dir.toUpperCase());
-    });
-
-    // 2. Mantiene 'click' para la compatibilidad con el ratón.
+    }, {passive: false});
     btn.addEventListener('click', (e) => {
-        // Ejecuta el movimiento solo si no es un evento táctil simulado
-        if (e.pointerType === 'mouse' || e.detail === 0) {
-             moveFrog(dir.toUpperCase());
-        }
+        if (e.pointerType === 'mouse' || e.detail === 0) moveFrog(dir.toUpperCase());
     });
-    
-    // 3. Previene el menú contextual al dejar de tocar (pulsación larga).
-    btn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-    });
-});
+  });
 
   // --- Restart ---
-  btnRestart.addEventListener('click', ()=>{
-    overlay.classList.add('hidden');
-    lives=3; score=0; gameOver=false;
-    spawnObstacles(); respawnFrog();
-    scoreValue.textContent=score;
-    livesValue.textContent=lives;
-    requestAnimationFrame(loop);
-  });
+  if(btnRestart) {
+      btnRestart.addEventListener('click', ()=>{
+        overlay.classList.add('hidden');
+        lives=3; score=0; gameOver=false;
+        filledHomes = []; // Reiniciar casillas
+        spawnObstacles(); respawnFrog();
+        scoreValue.textContent=score;
+        livesValue.textContent=lives;
+        requestAnimationFrame(loop);
+      });
+  }
 
   // --- Main loop ---
   function loop(){
@@ -259,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Start ---
-  scoreValue.textContent=score;
-  livesValue.textContent=lives;
+  if(scoreValue) scoreValue.textContent=score;
+  if(livesValue) livesValue.textContent=lives;
   requestAnimationFrame(loop);
 });
