@@ -1,6 +1,6 @@
 /* Frogger Retro - Logic Refined */
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Canvas setup ---
+  // --- Configuración Canvas ---
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   const W = 800, H = 600;
@@ -9,35 +9,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const COLS = 20, ROWS = 15;
   const TILE = Math.floor(W / COLS);
 
-  // --- DOM Elements ---
-  const scoreValue = document.getElementById('score-value');
-  const livesValue = document.getElementById('lives-value');
+  // --- Elementos del DOM ---
+  const scoreVal = document.getElementById('score-value');
+  const livesVal = document.getElementById('lives-value');
   const overlay = document.getElementById('overlay');
-  const overlayTitle = document.getElementById('overlay-title');
   const finalScore = document.getElementById('final-score');
   const btnRestart = document.getElementById('btn-restart');
 
-  // --- Game state ---
-  let frog = { x: 10, y: 14, anim: false };
+  // --- Estado del Juego ---
+  let frog = { x: 10, y: 14, anim: false }; // Posición inicial
   let score = 0;
   let lives = 3;
   let gameOver = false;
   
-  // ➡️ NUEVO: Array para guardar qué casillas (homes) están ocupadas
-  // Guardamos la posición X de la casilla ocupada (1, 5, 9, 13, 17)
+  // ➡️ NUEVO: Array para guardar qué casillas de meta están ocupadas (indices X)
+  // Las casillas visualmente están en X = 1, 5, 9, 13, 17
   let filledHomes = []; 
 
-  // --- Lanes ---
+  // --- Carriles (Lanes) ---
   const lanes = [];
   for (let r = 0; r < ROWS; r++) {
-    if (r === 0) lanes.push({ type: 'goal' });
+    if (r === 0) lanes.push({ type: 'goal' }); // La meta
     else if (r >= 1 && r <= 5) lanes.push({ type: 'river' });
     else if (r === 6 || r === 12) lanes.push({ type: 'safe' });
     else if (r >= 7 && r <= 11) lanes.push({ type: 'road' });
     else lanes.push({ type: 'start' });
   }
 
-  // --- Obstacles ---
+  // --- Obstáculos ---
   let obstacles = [];
   const laneConfigs = {
     rivers: {
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function spawnObstacles() {
     obstacles = [];
-    // rivers
+    // Ríos
     Object.keys(laneConfigs.rivers).forEach(r => {
       const cfg = laneConfigs.rivers[r];
       const gap = Math.floor(COLS / cfg.count);
@@ -68,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         obstacles.push({ x, y: parseInt(r), length: type==='log'?cfg.length:Math.min(2,cfg.length-1), speed: cfg.speed*cfg.dir, type, zone:'river' });
       }
     });
-    // roads
+    // Carreteras
     Object.keys(laneConfigs.roads).forEach(r => {
       const cfg = laneConfigs.roads[r];
       const gap = Math.floor(COLS / Math.max(1,cfg.count));
@@ -81,18 +80,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   spawnObstacles();
 
-  // --- Drawing ---
+  // --- Dibujo ---
   function drawPixelRect(x,y,w,h,color,stroke){
     ctx.fillStyle = color; ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));
     if(stroke){ ctx.strokeStyle = stroke; ctx.strokeRect(Math.round(x)+0.5,Math.round(y)+0.5,Math.round(w)-1,Math.round(h)-1); }
   }
 
-  // Función auxiliar para dibujar una rana (usada para el jugador y las metas)
+  // Función auxiliar para pintar ranas (jugador o metas completadas)
   function renderFrogBody(cx, cy) {
+    // Sombra
     drawPixelRect(cx-TILE*0.28, cy+TILE*0.22, TILE*0.56, TILE*0.16,'rgba(0,0,0,0.25)');
+    // Cuerpo
     drawPixelRect(cx-TILE*0.28, cy-TILE*0.18, TILE*0.56, TILE*0.42,'#6fe9a0','#2f7f56');
+    // Ojos
     drawPixelRect(cx-TILE*0.18,cy-TILE*0.32,TILE*0.12,TILE*0.12,'#fff');
     drawPixelRect(cx+TILE*0.06,cy-TILE*0.32,TILE*0.12,TILE*0.12,'#fff');
+    // Pupilas
     drawPixelRect(cx-TILE*0.12,cy-TILE*0.28,TILE*0.06,TILE*0.06,'#001');
     drawPixelRect(cx+TILE*0.12,cy-TILE*0.28,TILE*0.06,TILE*0.06,'#001');
   }
@@ -101,8 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let r=0;r<ROWS;r++){
       const lane = lanes[r];
       if(lane.type==='goal'){
+        // Fondo verde oscuro (muros)
         drawPixelRect(0,r*TILE,W,TILE,'#2e8b57');
-        // Dibuja las bahías (casillas meta) en posiciones 1, 5, 9, 13, 17
+        // Bahías (Casillas meta)
         for(let j=1;j<COLS;j+=4){ 
             drawPixelRect(j*TILE+4,r*TILE+6,TILE*2-8,TILE-12,'#36b97a'); 
         }
@@ -112,16 +116,16 @@ document.addEventListener('DOMContentLoaded', () => {
         drawPixelRect(0,r*TILE,W,TILE,'#3a8b6e');
       } else if(lane.type==='road'){
         drawPixelRect(0,r*TILE,W,TILE,'#2b3b4b');
+        // Líneas de carretera
         for(let j=0;j<COLS;j+=2){ drawPixelRect(j*TILE + TILE*0.45, r*TILE + TILE*0.45, TILE*0.2, TILE*0.1,'rgba(255,255,255,0.15)'); }
       }
     }
     
-    // ➡️ NUEVO: Dibujar las ranas que ya han llegado a casa
-    filledHomes.forEach(homeX => {
-        // El centro de la casilla meta. Las casillas tienen ancho 2 tiles.
-        // homeX es el inicio (ej: 1), el centro es 1 + 1 = 2 tiles en X
-        const cx = (homeX * TILE) + TILE; 
-        const cy = (0 * TILE) + TILE/2;
+    // ➡️ DIBUJAR RANAS EN CASILLAS COMPLETADAS
+    filledHomes.forEach(hx => {
+        // La casilla empieza en hx, el centro es hx + 1 tile
+        const cx = (hx * TILE) + TILE; 
+        const cy = TILE/2;
         renderFrogBody(cx, cy);
     });
   }
@@ -139,19 +143,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function drawFrog(){
-    if (gameOver) return;
+  function drawPlayer(){
+    if(gameOver) return;
     const cx=frog.x*TILE+TILE/2, cy=frog.y*TILE+TILE/2;
     renderFrogBody(cx, cy);
   }
 
-  // --- Movement ---
+  // --- Movimiento Suave ---
   let tween = null;
-  function jumpTo(tx,ty,duration=100){
+  function jumpTo(tx,ty){
     if(tween) cancelAnimationFrame(tween.raf);
     const sx=frog.x, sy=frog.y;
     frog.anim=true;
     let start=null;
+    const duration = 100; // ms
     function step(ts){
       if(!start) start=ts;
       const t=Math.min(1,(ts-start)/duration);
@@ -173,152 +178,152 @@ document.addEventListener('DOMContentLoaded', () => {
     jumpTo(tx,ty);
   }
 
-  // --- Update logic ---
+  // --- Lógica y Colisiones ---
   function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){
     return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;
   }
 
+  function checkGoalLogic() {
+    // Las casillas válidas empiezan en estas columnas X:
+    const homesX = [1, 5, 9, 13, 17];
+    let safe = false;
+
+    // Verificamos si la rana está alineada con alguna casilla (margen de error pequeño)
+    for(let hx of homesX) {
+        // La casilla mide 2 tiles de ancho, revisamos si la rana está dentro
+        if(frog.x >= hx - 0.2 && frog.x <= hx + 1.2) {
+            if(filledHomes.includes(hx)) {
+                // Casilla ocupada -> Muerte
+                return loseLife(); 
+            } else {
+                // Casilla vacía -> Éxito
+                filledHomes.push(hx);
+                score += 200;
+                safe = true;
+                
+                // ¿Nivel completado?
+                if(filledHomes.length === 5) {
+                    score += 1000;
+                    filledHomes = []; // Limpiar para siguiente ronda
+                    // Aquí podrías aumentar dificultad
+                }
+                respawnFrog();
+                return;
+            }
+        }
+    }
+    // Si llega a la fila 0 pero no es 'safe' (chocó con muro verde)
+    if(!safe) loseLife();
+  }
+
   function updateLogic(){
+    // Mover obstáculos
     obstacles.forEach(o=>{
       o.x += o.speed;
       if(o.speed>0 && o.x>COLS) o.x=-o.length;
       if(o.speed<0 && o.x<-o.length) o.x=COLS;
     });
 
-    if(frog.anim) return; // Esperar a que termine el salto para comprobar colisiones
+    // No chequeamos colisiones mientras salta
+    if(frog.anim) return;
 
     const fcx=frog.x*TILE+TILE/2;
     const fcy=frog.y*TILE+TILE/2;
-    const laneIndex = Math.floor(frog.y);
-    const lane = lanes[laneIndex];
+    const rIndex = Math.floor(frog.y); // Fila actual
+    const lane = lanes[rIndex];
 
     if(lane.type==='road'){
-      const dead = obstacles.some(o=>o.zone==='road' && o.y===laneIndex && rectsOverlap(
-        fcx-TILE*0.36, fcy-TILE*0.36, TILE*0.72, TILE*0.72,
+      const hit = obstacles.some(o=>o.zone==='road' && o.y===rIndex && rectsOverlap(
+        fcx-TILE*0.3, fcy-TILE*0.3, TILE*0.6, TILE*0.6,
         o.x*TILE, o.y*TILE+4, o.length*TILE, TILE-8
       ));
-      if(dead) loseLife();
+      if(hit) loseLife();
 
     } else if(lane.type==='river'){
-      const under = obstacles.find(o=>o.zone==='river' && o.y===laneIndex && fcx<(o.x+o.length)*TILE && fcx+TILE>o.x*TILE);
-      if(under){
-        if(under.type==='log' || under.type==='croc'){ frog.x += under.speed; }
-      } else { loseLife(); }
+      const log = obstacles.find(o=>o.zone==='river' && o.y===rIndex && fcx<(o.x+o.length)*TILE && fcx+TILE>o.x*TILE);
       
-      // Límites laterales en el río
-      if(frog.x < 0 || frog.x > COLS-1) loseLife();
+      if(log){
+        // Sobre tronco o cocodrilo -> Mover con él
+        frog.x += log.speed;
+      } else {
+        // En el agua -> Muerte
+        loseLife();
+      }
+      
+      // Muerte si se sale de la pantalla por los lados en el río
+      if(frog.x < -0.5 || frog.x > COLS-0.5) loseLife();
 
     } else if(lane.type==='goal'){
-       // ➡️ NUEVO: Lógica de Llegada a Meta
-       // Las metas están visualmente en x = 1, 5, 9, 13, 17. Tienen ancho de 2 tiles.
-       // Comprobamos si la rana está alineada con alguna de estas "bahías".
-       const validSlots = [1, 5, 9, 13, 17];
-       let landedSafe = false;
-
-       for(let slotX of validSlots) {
-           // Margen de error: Si la rana está dentro de la casilla (ancho 2)
-           if (frog.x >= slotX - 0.5 && frog.x <= slotX + 1.5) {
-               if (filledHomes.includes(slotX)) {
-                   // Casilla ocupada -> Muerte
-                   loseLife();
-               } else {
-                   // Casilla vacía -> Éxito
-                   filledHomes.push(slotX);
-                   score += 200; // Puntos por llegar
-                   landedSafe = true;
-                   
-                   // Verificar si completó las 5 casillas
-                   if (filledHomes.length === 5) {
-                       score += 1000; // Bonus de nivel
-                       filledHomes = []; // Limpiar casillas
-                       // Aquí podrías aumentar la velocidad de los obstáculos si quisieras
-                   }
-                   respawnFrog();
-               }
-               break;
-           }
-       }
-
-       if (!landedSafe && !gameOver) {
-           // Si llegó a la fila 0 pero no entró en una bahía (chocó con el muro verde)
-           loseLife();
-       }
+       // Lógica específica de llegar a meta
+       checkGoalLogic();
     }
 
-    // ➡️ Actualizar marcadores HTML
-    if(scoreValue) scoreValue.textContent = score;
-    if(livesValue) livesValue.textContent = lives;
+    // Actualizar HUD
+    scoreVal.textContent = score;
+    livesVal.textContent = lives;
   }
 
   function loseLife(){
-    lives = Math.max(0, lives-1);
-    if(livesValue) livesValue.textContent = lives;
-    
-    if(lives > 0){ 
-        respawnFrog(); 
+    lives--;
+    livesVal.textContent = lives;
+    if(lives > 0){
+        respawnFrog();
     } else {
-      if(finalScore) finalScore.textContent = score;
-      if(overlayTitle) overlayTitle.textContent = "GAME OVER";
-      if(overlay) overlay.classList.remove('hidden');
-      gameOver = true;
+        gameOver = true;
+        finalScore.textContent = score;
+        overlay.classList.remove('hidden');
     }
   }
 
-  function respawnFrog(){ 
-      frog.x = 10; 
-      frog.y = 14; 
-      frog.anim = false; 
+  function respawnFrog(){
+    frog.x = 10; 
+    frog.y = 14; 
+    frog.anim = false;
   }
 
-  // --- Keyboard ---
+  // --- Controles ---
   window.addEventListener('keydown', e=>{
     if(gameOver) return;
-    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
-    if(e.key==='ArrowUp') moveFrog('UP');
-    if(e.key==='ArrowDown') moveFrog('DOWN');
-    if(e.key==='ArrowLeft') moveFrog('LEFT');
-    if(e.key==='ArrowRight') moveFrog('RIGHT');
+    const k = e.key;
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(k)) e.preventDefault();
+    if(k==='ArrowUp') moveFrog('UP');
+    if(k==='ArrowDown') moveFrog('DOWN');
+    if(k==='ArrowLeft') moveFrog('LEFT');
+    if(k==='ArrowRight') moveFrog('RIGHT');
   });
 
-  // --- Touch Controls ---
-  ['up','down','left','right'].forEach(dir => {
-    const btn = document.getElementById(dir);
-    if(!btn) return;
-    btn.addEventListener('touchstart', (e) => {
-        e.preventDefault(); 
-        moveFrog(dir.toUpperCase());
-    }, {passive: false});
-    btn.addEventListener('click', (e) => {
-        if (e.pointerType === 'mouse' || e.detail === 0) moveFrog(dir.toUpperCase());
-    });
+  ['up','down','left','right'].forEach(id => {
+    const btn = document.getElementById(id);
+    if(btn){
+        // Prevenir zoom y seleccionar texto
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); moveFrog(id.toUpperCase()); }, {passive: false});
+        // Click para PC
+        btn.addEventListener('click', (e) => { moveFrog(id.toUpperCase()); });
+    }
   });
 
-  // --- Restart ---
-  if(btnRestart) {
-      btnRestart.addEventListener('click', ()=>{
-        overlay.classList.add('hidden');
-        lives=3; score=0; gameOver=false;
-        filledHomes = []; // Reiniciar casillas
-        spawnObstacles(); respawnFrog();
-        scoreValue.textContent=score;
-        livesValue.textContent=lives;
-        requestAnimationFrame(loop);
-      });
-  }
+  btnRestart.addEventListener('click', ()=>{
+    lives = 3; 
+    score = 0; 
+    filledHomes = [];
+    gameOver = false;
+    overlay.classList.add('hidden');
+    respawnFrog();
+    spawnObstacles();
+    loop();
+  });
 
-  // --- Main loop ---
+  // --- Loop Principal ---
   function loop(){
     if(gameOver) return;
     updateLogic();
     ctx.clearRect(0,0,W,H);
     drawScene();
     drawObstacles();
-    drawFrog();
+    drawPlayer();
     requestAnimationFrame(loop);
   }
 
-  // --- Start ---
-  if(scoreValue) scoreValue.textContent=score;
-  if(livesValue) livesValue.textContent=lives;
-  requestAnimationFrame(loop);
+  // Iniciar
+  loop();
 });
