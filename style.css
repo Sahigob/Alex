@@ -1,92 +1,221 @@
-:root{
-  --bg1:#071029;
-  --panel:#0f2b3a;
-  --accent:#00dd99;
-  --pixel-border:#0b1c25;
+:root {
+  --bg1: #071029;
+  --panel: #0f2b3a;
+  --accent: #00dd99;
+  --text-shadow: 2px 2px 0 #000;
 }
 
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b3150 100%);font-family:monospace}
+* {
+  box-sizing: border-box;
+  user-select: none; /* Evita seleccionar texto al tocar rápido */
+  -webkit-user-select: none;
+}
 
-#game-container{
-  width:100%;
-  max-width:900px;
-  aspect-ratio:4/3;
-  margin:18px auto;
-  position:relative;
-  border-radius:8px;
-  box-shadow:0 12px 30px rgba(0,0,0,0.6);
-  overflow:hidden;
-  background:var(--panel);
-  /* ➡️ CORRECCIÓN CLAVE: Bloquear cualquier zoom o scroll en el área de juego */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #071029 0%, #0b3150 100%);
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden; /* Evita scroll en la página entera */
+}
+
+/* --- Contenedor Principal del Juego --- */
+#game-container {
+  width: 100%;
+  max-width: 800px; /* Ajustado para que no sea gigante en PC */
+  aspect-ratio: 4/3;
+  margin: 0 auto; /* Centrado horizontal */
+  position: relative; /* Clave para posicionar HUD y Overlay dentro */
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  background: var(--panel);
+  
+  /* ➡️ CRÍTICO: Bloquea gestos del navegador (zoom, swipe back) dentro del juego */
   touch-action: none; 
 }
 
-#gameCanvas{
-  width:100%;
-  height:100%;
-  display:block;
-  image-rendering: pixelated;
-  background:linear-gradient(180deg,#1b6b5a,#125a47);
+/* Centrado vertical en pantallas grandes */
+@media (min-height: 700px) {
+  #game-container {
+    margin-top: 20px;
+  }
 }
 
-/* HUD */
-#hud{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:16px}
-#hud div{background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:6px;color:#fff;border:2px solid rgba(255,255,255,0.04);font-weight:700}
-#hud span{color:var(--accent)}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated; /* Mantiene los píxeles nítidos */
+  background: #000;
+}
 
-/* Controles móviles */
-#controls-container{
-  position: fixed;
-  bottom: 12px;
+/* --- HUD (Marcadores) --- */
+#hud {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  width: 100%;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between; /* Puntos a la izq, Vidas a la der */
+  z-index: 20;
+  pointer-events: none; /* Permite hacer clic en el juego a través del texto */
+}
+
+#hud div {
+  background: rgba(0, 0, 0, 0.65);
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  font-weight: bold;
+  font-size: 16px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 #000;
+}
+
+#hud span {
+  color: var(--accent);
+  margin-left: 5px;
+}
+
+/* --- Overlay (Game Over) --- */
+#overlay {
+  position: absolute;
+  inset: 0; /* Ocupa todo el contenedor padre */
+  background: rgba(2, 6, 14, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  backdrop-filter: blur(2px);
+}
+
+#overlay.hidden {
+  display: none;
+}
+
+#overlay-box {
+  background: #071422;
+  border: 4px solid var(--accent);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  color: #fff;
+  min-width: 280px;
+  box-shadow: 0 0 20px rgba(0, 221, 153, 0.2);
+}
+
+#overlay-title {
+  margin: 0 0 10px;
+  font-size: 32px;
+  color: #ff5555;
+  letter-spacing: 2px;
+  text-shadow: 3px 3px 0 #000;
+}
+
+#overlay p {
+  margin: 10px 0 20px;
+  font-size: 18px;
+}
+
+#btn-restart {
+  background: var(--accent);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 18px;
+  color: #000;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 0 4px 0 #008f63;
+  transition: transform 0.1s;
+}
+
+#btn-restart:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #008f63;
+}
+
+/* --- Controles Táctiles --- */
+#controls-container {
+  position: fixed; /* Fijo en la pantalla, fuera del canvas */
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   z-index: 100;
+  /* Solo visible si hace falta (se puede ocultar en PC con JS si quieres) */
 }
 
-#controls-container .middle-row{
-  display:flex;
-  gap:6px;
+.middle-row {
+  display: flex;
+  gap: 8px;
 }
 
-#controls-container button{
-  width: 70px;
-  height: 70px;
-  font-size: 28px;
-  font-weight: bold;
-  border:none;
-  border-radius:8px;
+#controls-container button {
+  width: 65px;
+  height: 65px;
+  font-size: 24px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  cursor: pointer;
+  /* ➡️ CRÍTICO: Evita el delay de 300ms en móviles */
+  touch-action: manipulation; 
+  -webkit-tap-highlight-color: transparent;
+}
+
+#controls-container button:active {
   background: var(--accent);
   color: #000;
-  cursor: pointer;
-  user-select: none;
-  /* ➡️ CORRECCIÓN CLAVE: Bloquear el doble toque (zoom) en los botones */
-  touch-action: manipulation; 
-}
-#controls-container button:active{
-  transform: translateY(2px);
+  transform: translateY(4px);
+  box-shadow: none;
 }
 
-/* Overlay */
-#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,14,0.6);z-index:40}
-#overlay.hidden{display:none}
-#overlay-box{background:#071422;border:6px solid #0f4251;padding:20px;border-radius:10px;text-align:center;color:#fff;min-width:260px}
-#overlay-box h1{margin:0 0 6px;font-size:28px;color:#ffd86b;letter-spacing:1.5px}
-#overlay-box p{margin:6px 0 12px}
-#btn-restart{background:var(--accent);border:none;padding:10px 14px;border-radius:6px;font-weight:bold;cursor:pointer}
-#btn-restart:active{transform:translateY(1px)}
-
-/* Responsivo */
-@media(max-width:500px){
-  #controls-container button{
-    width:60px;
-    height:60px; 
-    font-size:22px; 
+/* Ajustes Responsivos */
+@media (max-width: 600px) {
+  #game-container {
+    width: 100%;
+    margin: 0;
+    border-radius: 0; /* En móvil ocupa todo el ancho */
   }
-  #controls-container .middle-row{gap:4px}
-  #game-container{max-width:100%;margin:8px}
+  
+  #hud {
+    top: 5px;
+    padding: 0 10px;
+  }
+  
+  #hud div {
+    font-size: 14px;
+    padding: 5px 8px;
+  }
+
+  #controls-container {
+    bottom: 15px;
+  }
+  
+  #controls-container button {
+    width: 55px;
+    height: 55px;
+    font-size: 20px;
+    border-radius: 10px;
+  }
+}
+
+/* Ajuste para pantallas muy pequeñas (iPhone SE, etc) */
+@media (max-height: 600px) {
+  #controls-container button {
+     width: 45px;
+     height: 45px;
+     font-size: 16px;
+  }
+  .middle-row { gap: 4px; }
 }
