@@ -42,7 +42,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
 /* HUD NUEVA POSICIÓN: Debajo del Canvas */
 #hud-bottom{
     position: relative; 
-    margin: 10px 0 10px 0; /* Margen superior para separarlo del canvas */
+    margin: 10px 0 10px 0; 
     z-index:20;
     display:flex;
     gap:16px;
@@ -79,7 +79,6 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
   color: #000;
   cursor: pointer;
   user-select: none;
-  /* Bloquear el doble toque (zoom) en los botones */
   touch-action: manipulation; 
 }
 #controls-container button:active{
@@ -95,14 +94,24 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
 #btn-restart{background:var(--accent);border:none;padding:10px 14px;border-radius:6px;font-weight:bold;cursor:pointer}
 #btn-restart:active{transform:translateY(1px)}
 
-/* Responsivo */
+/* Responsivo (CRUCIAL PARA SOLUCIONAR EL ZOOM EN MÓVILES) */
 @media(max-width:500px){
-  #controls-container button{
-    width:60px;
-    height:60px; 
-    font-size:22px; 
-  }
-  #controls-container .middle-row{gap:4px}
-  #game-container{max-width:100%;} 
-  #main-wrapper{margin:8px auto 0;}
+    /* Restauramos los tamaños y centrado de los botones */
+    #controls-container button{
+        width:60px;
+        height:60px; 
+        font-size:22px; 
+    }
+    #controls-container .middle-row{gap:4px}
+
+    /* Solución al "Zoom": Usar el margen y centrado para evitar que la pantalla se estire */
+    #game-container{
+        width: 98%; /* Le damos un poco menos de ancho para el margen */
+        margin: 0 auto;
+        max-width: 100%;
+    }
+    #main-wrapper{
+        /* Reducimos el margen superior y eliminamos el inferior para acercar los controles */
+        margin: 8px auto 0;
+    }
 }
