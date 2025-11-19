@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Pong 1 Jugador</title>
 <style>
+/* --- ESTILOS GENERALES --- */
 * {
     margin: 0;
     padding: 0;
@@ -16,15 +17,21 @@ html, body {
     overflow: hidden;
     background: #000;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    /* Usa columna para apilar elementos y facilitar la separación */
+    justify-content: flex-start; /* Alinea los elementos al inicio (arriba) */
+    align-items: center; 
     font-family: Arial, sans-serif;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    flex-direction: column;
 }
+
+/* --- ESTILOS DE PUNTUACIÓN (BARRA SUPERIOR) --- */
 #scoreboard {
-    position: absolute;
-    top: 10px;
+    position: relative; 
+    /* Margen fijo para separar y empujar el canvas hacia abajo */
+    margin-top: 20px; 
+    margin-bottom: 20px; 
     width: 90%; 
     color: #0ff;
     font-size: 20px;
@@ -33,15 +40,27 @@ html, body {
     padding: 0 5%;
     z-index: 10;
 }
+
+/* --- ESTILOS DEL CANVAS DE JUEGO (MAXIMIZACIÓN Y CUADRADO) --- */
 #pongCanvas {
     background: #000;
     border: 3px solid #0ff;
     border-radius: 10px;
     touch-action: none;
-    width: 100vw; 
-    height: 100vh;
-    object-fit: contain;
+    
+    /* 1. Ocupa el 90% del ancho de la vista */
+    width: 90vw; 
+    
+    /* 2. ⭐ La clave: Fuerza que la altura sea igual al ancho, manteniéndolo cuadrado. */
+    aspect-ratio: 1 / 1;
+    
+    /* 3. Limita el tamaño total para que no se salga de la pantalla verticalmente */
+    max-height: calc(100vh - 80px); 
+    
     display: block;
+    /* Se usa 'flex-grow: 1' y 'margin-bottom' para empujar el contenido y generar el espacio deseado. */
+    flex-grow: 1;
+    margin-bottom: 20px; 
 }
 </style>
 </head>
@@ -63,15 +82,15 @@ html, body {
 
     // Las dimensiones lógicas del juego (internas)
     const WIDTH = canvas.width;
-    // ⭐ El valor HEIGHT ahora es 600
     const HEIGHT = canvas.height;
 
     const PADDLE_WIDTH = 120;
     const PADDLE_HEIGHT = 15;
     const BALL_RADIUS = 8;
     
-    // ⭐ VALOR AUMENTADO: Separación vertical desde los bordes (ahora 150)
-    const VERTICAL_OFFSET = 150; 
+    // ⭐ VALOR CLAVE AJUSTADO: Separación vertical lógica desde los bordes (Ahora 30).
+    // Esto aumenta el área de juego.
+    const VERTICAL_OFFSET = 30; 
 
     const WIN_SCORE = 10;
 
@@ -88,7 +107,6 @@ html, body {
 
     let gameOver = false;
 
-    // La velocidad de la IA debe escalarse si cambiamos HEIGHT. Mantenemos el valor base.
     const AI_SPEED = 4;
 
     function notifyParent(playerWon) {
@@ -136,6 +154,20 @@ html, body {
 
     function draw() {
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        // Dibujar líneas de límite para mayor claridad (opcional)
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        // Línea superior
+        ctx.beginPath();
+        ctx.moveTo(0, VERTICAL_OFFSET);
+        ctx.lineTo(WIDTH, VERTICAL_OFFSET);
+        ctx.stroke();
+        // Línea inferior
+        ctx.beginPath();
+        ctx.moveTo(0, HEIGHT - VERTICAL_OFFSET);
+        ctx.lineTo(WIDTH, HEIGHT - VERTICAL_OFFSET);
+        ctx.stroke();
+        
         // Coordenada Y de paleta superior ajustada
         drawPaddle(paddleTopX, VERTICAL_OFFSET); 
         // Coordenada Y de paleta inferior ajustada
@@ -195,7 +227,7 @@ html, body {
                 ballSpeedX = hitPos * 0.09;
                 limitSpeed();
             } else if (ballY + BALL_RADIUS >= HEIGHT - VERTICAL_OFFSET) {
-                 // Punto de puntuación del jugador (la bola cruza el límite inferior)
+                // Punto de puntuación del jugador (la bola cruza el límite inferior)
                 scoreTop++;
                 updateScores();
                 checkWin();
