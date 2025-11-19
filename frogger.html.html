@@ -8,17 +8,19 @@
 </head>
 <body>
 
-<div id="game-container">
-    <canvas id="gameCanvas"></canvas>
-
-    <!-- HUD -->
+<div id="main-wrapper"> 
+    
     <div id="hud">
         <div>Puntuación: <span id="score-value">0</span></div>
         <div>Vidas: <span id="lives-value">3</span></div>
     </div>
+    
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
 </div>
 
-<!-- Controles móviles -->
 <div id="controls-container">
     <button id="up">↑</button>
     <div class="middle-row">
@@ -28,16 +30,14 @@
     </div>
 </div>
 
-<!-- Overlay de reinicio -->
 <div id="overlay" class="hidden">
-  <div id="overlay-box">
-    <h1 id="overlay-title">GAME OVER</h1>
-    <p id="overlay-sub">Puntuación final: <span id="final-score">0</span></p>
-    <button id="btn-restart">REINICIAR</button>
-  </div>
+    <div id="overlay-box">
+        <h1 id="overlay-title">GAME OVER</h1>
+        <p id="overlay-sub">Puntuación final: <span id="final-score">0</span></p>
+        <button id="btn-restart">REINICIAR</button>
+    </div>
 </div>
 
 <script src="game.js" defer></script>
 </body>
 </html>
-
