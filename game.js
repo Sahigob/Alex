@@ -8,11 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const COLS = 20, ROWS = 15;
   const TILE = Math.floor(W / COLS);
 
-  // --- 2. Referencias al HTML (¡Importante!) ---
-  // Usamos nombres claros para conectar con tu HTML
+  // --- 2. Referencias al HTML ---
   const uiScore = document.getElementById('score-value');
   const uiLives = document.getElementById('lives-value');
   const overlay = document.getElementById('overlay');
+  // Necesitamos referencia al título y al botón para ocultarlo al terminar
+  const overlayTitle = document.getElementById('overlay-title'); 
   const finalScore = document.getElementById('final-score');
   const btnRestart = document.getElementById('btn-restart');
 
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let score = 0;
   let lives = 3;
   let gameOver = false;
-  let filledHomes = []; // Array para las ranas que llegan a meta
+  let filledHomes = []; 
 
   // --- 4. Carriles (Lanes) ---
   const lanes = [];
@@ -54,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function spawnObstacles() {
     obstacles = [];
-    // Ríos
     Object.keys(laneConfigs.rivers).forEach(r => {
       const cfg = laneConfigs.rivers[r];
       const gap = Math.floor(COLS / cfg.count);
@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         obstacles.push({ x, y: parseInt(r), length: type==='log'?cfg.length:Math.min(2,cfg.length-1), speed: cfg.speed*cfg.dir, type, zone:'river' });
       }
     });
-    // Carreteras
     Object.keys(laneConfigs.roads).forEach(r => {
       const cfg = laneConfigs.roads[r];
       const gap = Math.floor(COLS / Math.max(1,cfg.count));
@@ -97,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const lane = lanes[r];
       if(lane.type==='goal'){
         drawPixelRect(0,r*TILE,W,TILE,'#2e8b57');
-        // Dibujamos los huecos de meta
         for(let j=1;j<COLS;j+=4){ 
             drawPixelRect(j*TILE+4,r*TILE+6,TILE*2-8,TILE-12,'#36b97a'); 
         }
@@ -110,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
         for(let j=0;j<COLS;j+=2){ drawPixelRect(j*TILE + TILE*0.45, r*TILE + TILE*0.45, TILE*0.2, TILE*0.1,'rgba(255,255,255,0.15)'); }
       }
     }
-    // Dibujar ranas ya salvadas
     filledHomes.forEach(hx => {
         renderFrogBody((hx * TILE) + TILE, TILE/2);
     });
@@ -163,9 +160,45 @@ document.addEventListener('DOMContentLoaded', () => {
     jumpTo(tx,ty);
   }
 
-  // --- 8. Lógica Principal ---
+  // --- 8. Lógica y Colisiones ---
   function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){
     return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;
+  }
+
+  // ➡️ NUEVA FUNCIÓN PARA FINALIZAR Y SALIR
+  function finishGame(win) {
+      if (gameOver) return;
+      gameOver = true;
+
+      // Actualizamos la interfaz del Overlay
+      if (overlay) {
+          overlay.classList.remove('hidden');
+          if (finalScore) finalScore.textContent = score;
+          
+          if (overlayTitle) {
+              overlayTitle.textContent = win ? "¡VICTORIA!" : "GAME OVER";
+              overlayTitle.style.color = win ? "#00dd99" : "#ff5555";
+          }
+          
+          // Ocultar botón reiniciar para evitar clicks mientras nos vamos
+          if(btnRestart) btnRestart.style.display = 'none';
+      }
+
+      // Esperamos 2.5s y llamamos al padre (Lógica del Arkanoid)
+      setTimeout(() => {
+          try {
+              // 1. Intenta llamar a la función en la ventana padre
+              if (window.parent && window.parent !== window && typeof window.parent.endGame === 'function') {
+                  window.parent.endGame(win);
+              } else {
+                  // 2. Fallback seguro: Redirige
+                  window.location.href = '/'; 
+              }
+          } catch (e) {
+              // 3. Fallback si hay error
+              window.location.href = '/';
+          }
+      }, 2500);
   }
 
   function checkGoalLogic() {
@@ -180,10 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 filledHomes.push(hx);
                 score += 200;
                 safe = true;
+                
+                // ➡️ Si llenamos las 5 casillas, GANAMOS y salimos
                 if(filledHomes.length === 5) {
                     score += 1000;
-                    filledHomes = []; 
+                    finishGame(true); // True = Win
+                    return;
                 }
+                
                 respawnFrog();
                 return;
             }
@@ -224,20 +261,18 @@ document.addEventListener('DOMContentLoaded', () => {
        checkGoalLogic();
     }
 
-    // ➡️ AQUÍ ACTUALIZAMOS EL HTML DE PUNTOS Y VIDAS
     if(uiScore) uiScore.textContent = score;
     if(uiLives) uiLives.textContent = lives;
   }
 
   function loseLife(){
     lives--;
-    if(uiLives) uiLives.textContent = lives; // Actualización inmediata visual
+    if(uiLives) uiLives.textContent = lives;
     if(lives > 0){
         respawnFrog();
     } else {
-        gameOver = true;
-        if(finalScore) finalScore.textContent = score;
-        if(overlay) overlay.classList.remove('hidden');
+        // ➡️ Si mueres definitivamente, llamas al endGame con False (Derrota)
+        finishGame(false);
     }
   }
 
@@ -263,8 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // El botón restart ahora solo sirve si quisieras jugar antes de que el temporizador te saque, 
+  // pero por diseño lo he ocultado en finishGame. 
   if(btnRestart){
       btnRestart.addEventListener('click', ()=>{
+        // Reinicio local (solo útil si no ha saltado el endGame aun)
         lives = 3; score = 0; filledHomes = []; gameOver = false;
         overlay.classList.add('hidden');
         respawnFrog();
@@ -275,8 +313,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 10. Bucle Principal ---
   function loop(){
-    if(gameOver) return;
-    updateLogic();
+    // Nota: Seguimos dibujando incluso en GameOver para que no se borre la pantalla,
+    // pero la lógica (updateLogic) se detiene dentro de la función si gameOver es true.
+    if(!gameOver) updateLogic();
+    
     ctx.clearRect(0,0,W,H);
     drawScene();
     drawObstacles();
@@ -284,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(loop);
   }
 
-  // Inicializar textos al cargar
   if(uiScore) uiScore.textContent = score;
   if(uiLives) uiLives.textContent = lives;
   loop();
