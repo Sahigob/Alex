@@ -80,23 +80,26 @@ html, body {
     const PADDLE_HEIGHT = 15;
     const BALL_RADIUS = 8;
     
-    // Separación vertical lógica desde los bordes 
     const VERTICAL_OFFSET = 30; 
 
     const WIN_SCORE = 10;
+
+    // ⭐ NUEVAS CONSTANTES PARA EL CONTROL DE VELOCIDAD
+    const TARGET_SPEED_X = 7;
+    const TARGET_SPEED_Y = 10;
+    const ACCELERATION_RATE = 0.05; // Cuánto acelera la bola por fotograma
 
     let paddleTopX = (WIDTH - PADDLE_WIDTH) / 2;
     let paddleBottomX = (WIDTH - PADDLE_WIDTH) / 2;
 
     let ballX = WIDTH / 2;
     
-    // ⭐ CAMBIO 1: Posición Y de la paleta inferior para iniciar la bola allí.
+    // ⭐ INICIO LENTO Y DESDE LA BARRA DEL JUGADOR
     const bottomPaddleY = HEIGHT - PADDLE_HEIGHT - VERTICAL_OFFSET;
     let ballY = bottomPaddleY - BALL_RADIUS; 
     
-    // ⭐ CAMBIO 2: Velocidades iniciales MUY LENTAS (1 y 2).
-    let ballSpeedX = 1 * (Math.random() < 0.5 ? -1 : 1);
-    let ballSpeedY = -2; // Sale moviéndose hacia arriba.
+    let ballSpeedX = 1 * (Math.random() < 0.5 ? -1 : 1); // Velocidad X inicial muy lenta
+    let ballSpeedY = -2; // Velocidad Y inicial muy lenta, moviéndose hacia arriba
 
     let scoreTop = 0;
     let scoreBottom = 0;
@@ -181,6 +184,16 @@ html, body {
     function updateBall() {
         if (gameOver) return;
 
+        // ⭐ LÓGICA DE ACELERACIÓN GRADUAL
+        // Aumenta la velocidad X hasta TARGET_SPEED_X
+        if (Math.abs(ballSpeedX) < TARGET_SPEED_X) {
+            ballSpeedX += Math.sign(ballSpeedX) * ACCELERATION_RATE;
+        }
+        // Aumenta la velocidad Y hasta TARGET_SPEED_Y
+        if (Math.abs(ballSpeedY) < TARGET_SPEED_Y) {
+            ballSpeedY += Math.sign(ballSpeedY) * ACCELERATION_RATE;
+        }
+
         ballX += ballSpeedX;
         ballY += ballSpeedY;
 
@@ -209,12 +222,11 @@ html, body {
                 scoreBottom++;
                 updateScores();
                 checkWin();
-                resetBall(true);
+                resetBall(true); // Machine starts next
             }
         }
 
         // Paleta jugador (Inferior)
-        // bottomPaddleY ya está definida fuera de updateBall, pero la recalculamos para seguridad
         const currentBottomPaddleY = HEIGHT - PADDLE_HEIGHT - VERTICAL_OFFSET;
         if (ballY + BALL_RADIUS >= currentBottomPaddleY) {
             if (ballX >= paddleBottomX && ballX <= paddleBottomX + PADDLE_WIDTH) {
@@ -229,7 +241,7 @@ html, body {
                 scoreTop++;
                 updateScores();
                 checkWin();
-                resetBall(false);
+                resetBall(false); // Player starts next
             }
         }
     }
@@ -256,11 +268,22 @@ html, body {
         if (gameOver) return;
 
         ballX = WIDTH / 2;
-        ballY = HEIGHT / 2; // La bola se reinicia en el centro
         
-        // ⭐ REINICIO DE VELOCIDADES RÁPIDAS (7 y 10)
-        ballSpeedX = 7 * (Math.random() < 0.5 ? -1 : 1);
-        ballSpeedY = topStarts ? 10 : -10;
+        // ⭐ POSICIÓN DE SERVICIO DINÁMICA (EN LA BARRA CORRESPONDIENTE)
+        if (topStarts) {
+            // El servicio va para la Máquina (sale de la paleta superior)
+            const topPaddleY = VERTICAL_OFFSET;
+            ballY = topPaddleY + PADDLE_HEIGHT + BALL_RADIUS;
+            ballSpeedY = TARGET_SPEED_Y; // Velocidad rápida hacia abajo
+        } else {
+            // El servicio va para el Jugador (sale de la paleta inferior)
+            const bottomPaddleY = HEIGHT - PADDLE_HEIGHT - VERTICAL_OFFSET;
+            ballY = bottomPaddleY - BALL_RADIUS;
+            ballSpeedY = -TARGET_SPEED_Y; // Velocidad rápida hacia arriba
+        }
+
+        // ⭐ VELOCIDADES DE REINICIO RÁPIDAS
+        ballSpeedX = TARGET_SPEED_X * (Math.random() < 0.5 ? -1 : 1);
     }
 
     function updateAI() {
