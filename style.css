@@ -8,13 +8,13 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b3150 100%);font-family:monospace}
 
-/* NUEVO: Contenedor principal para centrar todo */
+/* Contenedor principal para centrar todo */
 #main-wrapper {
     width: 100%;
     max-width: 900px;
-    margin: 18px auto; /* Margen superior/inferior para el cuerpo principal */
+    margin: 18px auto 0;
     display: flex;
-    flex-direction: column; /* Apilar HUD y Game */
+    flex-direction: column; 
     align-items: center;
 }
 
@@ -39,16 +39,16 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
   background:linear-gradient(180deg,#1b6b5a,#125a47);
 }
 
-/* HUD: Reubicado fuera del Canvas */
-#hud{
+/* HUD NUEVA POSICIÓN: Debajo del Canvas */
+#hud-bottom{
     position: relative; 
-    margin-bottom: 10px; /* Separación entre el HUD y el Canvas */
+    margin: 10px 0 10px 0; /* Margen superior para separarlo del canvas */
     z-index:20;
     display:flex;
-    gap:16px
+    gap:16px;
 }
-#hud div{background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:6px;color:#fff;border:2px solid rgba(255,255,255,0.04);font-weight:700}
-#hud span{color:var(--accent)}
+#hud-bottom div{background:rgba(0,0,0,0.35);padding:6px 10px;border-radius:6px;color:#fff;border:2px solid rgba(255,255,255,0.04);font-weight:700}
+#hud-bottom span{color:var(--accent)}
 
 /* Controles móviles */
 #controls-container{
@@ -104,5 +104,5 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
   }
   #controls-container .middle-row{gap:4px}
   #game-container{max-width:100%;} 
-  #main-wrapper{margin:8px auto;}
+  #main-wrapper{margin:8px auto 0;}
 }
