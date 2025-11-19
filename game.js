@@ -21,7 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Game state ---
   let frog = { x: 10, y: 14, anim: false };
   let score = 0;
-  let lives = 3;
+// >>> MODIFICACIÓN: AUMENTO DE VIDAS (3 + 3 = 6) <<<
+  let lives = 6; 
+// ----------------------------------------------------
   let gameOver = false;
 
 // --- NUEVAS VARIABLES DE DESTINO Y LÓGICA ---
@@ -33,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const FILA_DESTINO_R = 0; 
 
   // Coordenadas X (en unidades de 'TILE') de los centros de las 5 casillas de destino
-  // (1, 5, 9, 13, 17 son los inicios de las casillas en el dibujo original de 2 TILEs de ancho)
   const POSICIONES_DESTINO_TILE = [
     2,  // Centro del Goal 1 (entre X=1 y X=3)
     6,  // Centro del Goal 2 (entre X=5 y X=7)
@@ -162,8 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
-  // drawFrog ha sido movida para ser una función de utilidad (arriba)
   
   // --- Movement ---
   let tween = null;
@@ -323,7 +322,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Restart ---
   btnRestart.addEventListener('click', ()=>{
     overlay.classList.add('hidden');
-    lives=3; score=0; gameOver=false;
+// >>> MODIFICACIÓN: Resetear a 6 vidas <<<
+    lives=6; score=0; gameOver=false;
+// ----------------------------------------
     
     // --- RESET DE ESTADO DE DESTINO ---
     ranasEnCasa = 0;
