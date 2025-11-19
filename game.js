@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Game state ---
   let frog = { x: 10, y: 14, anim: false };
   let score = 0;
-// >>> MODIFICACIÓN: AUMENTO DE VIDAS (3 + 3 = 6) <<<
+// >>> Vidas iniciales a 6 <<<
   let lives = 6; 
 // ----------------------------------------------------
   let gameOver = false;
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // --- MODIFICACIÓN DE drawScene para dibujar ranas fijas ---
+  // --- Dibuja la escena con ranas fijas ---
   function drawScene(){
     for (let r=0;r<ROWS;r++){
       const lane = lanes[r];
@@ -149,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
-  // ------------------------------------------------------------------
 
   function drawObstacles(){
     obstacles.forEach(o=>{
@@ -198,12 +197,30 @@ document.addEventListener('DOMContentLoaded', () => {
     jumpTo(tx,ty);
   }
 
-  // --- Update logic ---
+  // --- Lógica de pérdida de vida (CORREGIDA) ---
+  function loseLife(){
+    // Siempre resta 1 vida
+    lives = Math.max(0, lives - 1); 
+    
+    if (lives > 0) { 
+      respawnFrog(); // Si quedan vidas, la rana reaparece
+    } 
+    else {
+      // Game Over
+      finalScore.textContent = score;
+      overlayTitle.textContent = "GAME OVER";
+      overlay.classList.remove('hidden');
+      gameOver = true;
+    }
+    livesValue.textContent = lives;
+  }
+  // --------------------------------------------
+
   function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){
     return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;
   }
 
-  // --- MODIFICACIÓN DE updateLogic para manejar el destino ---
+  // --- Update logic ---
   function updateLogic(){
     obstacles.forEach(o=>{
       o.x += o.speed;
@@ -230,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(frog.x>COLS-1) frog.x=COLS-1;
     } 
     
-    // --- NUEVA LÓGICA DE OBJETIVO (GOAL) ---
+    // --- LÓGICA DE OBJETIVO (GOAL) ---
     else if(lane.type==='goal'){ 
       let isGoal = false;
       let foundEmptySpot = false;
@@ -264,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       // Lógica de Muerte en la zona GOAL (hueco o casilla ocupada)
+      // Si está en la fila de destino (fila 0) y no se encontró un spot vacío (foundEmptySpot es false)
       if(frog.y === FILA_DESTINO_R && !foundEmptySpot){
         loseLife(); 
       }
@@ -275,18 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // ----------------------------------------------------------------------
 
-
-  function loseLife(){
-    lives=Math.max(0,lives-1);
-    if(lives>0){ respawnFrog(); }
-    else{
-      finalScore.textContent=score;
-      overlayTitle.textContent="GAME OVER";
-      overlay.classList.remove('hidden');
-      gameOver=true;
-    }
-    livesValue.textContent=lives;
-  }
 
   function respawnFrog(){ frog.x=10; frog.y=14; frog.anim=false; }
 
@@ -322,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Restart ---
   btnRestart.addEventListener('click', ()=>{
     overlay.classList.add('hidden');
-// >>> MODIFICACIÓN: Resetear a 6 vidas <<<
+// >>> Resetear a 6 vidas <<<
     lives=6; score=0; gameOver=false;
 // ----------------------------------------
     
