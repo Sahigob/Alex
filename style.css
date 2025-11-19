@@ -94,9 +94,8 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
 #btn-restart{background:var(--accent);border:none;padding:10px 14px;border-radius:6px;font-weight:bold;cursor:pointer}
 #btn-restart:active{transform:translateY(1px)}
 
-/* Responsivo (CRUCIAL PARA SOLUCIONAR EL ZOOM EN MÓVILES) */
+/* Responsivo (AJUSTE CLAVE PARA REDUCIR EL TAMAÑO EN MÓVILES) */
 @media(max-width:500px){
-    /* Restauramos los tamaños y centrado de los botones */
     #controls-container button{
         width:60px;
         height:60px; 
@@ -104,14 +103,19 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #0b
     }
     #controls-container .middle-row{gap:4px}
 
-    /* Solución al "Zoom": Usar el margen y centrado para evitar que la pantalla se estire */
+    /* ¡CLAVE! Reducimos el ancho del contenedor principal para forzar a que el juego se haga pequeño */
     #game-container{
-        width: 98%; /* Le damos un poco menos de ancho para el margen */
+        width: 90%; /* Reducido de 98% */
         margin: 0 auto;
         max-width: 100%;
     }
     #main-wrapper{
-        /* Reducimos el margen superior y eliminamos el inferior para acercar los controles */
+        max-width: 90%; /* Limita el ancho total del área visible */
         margin: 8px auto 0;
+    }
+    
+    /* Pequeño ajuste para que el HUD también respete el nuevo tamaño */
+    #hud-bottom {
+        max-width: 90%;
     }
 }
