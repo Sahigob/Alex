@@ -1,190 +1,351 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Tres en Raya Táctil</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f4f4;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-            user-select: none; /* Evita la selección de texto en móviles */
-            touch-action: manipulation; /* Optimiza la respuesta táctil */
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        #estadoJuego {
-            margin: 15px 0;
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #007bff;
-        }
-
-        #tablero {
-            display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-template-rows: repeat(3, 100px);
-            gap: 5px;
-            background-color: #333;
-            border: 5px solid #333;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .casilla {
-            background-color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 48px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .casilla:hover {
-            background-color: #e0e0e0;
-        }
-
-        /* Estilos para las marcas (opcional, mejora la visual) */
-        .casilla.X { color: #ff5722; } /* Naranja/Rojo */
-        .casilla.O { color: #00bcd4; } /* Cyan/Azul */
-        
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Conecta 4 Educativo</title>
+<style>
+  body {
+    margin: 0; padding: 10px;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+  }
+  #controls {
+    margin-bottom: 15px;
+  }
+  button {
+    background: #0a74da;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    margin: 0 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    user-select: none;
+  }
+  button:disabled {
+    background: #555;
+    cursor: default;
+  }
+  #message {
+    margin: 15px 0;
+    font-size: 1.2rem;
+    min-height: 1.6em;
+    text-align: center;
+  }
+  canvas {
+    background-color: #0052cc;
+    border-radius: 12px;
+    box-shadow: 0 0 10px #003d99;
+    touch-action: manipulation;
+    max-width: 100vw;
+    height: auto;
+  }
+</style>
 </head>
 <body>
-    <h1>¡Tres en Raya! 🎯</h1>
-    <div id="estadoJuego">Turno de: X</div>
-    
-    <div id="tablero">
-        </div>
-    
-    <button onclick="reiniciarJuego()">Reiniciar Juego</button>
 
-    <script>
-        // -------------------------------------------------------------------
-        // VARIABLES GLOBALES
-        // -------------------------------------------------------------------
-        const tableroHTML = document.getElementById('tablero');
-        const estadoJuegoHTML = document.getElementById('estadoJuego');
-        let tablero = ['', '', '', '', '', '', '', '', '']; // Representación del tablero (9 casillas)
-        let jugadorActual = 'X';
-        let juegoActivo = true;
+<h1>Conecta 4 Educativo</h1>
 
-        // Combinaciones ganadoras
-        const combinacionesGanadoras = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Filas
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columnas
-            [0, 4, 8], [2, 4, 6]             // Diagonales
-        ];
+<div id="controls" role="group" aria-label="Modo de juego">
+  <button id="btnPvP" aria-pressed="true">2 Jugadores</button>
+  <button id="btnPvC" aria-pressed="false">Jugador vs Máquina</button>
+</div>
 
-        // -------------------------------------------------------------------
-        // INICIALIZACIÓN: CREAR CASILLAS Y EVENTOS
-        // -------------------------------------------------------------------
-        function crearTablero() {
-            tableroHTML.innerHTML = ''; // Limpiar cualquier contenido anterior
-            for (let i = 0; i < 9; i++) {
-                const casilla = document.createElement('div');
-                casilla.classList.add('casilla');
-                casilla.dataset.index = i; // Guardar el índice de la casilla
-                
-                // Añadir evento para el manejo de clics (ratón) o toques (táctil)
-                casilla.addEventListener('click', manejarMovimiento);
-                
-                // Aunque 'click' funciona en táctil, un manejo de 'touchend' 
-                // podría usarse para juegos más complejos, pero 'click' es 
-                // suficiente aquí y es más simple.
-                // Sin embargo, incluiremos 'touchend' para asegurar la respuesta inmediata.
-                casilla.addEventListener('touchend', manejarMovimiento);
+<canvas id="gameCanvas" width="420" height="360" aria-label="Tablero de Conecta 4" role="img" tabindex="0"></canvas>
 
-                tableroHTML.appendChild(casilla);
-            }
+<div id="message" aria-live="polite"></div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const messageElem = document.getElementById('message');
+  const btnPvP = document.getElementById('btnPvP');
+  const btnPvC = document.getElementById('btnPvC');
+
+  // Board config
+  const COLS = 7;
+  const ROWS = 6;
+
+  // Canvas dimensions and constants
+  const CANVAS_WIDTH = canvas.width;
+  const CANVAS_HEIGHT = canvas.height;
+  const SLOT_SIZE = CANVAS_WIDTH / COLS;
+  const RADIUS = SLOT_SIZE * 0.4;
+
+  // Game state
+  let board = [];
+  let currentPlayer = 1; // 1=Red, 2=Yellow
+  let vsComputer = false;
+  let gameActive = true;
+
+  // Initialize board: 0 = empty, 1 = player 1 disk, 2 = player 2 disk
+  function initBoard() {
+    board = [];
+    for(let r=0; r<ROWS; r++) {
+      const row = [];
+      for(let c=0; c<COLS; c++) {
+        row.push(0);
+      }
+      board.push(row);
+    }
+  }
+
+  // Draw empty board and disks
+  function drawBoard() {
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Draw slots background
+    ctx.fillStyle = '#0052cc';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Draw slots and disks
+    for(let r=0; r<ROWS; r++){
+      for(let c=0; c<COLS; c++){
+        const x = c * SLOT_SIZE + SLOT_SIZE/2;
+        const y = (ROWS - 1 - r) * SLOT_SIZE + SLOT_SIZE/2;
+
+        // Draw slot background: circle in blue
+        ctx.beginPath();
+        ctx.arc(x, y, RADIUS, 0, 2*Math.PI);
+        ctx.fillStyle = '#003d99';
+        ctx.fill();
+
+        // Draw disk if any
+        if(board[r][c] === 1) {
+          ctx.fillStyle = '#ff0000'; // Red
+        } else if(board[r][c] === 2) {
+          ctx.fillStyle = '#ffff00'; // Yellow
+        } else {
+          ctx.fillStyle = '#1a1a66'; // Empty slot darker circle inside
+          ctx.beginPath();
+          ctx.arc(x, y, RADIUS * 0.8, 0, 2*Math.PI);
+          ctx.fill();
+          continue;
         }
 
-        // -------------------------------------------------------------------
-        // LÓGICA DEL JUEGO
-        // -------------------------------------------------------------------
+        ctx.beginPath();
+        ctx.arc(x, y, RADIUS * 0.85, 0, 2*Math.PI);
+        ctx.fill();
+      }
+    }
+  }
 
-        function manejarMovimiento(evento) {
-            if (!juegoActivo) return; // Si el juego terminó, no hacer nada
+  // Get first empty row in a column, or -1 if full
+  function getAvailableRow(col) {
+    for(let r = 0; r < ROWS; r++){
+      if(board[r][col] === 0){
+        return r;
+      }
+    }
+    return -1;
+  }
 
-            // Asegurarse de obtener la casilla, ya sea por click o touchend
-            const casilla = evento.currentTarget;
-            const indice = parseInt(casilla.dataset.index);
+  // Drop piece for player in column, return true if successful
+  function dropPiece(col, player) {
+    if(!gameActive) return false;
+    const row = getAvailableRow(col);
+    if(row === -1) return false;
+    board[row][col] = player;
+    return true;
+  }
 
-            // Verificar si la casilla ya está ocupada
-            if (tablero[indice] !== '') {
-                return;
-            }
+  // Check horizontal, vertical and diagonal for 4 in a row
+  function checkWin(player) {
+    // Horizontal
+    for(let r=0; r<ROWS; r++){
+      for(let c=0; c<=COLS-4; c++){
+        if(board[r][c] === player &&
+           board[r][c+1] === player &&
+           board[r][c+2] === player &&
+           board[r][c+3] === player) return true;
+      }
+    }
+    // Vertical
+    for(let c=0; c<COLS; c++){
+      for(let r=0; r<=ROWS-4; r++){
+        if(board[r][c] === player &&
+           board[r+1][c] === player &&
+           board[r+2][c] === player &&
+           board[r+3][c] === player) return true;
+      }
+    }
+    // Diagonal down-right
+    for(let r=0; r<=ROWS-4; r++){
+      for(let c=0; c<=COLS-4; c++){
+        if(board[r][c] === player &&
+           board[r+1][c+1] === player &&
+           board[r+2][c+2] === player &&
+           board[r+3][c+3] === player) return true;
+      }
+    }
+    // Diagonal up-right
+    for(let r=3; r<ROWS; r++){
+      for(let c=0; c<=COLS-4; c++){
+        if(board[r][c] === player &&
+           board[r-1][c+1] === player &&
+           board[r-2][c+2] === player &&
+           board[r-3][c+3] === player) return true;
+      }
+    }
+    return false;
+  }
 
-            // 1. Marcar la casilla en el array y en el HTML
-            tablero[indice] = jugadorActual;
-            casilla.textContent = jugadorActual;
-            casilla.classList.add(jugadorActual); // Añadir clase para estilo (X o O)
+  // Check for draw (no empty slots)
+  function checkDraw() {
+    for(let c=0; c<COLS; c++){
+      if(getAvailableRow(c) !== -1) return false;
+    }
+    return true;
+  }
 
-            // 2. Comprobar el estado del juego
-            if (comprobarVictoria()) {
-                estadoJuegoHTML.textContent = `🎉 ¡El jugador ${jugadorActual} ha ganado! 🎉`;
-                juegoActivo = false;
-                return;
-            }
+  // Show message in panel
+  function showMessage(msg) {
+    messageElem.textContent = msg;
+  }
 
-            if (comprobarEmpate()) {
-                estadoJuegoHTML.textContent = `🤝 ¡Es un empate! 🤝`;
-                juegoActivo = false;
-                return;
-            }
+  // Update turn message
+  function updateTurnMessage() {
+    if(!gameActive) return;
+    if(vsComputer) {
+      showMessage(currentPlayer === 1 ? "Tu turno" : "Turno de la máquina");
+    } else {
+      showMessage(`Turno jugador ${currentPlayer === 1 ? 'Rojo' : 'Amarillo'}`);
+    }
+  }
 
-            // 3. Cambiar de turno
-            jugadorActual = jugadorActual === 'X' ? 'O' : 'X';
-            estadoJuegoHTML.textContent = `Turno de: ${jugadorActual}`;
+  // Switch player turn
+  function switchTurn() {
+    currentPlayer = 3 - currentPlayer;
+    updateTurnMessage();
+  }
+
+  // Reset game state
+  function resetGame() {
+    initBoard();
+    currentPlayer = 1;
+    gameActive = true;
+    showMessage('');
+    updateTurnMessage();
+    drawBoard();
+  }
+
+  // Simple AI to choose a column randomly from available (improved later as needed)
+  function simpleAIPlay() {
+    const validCols = [];
+    for(let i=0; i<COLS; i++){
+      if(getAvailableRow(i) !== -1) validCols.push(i);
+    }
+    if(validCols.length === 0) return -1;
+    return validCols[Math.floor(Math.random() * validCols.length)];
+  }
+
+  // AI turn async to simulate delay
+  async function aiTurn() {
+    if(!gameActive || currentPlayer !== 2) return;
+    showMessage('Turno de la máquina...');
+    await new Promise(resolve => setTimeout(resolve, 600)); // delay
+    const col = simpleAIPlay();
+    if(col === -1) return;
+    dropPiece(col, 2);
+    drawBoard();
+    if(checkWin(2)) {
+      gameActive = false;
+      showMessage('La máquina gana. ¡Fin del juego!');
+      notifyParent(false);
+      return;
+    }
+    if(checkDraw()) {
+      gameActive = false;
+      showMessage('Empate. ¡Fin del juego!');
+      notifyParent(null);
+      return;
+    }
+    switchTurn();
+  }
+
+  // Notify parent frame about game end, with fallback
+  function notifyParent(playerWon) {
+    // Parámetro true si ganó jugador, false si máquina, null empate
+    setTimeout(() => {
+      try {
+        if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
+          window.parent.endGame(playerWon === true);
+        } else {
+          window.location.href = '/';
         }
+      } catch(e) {
+        window.location.href = '/';
+      }
+    }, 2500);
+  }
 
-        function comprobarVictoria() {
-            return combinacionesGanadoras.some(combinacion => {
-                // Comprobar si los tres índices de la combinación tienen el mismo símbolo
-                const [a, b, c] = combinacion;
-                return tablero[a] !== '' && tablero[a] === tablero[b] && tablero[b] === tablero[c];
-            });
-        }
+  // Handle user clicking on board to place disk
+  function handleClick(event) {
+    if(!gameActive || currentPlayer !== 1) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const colClicked = Math.floor(x / SLOT_SIZE);
+    if(colClicked < 0 || colClicked >= COLS) return;
+    if(dropPiece(colClicked, 1)){
+      drawBoard();
+      if(checkWin(1)){
+        gameActive = false;
+        showMessage('¡Has ganado! 🎉');
+        notifyParent(true);
+        return;
+      }
+      if(checkDraw()){
+        gameActive = false;
+        showMessage('Empate. Fin del juego.');
+        notifyParent(null);
+        return;
+      }
+      switchTurn();
+      aiTurn();
+    }
+  }
 
-        function comprobarEmpate() {
-            // Si no hay victoria y todas las casillas están llenas (no hay strings vacíos)
-            return !tablero.includes('');
-        }
+  // Touch support: treat touch as click for simplicity
+  canvas.addEventListener('touchstart', e => {
+    if(e.touches.length === 1){
+      handleClick(e.touches[0]);
+    }
+  });
 
-        // -------------------------------------------------------------------
-        // REINICIO
-        // -------------------------------------------------------------------
+  // Mouse support
+  canvas.addEventListener('click', handleClick);
 
-        function reiniciarJuego() {
-            tablero = ['', '', '', '', '', '', '', '', ''];
-            jugadorActual = 'X';
-            juegoActivo = true;
-            estadoJuegoHTML.textContent = `Turno de: X`;
-            crearTablero();
-        }
+  // Buttons for mode selection
+  btnPvP.addEventListener('click', () => {
+    if(gameActive) return;
+    vsComputer = false;
+    btnPvP.setAttribute('aria-pressed', 'true');
+    btnPvC.setAttribute('aria-pressed', 'false');
+    showMessage('Modo 2 Jugadores activado');
+    resetGame();
+  });
+  btnPvC.addEventListener('click', () => {
+    if(gameActive) return;
+    vsComputer = true;
+    btnPvP.setAttribute('aria-pressed', 'false');
+    btnPvC.setAttribute('aria-pressed', 'true');
+    showMessage('Modo Jugador vs Máquina activado');
+    resetGame();
+  });
 
-        // Iniciar el juego al cargar la página
-        crearTablero();
+  // On load initialize PvP by default
+  vsComputer = false;
+  resetGame();
 
-    </script>
+})();
+</script>
+
 </body>
 </html>
