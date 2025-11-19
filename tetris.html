@@ -58,6 +58,29 @@
       '#3877FF',
     ];
 
+    // ------------------------------------------------------------------
+    // FUNCIÓN AÑADIDA PARA COMUNICARSE CON EL IFRAME PADRE
+    // ------------------------------------------------------------------
+    function notifyParent(playerWon) {
+      // En Tetris, el juego termina cuando se detecta una colisión en playerReset (Game Over).
+      // El jugador siempre pierde en este punto, por lo que playerWon es false.
+      setTimeout(() => {
+        try {
+          if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
+            // Notificamos al padre que el jugador perdió (false)
+            window.parent.endGame(false);
+          } else {
+            // Fallback de redirección si no puede acceder al padre
+            window.location.href = '/'; 
+          }
+        } catch(e) {
+          // Fallback de redirección si la Política de Mismo Origen lo bloquea
+          window.location.href = '/';
+        }
+      }, 2500); // 2.5 segundos de retraso
+    }
+    // ------------------------------------------------------------------
+
     function createMatrix(w, h) {
       const matrix = [];
       while (h--) matrix.push(new Array(w).fill(0));
@@ -152,13 +175,19 @@
       }
     }
 
+    // FUNCIÓN MODIFICADA
     function playerReset() {
       const pieces = 'TJLOSZI';
       player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
       player.pos.y = 0;
       player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+      
+      // LÓGICA DE GAME OVER
       if (collide(arena, player)) {
         arena.forEach(row => row.fill(0));
+        
+        // ¡GAME OVER! Notifica al padre
+        notifyParent(false);
       }
     }
 
