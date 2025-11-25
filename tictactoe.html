@@ -64,286 +64,424 @@
 
 <script>
 (() => {
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  const messageElem = document.getElementById('message');
-  const btnPvP = document.getElementById('btnPvP');
-  const btnPvC = document.getElementById('btnPvC');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const messageElem = document.getElementById('message');
+    const btnPvP = document.getElementById('btnPvP');
+    const btnPvC = document.getElementById('btnPvC');
 
-  // Board config
-  const COLS = 7;
-  const ROWS = 6;
+    // Board config
+    const COLS = 7;
+    const ROWS = 6;
 
-  // Canvas dimensions and constants
-  const CANVAS_WIDTH = canvas.width;
-  const CANVAS_HEIGHT = canvas.height;
-  const SLOT_SIZE = CANVAS_WIDTH / COLS;
-  const RADIUS = SLOT_SIZE * 0.4;
+    // Canvas dimensions and constants
+    const CANVAS_WIDTH = canvas.width;
+    const CANVAS_HEIGHT = canvas.height;
+    const SLOT_SIZE = CANVAS_WIDTH / COLS;
+    const RADIUS = SLOT_SIZE * 0.4;
 
-  // Game state
-  let board = [];
-  let currentPlayer = 1; // 1=Red, 2=Yellow
-  let vsComputer = false;
-  let gameActive = true;
+    // Game state
+    let board = [];
+    let currentPlayer = 1; // 1=Red, 2=Yellow (Máquina)
+    let vsComputer = false;
+    let gameActive = true;
+    
+    // Configuración de la IA
+    // Profundidad de búsqueda: 1-3 (Fácil/Medio), 4-5 (Difícil), 6+ (Muy Difícil / Lento)
+    const AI_DEPTH = 4; 
 
-  // Initialize board: 0 = empty, 1 = player 1 disk, 2 = player 2 disk
-  function initBoard() {
-    board = [];
-    for(let r=0; r<ROWS; r++) {
-      const row = [];
-      for(let c=0; c<COLS; c++) {
-        row.push(0);
-      }
-      board.push(row);
+    // Initialize board: 0 = empty, 1 = player 1 disk, 2 = player 2 disk
+    function initBoard() {
+        board = [];
+        for(let r=0; r<ROWS; r++) {
+            const row = [];
+            for(let c=0; c<COLS; c++) {
+                row.push(0);
+            }
+            board.push(row);
+        }
     }
-  }
 
-  // Draw empty board and disks
-  function drawBoard() {
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    // Draw slots background
-    ctx.fillStyle = '#0052cc';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Draw empty board and disks
+    function drawBoard() {
+        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        // Draw slots background
+        ctx.fillStyle = '#0052cc';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Draw slots and disks
-    for(let r=0; r<ROWS; r++){
-      for(let c=0; c<COLS; c++){
-        const x = c * SLOT_SIZE + SLOT_SIZE/2;
-        const y = (ROWS - 1 - r) * SLOT_SIZE + SLOT_SIZE/2;
+        // Draw slots and disks
+        for(let r=0; r<ROWS; r++){
+            for(let c=0; c<COLS; c++){
+                const x = c * SLOT_SIZE + SLOT_SIZE/2;
+                const y = (ROWS - 1 - r) * SLOT_SIZE + SLOT_SIZE/2;
 
-        // Draw slot background: circle in blue
-        ctx.beginPath();
-        ctx.arc(x, y, RADIUS, 0, 2*Math.PI);
-        ctx.fillStyle = '#003d99';
-        ctx.fill();
+                // Draw slot background: circle in blue
+                ctx.beginPath();
+                ctx.arc(x, y, RADIUS, 0, 2*Math.PI);
+                ctx.fillStyle = '#003d99';
+                ctx.fill();
 
-        // Draw disk if any
-        if(board[r][c] === 1) {
-          ctx.fillStyle = '#ff0000'; // Red
-        } else if(board[r][c] === 2) {
-          ctx.fillStyle = '#ffff00'; // Yellow
+                // Draw disk if any
+                if(board[r][c] === 1) {
+                    ctx.fillStyle = '#ff0000'; // Red
+                } else if(board[r][c] === 2) {
+                    ctx.fillStyle = '#ffff00'; // Yellow
+                } else {
+                    ctx.fillStyle = '#1a1a66'; // Empty slot darker circle inside
+                    ctx.beginPath();
+                    ctx.arc(x, y, RADIUS * 0.8, 0, 2*Math.PI);
+                    ctx.fill();
+                    continue;
+                }
+
+                ctx.beginPath();
+                ctx.arc(x, y, RADIUS * 0.85, 0, 2*Math.PI);
+                ctx.fill();
+            }
+        }
+    }
+
+    // *** FUNCIÓN MODIFICADA ***
+    // Get first empty row in a column, or -1 if full. Acepta tablero simulado.
+    function getAvailableRow(col, boardToCheck = board) {
+        for(let r = 0; r < ROWS; r++){
+            if(boardToCheck[r][col] === 0){
+                return r;
+            }
+        }
+        return -1;
+    }
+
+    // Drop piece for player in column, return true if successful
+    function dropPiece(col, player) {
+        if(!gameActive) return false;
+        const row = getAvailableRow(col);
+        if(row === -1) return false;
+        board[row][col] = player;
+        return true;
+    }
+    
+    // *** FUNCIÓN MODIFICADA ***
+    // Check horizontal, vertical and diagonal for 4 in a row. Acepta tablero simulado.
+    function checkWin(player, boardToCheck = board) {
+        // Horizontal
+        for(let r=0; r<ROWS; r++){
+            for(let c=0; c<=COLS-4; c++){
+                if(boardToCheck[r][c] === player &&
+                   boardToCheck[r][c+1] === player &&
+                   boardToCheck[r][c+2] === player &&
+                   boardToCheck[r][c+3] === player) return true;
+            }
+        }
+        // Vertical
+        for(let c=0; c<COLS; c++){
+            for(let r=0; r<=ROWS-4; r++){
+                if(boardToCheck[r][c] === player &&
+                   boardToCheck[r+1][c] === player &&
+                   boardToCheck[r+2][c] === player &&
+                   boardToCheck[r+3][c] === player) return true;
+            }
+        }
+        // Diagonal down-right
+        for(let r=0; r<=ROWS-4; r++){
+            for(let c=0; c<=COLS-4; c++){
+                if(boardToCheck[r][c] === player &&
+                   boardToCheck[r+1][c+1] === player &&
+                   boardToCheck[r+2][c+2] === player &&
+                   boardToCheck[r+3][c+3] === player) return true;
+            }
+        }
+        // Diagonal up-right
+        for(let r=3; r<ROWS; r++){
+            for(let c=0; c<=COLS-4; c++){
+                if(boardToCheck[r][c] === player &&
+                   boardToCheck[r-1][c+1] === player &&
+                   boardToCheck[r-2][c+2] === player &&
+                   boardToCheck[r-3][c+3] === player) return true;
+            }
+        }
+        return false;
+    }
+
+
+    // Check for draw (no empty slots)
+    function checkDraw() {
+        for(let c=0; c<COLS; c++){
+            if(getAvailableRow(c) !== -1) return false;
+        }
+        return true;
+    }
+
+    // Show message in panel
+    function showMessage(msg) {
+        messageElem.textContent = msg;
+    }
+
+    // Update turn message
+    function updateTurnMessage() {
+        if(!gameActive) return;
+        if(vsComputer) {
+            showMessage(currentPlayer === 1 ? "Tu turno (Rojo)" : "Turno de la máquina (Amarillo)");
         } else {
-          ctx.fillStyle = '#1a1a66'; // Empty slot darker circle inside
-          ctx.beginPath();
-          ctx.arc(x, y, RADIUS * 0.8, 0, 2*Math.PI);
-          ctx.fill();
-          continue;
+            showMessage(`Turno jugador ${currentPlayer === 1 ? 'Rojo' : 'Amarillo'}`);
+        }
+    }
+
+    // Switch player turn
+    function switchTurn() {
+        currentPlayer = 3 - currentPlayer;
+        updateTurnMessage();
+    }
+
+    // Reset game state
+    function resetGame() {
+        initBoard();
+        currentPlayer = 1;
+        gameActive = true;
+        showMessage('');
+        updateTurnMessage();
+        drawBoard();
+    }
+
+
+    // ------------------------------------------------------------------
+    // -------- ALGORITMO MINIMAX (PARA AUMENTAR LA DIFICULTAD) ---------
+    // ------------------------------------------------------------------
+
+    // Puntuación heurística simple: cuenta 2 en raya, 3 en raya, etc.
+    function evaluateWindow(window, player) {
+        let score = 0;
+        const opp = 3 - player; 
+
+        const player_count = window.filter(x => x === player).length;
+        const empty_count = window.filter(x => x === 0).length;
+        const opp_count = window.filter(x => x === opp).length;
+
+        if (player_count === 4) {
+            score += 100000; // ¡Victoria!
+        } else if (player_count === 3 && empty_count === 1) {
+            score += 50; // 3 en raya con un hueco
+        } else if (player_count === 2 && empty_count === 2) {
+            score += 10; // 2 en raya con dos huecos
         }
 
-        ctx.beginPath();
-        ctx.arc(x, y, RADIUS * 0.85, 0, 2*Math.PI);
-        ctx.fill();
-      }
-    }
-  }
-
-  // Get first empty row in a column, or -1 if full
-  function getAvailableRow(col) {
-    for(let r = 0; r < ROWS; r++){
-      if(board[r][col] === 0){
-        return r;
-      }
-    }
-    return -1;
-  }
-
-  // Drop piece for player in column, return true if successful
-  function dropPiece(col, player) {
-    if(!gameActive) return false;
-    const row = getAvailableRow(col);
-    if(row === -1) return false;
-    board[row][col] = player;
-    return true;
-  }
-
-  // Check horizontal, vertical and diagonal for 4 in a row
-  function checkWin(player) {
-    // Horizontal
-    for(let r=0; r<ROWS; r++){
-      for(let c=0; c<=COLS-4; c++){
-        if(board[r][c] === player &&
-           board[r][c+1] === player &&
-           board[r][c+2] === player &&
-           board[r][c+3] === player) return true;
-      }
-    }
-    // Vertical
-    for(let c=0; c<COLS; c++){
-      for(let r=0; r<=ROWS-4; r++){
-        if(board[r][c] === player &&
-           board[r+1][c] === player &&
-           board[r+2][c] === player &&
-           board[r+3][c] === player) return true;
-      }
-    }
-    // Diagonal down-right
-    for(let r=0; r<=ROWS-4; r++){
-      for(let c=0; c<=COLS-4; c++){
-        if(board[r][c] === player &&
-           board[r+1][c+1] === player &&
-           board[r+2][c+2] === player &&
-           board[r+3][c+3] === player) return true;
-      }
-    }
-    // Diagonal up-right
-    for(let r=3; r<ROWS; r++){
-      for(let c=0; c<=COLS-4; c++){
-        if(board[r][c] === player &&
-           board[r-1][c+1] === player &&
-           board[r-2][c+2] === player &&
-           board[r-3][c+3] === player) return true;
-      }
-    }
-    return false;
-  }
-
-  // Check for draw (no empty slots)
-  function checkDraw() {
-    for(let c=0; c<COLS; c++){
-      if(getAvailableRow(c) !== -1) return false;
-    }
-    return true;
-  }
-
-  // Show message in panel
-  function showMessage(msg) {
-    messageElem.textContent = msg;
-  }
-
-  // Update turn message
-  function updateTurnMessage() {
-    if(!gameActive) return;
-    if(vsComputer) {
-      showMessage(currentPlayer === 1 ? "Tu turno" : "Turno de la máquina");
-    } else {
-      showMessage(`Turno jugador ${currentPlayer === 1 ? 'Rojo' : 'Amarillo'}`);
-    }
-  }
-
-  // Switch player turn
-  function switchTurn() {
-    currentPlayer = 3 - currentPlayer;
-    updateTurnMessage();
-  }
-
-  // Reset game state
-  function resetGame() {
-    initBoard();
-    currentPlayer = 1;
-    gameActive = true;
-    showMessage('');
-    updateTurnMessage();
-    drawBoard();
-  }
-
-  // Simple AI to choose a column randomly from available (improved later as needed)
-  function simpleAIPlay() {
-    const validCols = [];
-    for(let i=0; i<COLS; i++){
-      if(getAvailableRow(i) !== -1) validCols.push(i);
-    }
-    if(validCols.length === 0) return -1;
-    return validCols[Math.floor(Math.random() * validCols.length)];
-  }
-
-  // AI turn async to simulate delay
-  async function aiTurn() {
-    if(!gameActive || currentPlayer !== 2) return;
-    showMessage('Turno de la máquina...');
-    await new Promise(resolve => setTimeout(resolve, 600)); // delay
-    const col = simpleAIPlay();
-    if(col === -1) return;
-    dropPiece(col, 2);
-    drawBoard();
-    if(checkWin(2)) {
-      gameActive = false;
-      showMessage('La máquina gana. ¡Fin del juego!');
-      notifyParent(false);
-      return;
-    }
-    if(checkDraw()) {
-      gameActive = false;
-      showMessage('Empate. ¡Fin del juego!');
-      notifyParent(null);
-      return;
-    }
-    switchTurn();
-  }
-
-  // Notify parent frame about game end, with fallback
-  function notifyParent(playerWon) {
-    // Parámetro true si ganó jugador, false si máquina, null empate
-    setTimeout(() => {
-      try {
-        if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
-          window.parent.endGame(playerWon === true);
-        } else {
-          window.location.href = '/';
+        // Bloquea las amenazas del oponente
+        if (opp_count === 3 && empty_count === 1) {
+            score -= 5000; // Bloquea una posible victoria
         }
-      } catch(e) {
-        window.location.href = '/';
-      }
-    }, 2500);
-  }
 
-  // Handle user clicking on board to place disk
-  function handleClick(event) {
-    if(!gameActive || currentPlayer !== 1) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const colClicked = Math.floor(x / SLOT_SIZE);
-    if(colClicked < 0 || colClicked >= COLS) return;
-    if(dropPiece(colClicked, 1)){
-      drawBoard();
-      if(checkWin(1)){
-        gameActive = false;
-        showMessage('¡Has ganado! 🎉');
-        notifyParent(true);
-        return;
-      }
-      if(checkDraw()){
-        gameActive = false;
-        showMessage('Empate. Fin del juego.');
-        notifyParent(null);
-        return;
-      }
-      switchTurn();
-      aiTurn();
+        return score;
     }
-  }
 
-  // Touch support: treat touch as click for simplicity
-  canvas.addEventListener('touchstart', e => {
-    if(e.touches.length === 1){
-      handleClick(e.touches[0]);
+    // Función principal de puntuación de tablero
+    function scorePosition(board, player) {
+        let score = 0;
+
+        // Puntuación por control del centro (estratégico)
+        const center_col = Math.floor(COLS / 2);
+        const center_array = board.map(r => r[center_col]);
+        score += center_array.filter(x => x === player).length * 3;
+
+        // Evaluar 4 casillas en todas las direcciones
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                // Horizontal
+                if (c <= COLS - 4) {
+                    score += evaluateWindow(board[r].slice(c, c + 4), player);
+                }
+                // Vertical
+                if (r <= ROWS - 4) {
+                    const window = [board[r][c], board[r + 1][c], board[r + 2][c], board[r + 3][c]];
+                    score += evaluateWindow(window, player);
+                }
+                // Diagonal (Down-Right)
+                if (c <= COLS - 4 && r <= ROWS - 4) {
+                    const window = [board[r][c], board[r + 1][c + 1], board[r + 2][c + 2], board[r + 3][c + 3]];
+                    score += evaluateWindow(window, player);
+                }
+                // Diagonal (Up-Right)
+                if (c <= COLS - 4 && r >= 3) {
+                    const window = [board[r][c], board[r - 1][c + 1], board[r - 2][c + 2], board[r - 3][c + 3]];
+                    score += evaluateWindow(window, player);
+                }
+            }
+        }
+        return score;
     }
-  });
 
-  // Mouse support
-  canvas.addEventListener('click', handleClick);
+    // Algoritmo Minimax (Busca la mejor jugada asumiendo que el oponente también juega óptimamente)
+    function minimax(currentBoard, depth, alpha, beta, maximizingPlayer) {
+        const validCols = [];
+        for(let i=0; i<COLS; i++){
+            // Usamos la versión modificada de getAvailableRow
+            if(getAvailableRow(i, currentBoard) !== -1) validCols.push(i);
+        }
+        
+        // Condiciones terminales (fin del juego o profundidad máxima alcanzada)
+        if (depth === 0 || checkWin(1, currentBoard) || checkWin(2, currentBoard) || validCols.length === 0) {
+            if (checkWin(2, currentBoard)) return [null, 100000000000000]; // Máquina gana
+            if (checkWin(1, currentBoard)) return [null, -100000000000000]; // Jugador gana
+            if (validCols.length === 0) return [null, 0]; // Empate
+            
+            return [null, scorePosition(currentBoard, 2)]; // Puntuación heurística
+        }
 
-  // Buttons for mode selection
-  btnPvP.addEventListener('click', () => {
-    if(gameActive) return;
-    vsComputer = false;
-    btnPvP.setAttribute('aria-pressed', 'true');
-    btnPvC.setAttribute('aria-pressed', 'false');
-    showMessage('Modo 2 Jugadores activado');
-    resetGame();
-  });
-  btnPvC.addEventListener('click', () => {
-    if(gameActive) return;
+        if (maximizingPlayer) {
+            let value = -Infinity;
+            let best_col = validCols[Math.floor(Math.random() * validCols.length)]; // Movimiento aleatorio como fallback
+
+            for (const col of validCols) {
+                const tempBoard = JSON.parse(JSON.stringify(currentBoard)); // Crear copia profunda
+                const row = getAvailableRow(col, tempBoard);
+                tempBoard[row][col] = 2; // Simular jugada de la máquina
+
+                const new_score = minimax(tempBoard, depth - 1, alpha, beta, false)[1];
+
+                if (new_score > value) {
+                    value = new_score;
+                    best_col = col;
+                }
+                alpha = Math.max(alpha, value);
+                if (alpha >= beta) break; // Alpha-Beta Pruning
+            }
+            return [best_col, value];
+        } else { // Minimizing player (jugador 1)
+            let value = Infinity;
+            let best_col = validCols[Math.floor(Math.random() * validCols.length)];
+
+            for (const col of validCols) {
+                const tempBoard = JSON.parse(JSON.stringify(currentBoard));
+                const row = getAvailableRow(col, tempBoard);
+                tempBoard[row][col] = 1; // Simular jugada del jugador
+
+                const new_score = minimax(tempBoard, depth - 1, alpha, beta, true)[1];
+
+                if (new_score < value) {
+                    value = new_score;
+                    best_col = col;
+                }
+                beta = Math.min(beta, value);
+                if (alpha >= beta) break; // Alpha-Beta Pruning
+            }
+            return [best_col, value];
+        }
+    }
+
+    // Lógica del turno de la máquina (sustituye a simpleAIPlay)
+    async function aiTurn() {
+        if(!gameActive || currentPlayer !== 2) return;
+        showMessage('Turno de la máquina...');
+        
+        // Ejecutar Minimax para encontrar el mejor movimiento
+        const [best_col, score] = minimax(board, AI_DEPTH, -Infinity, Infinity, true); 
+
+        // Retardo simulado para que parezca que la máquina "piensa"
+        await new Promise(resolve => setTimeout(resolve, 600)); 
+
+        if(best_col !== null && dropPiece(best_col, 2)){
+            drawBoard();
+            if(checkWin(2)) {
+                gameActive = false;
+                showMessage('La máquina gana. ¡Fin del juego! 😭');
+                notifyParent(false);
+                return;
+            }
+            if(checkDraw()) {
+                gameActive = false;
+                showMessage('Empate. ¡Fin del juego!');
+                notifyParent(null);
+                return;
+            }
+            switchTurn();
+        }
+    }
+    // ------------------------------------------------------------------
+    // -------------------- FIN CÓDIGO MINIMAX --------------------------
+    // ------------------------------------------------------------------
+
+
+    // Notify parent frame about game end, with fallback
+    function notifyParent(playerWon) {
+        // Parámetro true si ganó jugador, false si máquina, null empate
+        setTimeout(() => {
+            try {
+                if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
+                    window.parent.endGame(playerWon === true);
+                } else {
+                    // Fallback para reiniciar o redirigir
+                    resetGame(); 
+                }
+            } catch(e) {
+                // Fallback para reiniciar o redirigir
+                resetGame(); 
+            }
+        }, 2500);
+    }
+
+    // Handle user clicking on board to place disk
+    function handleClick(event) {
+        if(!gameActive || currentPlayer !== 1) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const colClicked = Math.floor(x / SLOT_SIZE);
+        if(colClicked < 0 || colClicked >= COLS) return;
+        if(dropPiece(colClicked, 1)){
+            drawBoard();
+            if(checkWin(1)){
+                gameActive = false;
+                showMessage('¡Has ganado! 🎉');
+                notifyParent(true);
+                return;
+            }
+            if(checkDraw()){
+                gameActive = false;
+                showMessage('Empate. Fin del juego.');
+                notifyParent(null);
+                return;
+            }
+            switchTurn();
+            // Llama a la IA para su turno
+            if(vsComputer) {
+                aiTurn();
+            }
+        }
+    }
+
+    // Touch support: treat touch as click for simplicity
+    canvas.addEventListener('touchstart', e => {
+        if(e.touches.length === 1){
+            handleClick(e.touches[0]);
+        }
+    });
+
+    // Mouse support
+    canvas.addEventListener('click', handleClick);
+
+    // Buttons for mode selection
+    btnPvP.addEventListener('click', () => {
+        // Permitir cambiar modo solo si el juego está inactivo o al inicio
+        if (gameActive) return; 
+        vsComputer = false;
+        btnPvP.setAttribute('aria-pressed', 'true');
+        btnPvC.setAttribute('aria-pressed', 'false');
+        showMessage('Modo 2 Jugadores activado');
+        resetGame();
+    });
+    btnPvC.addEventListener('click', () => {
+        // Permitir cambiar modo solo si el juego está inactivo o al inicio
+        if (gameActive) return; 
+        vsComputer = true;
+        btnPvP.setAttribute('aria-pressed', 'false');
+        btnPvC.setAttribute('aria-pressed', 'true');
+        showMessage('Modo Jugador vs Máquina activado');
+        resetGame();
+    });
+
+    // On load initialize PvC by default
     vsComputer = true;
-    btnPvP.setAttribute('aria-pressed', 'false');
     btnPvC.setAttribute('aria-pressed', 'true');
-    showMessage('Modo Jugador vs Máquina activado');
+    btnPvP.setAttribute('aria-pressed', 'false');
     resetGame();
-  });
-
-  // On load initialize PvP by default
-  vsComputer = false;
-  resetGame();
-
 })();
 </script>
 
