@@ -34,7 +34,7 @@
             aspect-ratio: 4 / 5;
             box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), 0 0 5px rgba(255, 255, 255, 0.8) inset;
             border-radius: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 10px; /* Espacio reducido para el HUD */
         }
 
         h2 {
@@ -42,12 +42,22 @@
             margin: 12px 0 8px 0;
             text-shadow: 2px 2px #ff0077;
         }
+        
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 380px;
+            margin-bottom: 10px;
+            font-size: 10px;
+            color: #00FF80;
+        }
 
         #controlesTactiles {
             /* Contenedor principal para el D-Pad */
             display: grid;
             grid-template-columns: repeat(3, 1fr); /* 3 columnas */
-            grid-template-rows: repeat(3, 1fr);    /* 3 filas */
+            grid-template-rows: repeat(3, 1fr);    /* 3 filas */
             gap: 5px; /* Pequeño espacio entre los botones */
             width: 180px; /* Ancho fijo para el conjunto del D-Pad */
             height: 180px; /* Alto fijo para el conjunto del D-Pad */
@@ -85,21 +95,21 @@
         /* Posicionamiento específico para cada botón dentro del grid */
         .botonControl[data-key="ArrowUp"] {
             grid-column: 2; 
-            grid-row: 1;    
+            grid-row: 1;    
             background-color: #ff8c00;
             border: 3px solid #ffa500;
             box-shadow: 3px 3px #ffa500;
         }
         .botonControl[data-key="ArrowLeft"] {
             grid-column: 1; 
-            grid-row: 2;    
+            grid-row: 2;    
             background-color: #6a006a;
             border: 3px solid #ff00ff;
             box-shadow: 3px 3px #ff00ff;
         }
         .botonControl[data-key=" "] { /* Botón de SALTO (Centro) */
             grid-column: 2; 
-            grid-row: 2;    
+            grid-row: 2;    
             background-color: #004d40;
             border: 3px solid #00ff80;
             box-shadow: 3px 3px #00ff80;
@@ -109,21 +119,20 @@
         }
         .botonControl[data-key="ArrowRight"] {
             grid-column: 3; 
-            grid-row: 2;    
+            grid-row: 2;    
             background-color: #6a006a;
             border: 3px solid #ff00ff;
             box-shadow: 3px 3px #ff00ff;
         }
         .botonControl[data-key="ArrowDown"] {
             grid-column: 2; 
-            grid-row: 3;    
+            grid-row: 3;    
             background-color: #ff8c00;
             border: 3px solid #ffa500;
             box-shadow: 3px 3px #ffa500;
         }
 
         /* Ocultar los espacios vacíos para que solo se vean los botones */
-        /* Nota: Necesitamos que existan los divs vacíos para mantener la estructura de la cuadrícula 3x3 */
         .grid-cell-empty {
             visibility: hidden;
         }
@@ -136,20 +145,22 @@
 </head>
 <body>
     <h2>DONKEY KONG CLÁSICO</h2>
+    
+    <div id="hud">
+        <span>VIDAS: <span id="livesDisplay">3</span></span>
+    </div>
+    
     <canvas id="juegoCanvas" width="320" height="400"></canvas>
     <div id="controlesTactiles">
         
-        <!-- Fila 1 -->
         <div class="grid-cell-empty"></div> 
         <button class="botonControl" data-key="ArrowUp">↑</button>
         <div class="grid-cell-empty"></div> 
 
-        <!-- Fila 2 (Movimiento lateral y salto central) -->
         <button class="botonControl" data-key="ArrowLeft">←</button>
         <button class="botonControl" data-key=" ">SALTO</button> 
         <button class="botonControl" data-key="ArrowRight">→</button>
         
-        <!-- Fila 3 -->
         <div class="grid-cell-empty"></div> 
         <button class="botonControl" data-key="ArrowDown">↓</button>
         <div class="grid-cell-empty"></div> 
@@ -162,10 +173,16 @@
         const ctx = canvas.getContext("2d");
         const ancho = canvas.width;
         const alto = canvas.height;
+        
+        // Elementos del HUD
+        const livesDisplay = document.getElementById('livesDisplay');
 
         let teclasPresionadas = {};
         const GRAVEDAD = 0.3;
         let juegoActivo = true;
+        
+        // NUEVAS VARIABLES DE JUEGO
+        let vidas = 3; 
 
         const ESTADO_INICIAL_CARLA = {
             ancho: 16, 
@@ -349,6 +366,11 @@
             ctx.fillText('EXIT', meta.x + meta.ancho / 2, meta.y + 20);
             ctx.textAlign = 'start';
         }
+        
+        function actualizarHUD() {
+            livesDisplay.textContent = vidas;
+        }
+
 
         function dibujar() {
             if (!juegoActivo) return;
@@ -365,15 +387,73 @@
 
         // --- GAME LOGIC ---
 
+        // FUNCIÓN AÑADIDA PARA COMUNICARSE CON EL IFRAME PADRE
+        function notifyParent(playerWon) {
+            setTimeout(() => {
+                try {
+                    if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
+                        window.parent.endGame(playerWon);
+                    } else {
+                        window.location.href = '/'; 
+                    }
+                } catch(e) {
+                    window.location.href = '/';
+                }
+            }, 2500); 
+        }
+
+        // NUEVA FUNCIÓN: Reinicia solo la posición y los barriles.
+        function perderVida() {
+            vidas--;
+            actualizarHUD();
+            
+            if (vidas <= 0) {
+                manejarDerrota("¡Carla ha sido aplastada! Fin del Juego.");
+                return;
+            }
+            
+            // Reinicia la posición de Carla al inicio.
+            carla = { ...ESTADO_INICIAL_CARLA };
+            
+            // Mantiene el juego activo, pero muestra un mensaje breve.
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(255, 0, 0, 0.4);
+                color: white;
+                font-family: 'Press Start 2P', monospace;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 999;
+            `;
+            overlay.innerHTML = `<p style="font-size: 16px; color: #fff; text-shadow: 2px 2px #000;">¡OUCH! VIDA PERDIDA. Te quedan ${vidas}</p>`;
+            document.body.appendChild(overlay);
+
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                juegoActivo = true;
+            }, 1000); 
+            
+            // También se pueden reiniciar los barriles para dar una pequeña tregua
+            barriles = []; 
+            donkeyKong.ultimoBarril = Date.now();
+        }
+
+
         function reiniciarJuego() {
+            vidas = 3; // Reinicia vidas
             carla = { ...ESTADO_INICIAL_CARLA };
             barriles = [];
             donkeyKong.intervaloBarril = 2000;
             donkeyKong.velocidadMovimiento = 0.5;
             juegoActivo = true;
+            actualizarHUD();
         }
 
-        function mostrarMensaje(mensaje) {
+        function mostrarMensaje(mensaje, esGameOver) {
             const overlay = document.createElement('div');
             overlay.style.cssText = `
                 position: absolute;
@@ -391,8 +471,8 @@
 
             overlay.innerHTML = `
                 <div style="padding: 20px; border: 4px solid #FF0077; background: #333; border-radius: 8px; box-shadow: 0 0 15px #FF0077;">
-                    <p style="margin: 0 0 20px 0; font-size: 14px;">${mensaje}</p>
-                    <button id="okBtn" style="padding: 10px 20px; font-family: 'Press Start 2P', monospace; background: #00FF80; border: none; border-radius: 4px; cursor: pointer; color: black; font-size: 10px;">OK</button>
+                    <p style="margin: 0 0 20px 0; font-size: 14px; color: ${esGameOver ? '#FF0077' : '#00FF80'};">${mensaje}</p>
+                    <button id="okBtn" style="padding: 10px 20px; font-family: 'Press Start 2P', monospace; background: #00FF80; border: none; border-radius: 4px; cursor: pointer; color: black; font-size: 10px;">${esGameOver ? 'Reiniciar' : '¡Genial!'}</button>
                 </div>
             `;
 
@@ -400,15 +480,20 @@
 
             document.getElementById('okBtn').onclick = () => {
                 document.body.removeChild(overlay);
-                if (!juegoActivo) {
+                if (esGameOver) {
                     reiniciarJuego();
+                } else if (!juegoActivo) { // Si es victoria
+                    notifyParent(true);
                 }
             };
         }
 
-        function manejarDerrota() {
+        // FUNCIÓN MODIFICADA
+        function manejarDerrota(mensaje) {
             juegoActivo = false;
-            mostrarMensaje("¡Carla ha sido aplastada! Fin del Juego.");
+            mostrarMensaje(mensaje, true);
+            // Notifica al padre que el jugador perdió (false)
+            notifyParent(false);
         }
 
         function crearBarril() {
@@ -464,21 +549,27 @@
         }
 
         function comprobarColisionCarla() {
-            barriles.forEach(b => {
+            // Colisión con Barriles
+            for (let i = barriles.length - 1; i >= 0; i--) {
+                const b = barriles[i];
                 const dx = Math.abs((carla.x + carla.ancho / 2) - b.x);
                 const dy = Math.abs((carla.y + carla.alto / 2) - b.y);
 
                 if (dx < (carla.ancho / 2 + b.radio) && dy < (carla.alto / 2 + b.radio)) {
-                    manejarDerrota();
+                    barriles.splice(i, 1); // El barril desaparece
+                    juegoActivo = false; // Detiene el juego por un momento
+                    perderVida(); // El juego continúa si quedan vidas
+                    return; // Sale inmediatamente después de colisionar
                 }
-            });
+            }
 
+            // Colisión con Meta (Victoria)
             if (
                 carla.x < meta.x + meta.ancho && carla.x + carla.ancho > meta.x &&
                 carla.y + carla.alto > meta.y && carla.y < meta.y + meta.alto
             ) {
                 juegoActivo = false;
-                mostrarMensaje("¡Carla ha alcanzado la puerta! ¡Has ganado!");
+                mostrarMensaje("¡Carla ha alcanzado la puerta! ¡Has ganado!", false);
             }
         }
         
@@ -598,7 +689,9 @@
             // Colisiones con bordes del canvas
             if (carla.x < 0) carla.x = 0;
             if (carla.x + carla.ancho > ancho) carla.x = ancho - carla.ancho;
-            if (carla.y > alto) manejarDerrota();
+            
+            // Si cae al vacío (fuera del canvas)
+            if (carla.y > alto && juegoActivo) perderVida(); 
         }
 
         // --- BUCLE PRINCIPAL DEL JUEGO ---
@@ -654,7 +747,10 @@
             button.addEventListener('mouseup', endEvent);
         });
 
-        window.onload = bucleJuego;
+        window.onload = () => {
+            actualizarHUD(); // Muestra las vidas iniciales
+            bucleJuego();
+        }
 
     </script>
 </body>
