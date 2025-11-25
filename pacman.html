@@ -34,6 +34,12 @@
             border: 4px solid #1e40af;
             background-color: #000;
         }
+    /* ✅ Estilo responsive para móviles */
+    #gameCanvas {
+      width: 100%;
+      height: auto;
+      max-width: 560px;
+    }
 
         #controls {
             margin-top: 20px;
@@ -347,32 +353,42 @@
         }
 
         function checkCollisions() {
-            ghosts.forEach(ghost => {
-                if (ghost.x === pacman.x && ghost.y === pacman.y) {
-                    if (scared) {
-                        score += 200;
-                        document.getElementById('score').textContent = 'Score: ' + score;
-                        // Reiniciar fantasma a su posición inicial
-                        ghost.x = 14;
-                        ghost.y = 14;
-                    } else {
-                        endGame(false);
-                    }
-                }
-            });
+    ghosts.forEach(ghost => {
+        if (ghost.x === pacman.x && ghost.y === pacman.y) {
+            if (scared) {
+                // El fantasma es comido
+                score += 200;
+                document.getElementById('score').textContent = 'Score: ' + score;
+                // Reiniciar fantasma a su posición inicial
+                // ESTO DEBE SER EL PUNTO DE INICIO DE LA JAULA
+                ghost.x = 14; 
+                ghost.y = 14;
+                // Opcional: El fantasma puede salir con una dirección fija
+                ghost.dir = 'up'; 
+            } else {
+                // Pac-Man muere
+                endGame(false); 
+            }
+        }
+    });
 
             if (dots.length === 0) {
                 endGame(true);
             }
         }
 
-        function endGame(won) {
-            gameOver = true;
-            document.getElementById('gameOverText').textContent = won ? '¡GANASTE!' : 'GAME OVER';
-            document.getElementById('finalScore').textContent = 'Score Final: ' + score;
-            document.getElementById('gameOver').style.display = 'block';
-        }
+       function endGame(won) {
+    gameOver = true;
+    document.getElementById('gameOverText').textContent = won ? '¡GANASTE!' : 'GAME OVER';
+    document.getElementById('finalScore').textContent = 'Score Final: ' + score;
+    document.getElementById('gameOver').style.display = 'block';
 
+    // 🏆 LÍNEA CRUCIAL: Retorna automáticamente a la aplicación principal 
+    // después de un breve retraso para que el usuario vea el mensaje final.
+    setTimeout(function() {
+        window.parent.endGame(); 
+    }, 2500); // 2.5 segundos de pausa
+}
         function resetGame() {
             pacman = { x: 14, y: 23, dir: 'right', nextDir: 'right' };
             ghosts = [
@@ -469,10 +485,16 @@
             if (e.key === 'ArrowRight') pacman.nextDir = 'right';
         });
 
-        document.getElementById('restartBtn').addEventListener('click', resetGame);
+       document.getElementById('restartBtn').addEventListener('click', function() {
+    // Si el usuario presiona el botón "Jugar de Nuevo", volvemos a la aplicación de ejercicios.
+    window.parent.endGame(); 
+});
 
-        initDots();
-        gameLoop();
+initDots();
+gameLoop();
     </script>
 </body>
 </html>
+
+
+
