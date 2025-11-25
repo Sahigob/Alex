@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Mata Marcianos Clásico Educativo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin:0; padding:0; height:100%;
+    background: #000;
+    color: #0f0;
+    font-family: monospace, monospace;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #infoBar {
+    font-size: 1.2rem;
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    box-sizing: border-box;
+  }
+  #message {
+    margin-top: 10px;
+    color: #0f0;
+    font-size: 1.4rem;
+    text-align: center;
+    min-height: 36px;
+  }
+  canvas {
+    background: black;
+    border: 3px solid #0f0;
+    border-radius: 8px;
+    max-width: 100vw;
+    width: 600px;
+    height: 420px;
+    touch-action: none;
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<div id="infoBar" aria-live="polite" aria-atomic="true">
+  <div>Vidas: <span id="lives">3</span></div>
+  <div>Puntos: <span id="score">0</span></div>
+</div>
+<canvas id="gameCanvas" width="600" height="420" aria-label="Juego Mata Marcianos educativo" role="img" tabindex="0"></canvas>
+<div id="message" aria-live="assertive" aria-atomic="true"></div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const WIDTH = canvas.width;
+  const HEIGHT = canvas.height;
+
+  // DPI fix for sharp display, no double scale
+  function fixDPI(){
+    const dpi = window.devicePixelRatio || 1;
+    canvas.style.width = WIDTH + "px";
+    canvas.style.height = HEIGHT + "px";
+    if(canvas.width !== WIDTH * dpi || canvas.height !== HEIGHT * dpi){
+      canvas.width = WIDTH * dpi;
+      canvas.height = HEIGHT * dpi;
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpi,dpi);
+    }
+  }
+  fixDPI();
+
+  // Player ship constants
+  // ********** NAVE DEL JUGADOR MÁS PEQUEÑA **********
+  const SHIP_WIDTH = 40; // De 50 a 40
+  const SHIP_HEIGHT = 20; // De 25 a 20
+  // **************************************************
+  const SHIP_SPEED = 6;
+
+  // Bullet constants (player)
+  const BULLET_WIDTH = 4;
+  const BULLET_HEIGHT = 12;
+  const BULLET_SPEED = 10;
+  const BULLET_FIRE_INTERVAL = 300; // ms automatic fire
+
+  // --- Constantes de Tipos de Enemigos ---
+  const ENEMY_H_GAP = 5; 
+  const ENEMY_V_GAP = 10; 
+
+  const ENEMY_TYPES = {
+    Type1: { width: 20, height: 14, color: '#0f0', score: 10, shadow: '#0f0' }, // Pequeña, Verde
+    Type2: { width: 28, height: 18, color: '#00f', score: 20, shadow: '#00f' }, // Mediana, Azul
+    Type3: { width: 35, height: 22, color: '#f00', score: 40, shadow: '#f00' }  // Grande, Roja
+  };
+  
+  const ENEMY_COLS = 12; 
+  const ENEMY_ROWS_INITIAL = 3; 
+
+  const ENEMY_MOVE_INTERVAL_INIT = 1000;
+  const ENEMY_MOVE_INTERVAL_MIN = 240;
+  const ENEMY_MOVE_STEP = 10;
+  const ENEMY_DESCEND_STEP = 12; 
+
+  // Enemy bullets
+  const ENEMY_BULLET_WIDTH = 4;
+  const ENEMY_BULLET_HEIGHT = 12;
+  const ENEMY_BULLET_SPEED = 6;
+  const ENEMY_FIRE_CHANCE = 0.005; 
+  
+  // Constante de Invulnerabilidad
+  const INVINCIBILITY_DURATION = 2000; // 2 segundos
+
+  const ENEMY_ROW_ADD_INTERVAL = 10000; // Genera fila cada 10 segundos
+
+  // Game variables
+  let lives = 3;
+  let score = 0;
+  let invincibleTimer = 0; // Temporizador de invulnerabilidad
+
+  // Player position and state
+  let shipX = WIDTH/2 - SHIP_WIDTH/2;
+  let shipY = HEIGHT - SHIP_HEIGHT - 10;
+
+  // Movement input flag for ship
+  let targetShipX = shipX;
+
+  // Player bullets array
+  let playerBullets = [];
+
+  // Timer for automatic shooting
+  let lastPlayerFire = 0;
+
+  // Enemy data array: each element {row, col, x, y, alive, type, width, height}
+  let enemies = [];
+
+  // Enemy horizontal movement direction: 1 right, -1 left
+  let enemyDirection = 1;
+
+  // Enemy movement timing and position
+  let enemyMoveTimer = 0;
+  let enemyMoveInterval = ENEMY_MOVE_INTERVAL_INIT;
+
+  // Enemy bullets array
+  let enemyBullets = [];
+
+  // Track last time row added (to generate rows dynamically)
+  let lastEnemyRowAdd = 0; 
+
+  // Game state
+  let gameEnded = false;
+
+  // UI elements
+  const livesElem = document.getElementById('lives');
+  const scoreElem = document.getElementById('score');
+  const messageElem = document.getElementById('message');
+
+  // Helper to get enemy info
+  function getEnemyInfo(type) {
+    return ENEMY_TYPES[type] || ENEMY_TYPES.Type1;
+  }
+
+  // Calculate horizontal spacing dynamically
+  const MAX_ENEMY_WIDTH = ENEMY_TYPES.Type3.width; 
+  const TOTAL_H_SPACE_PER_COL = MAX_ENEMY_WIDTH + ENEMY_H_GAP;
+  const GRID_WIDTH = ENEMY_COLS * TOTAL_H_SPACE_PER_COL;
+  const START_X = (WIDTH - GRID_WIDTH) / 2 + ENEMY_H_GAP / 2;
+
+  // Generate a new enemy object
+  function createEnemy(row, col, startY, typeName) {
+    const info = getEnemyInfo(typeName);
+    // Centra horizontalmente para que la grilla esté centrada
+    const x = START_X + col * TOTAL_H_SPACE_PER_COL + (MAX_ENEMY_WIDTH - info.width) / 2;
+    // Espaciado vertical basado en el tipo más grande
+    const y = startY + row * (MAX_ENEMY_WIDTH + ENEMY_V_GAP); 
+
+    return { row, col, x, y, alive: true, type: typeName, width: info.width, height: info.height };
+  }
+
+  // Initialize enemies grid initial rows and columns
+  function initEnemies() {
+    enemies = [];
+    const startY = 5; 
+    
+    // Configuración inicial para 3 filas y 12 columnas (36 naves)
+    const initialConfig = [
+        'Type3', 'Type3', 'Type3', 'Type2', 'Type2', 'Type2', 'Type2', 'Type2', 'Type2', 'Type3', 'Type3', 'Type3', 
+        'Type2', 'Type2', 'Type2', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type2', 'Type2', 'Type2', 
+        'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1', 'Type1'
+    ];
+
+    for(let row=0; row<ENEMY_ROWS_INITIAL; row++){
+      for(let col=0; col<ENEMY_COLS; col++){
+        const typeIndex = row * ENEMY_COLS + col;
+        const typeName = initialConfig[typeIndex] || 'Type1';
+        enemies.push(createEnemy(row, col, startY, typeName));
+      }
+    }
+  }
+
+  // Draw player ship
+  function drawShip(){
+    // La nave parpadea durante el periodo de invulnerabilidad
+    if (invincibleTimer > 0 && Math.floor(performance.now() / 100) % 2 === 0) {
+        return; // No dibujar la nave (parpadeo)
+    }
+
+    ctx.save();
+    ctx.fillStyle = '#0f0';
+    ctx.shadowColor = '#0f0';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(shipX, shipY + SHIP_HEIGHT);
+    ctx.lineTo(shipX + SHIP_WIDTH/2, shipY);
+    ctx.lineTo(shipX + SHIP_WIDTH, shipY + SHIP_HEIGHT);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  // Draw bullet
+  function drawBullet(bullet, player=true){
+    ctx.save();
+    ctx.fillStyle = player ? '#0f0': '#f00';
+    ctx.shadowColor = player ? '#0f0': '#f00';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  // Draw an enemy ship (rectangle with eyes, now with variable size/color)
+  function drawEnemy(enemy){
+    if(!enemy.alive) return;
+    const info = getEnemyInfo(enemy.type);
+    ctx.save();
+    ctx.fillStyle = info.color;
+    ctx.shadowColor = info.shadow;
+    ctx.shadowBlur = 12;
+    ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+    ctx.shadowBlur = 0;
+
+    // Eyes (2 small black squares)
+    ctx.fillStyle = '#000';
+    ctx.fillRect(enemy.x + enemy.width * 0.2, enemy.y + enemy.height * 0.3, enemy.width * 0.15, enemy.height * 0.15);
+    ctx.fillRect(enemy.x + enemy.width * 0.65, enemy.y + enemy.height * 0.3, enemy.width * 0.15, enemy.height * 0.15);
+    ctx.restore();
+  }
+
+  // Update movement of enemies (horizontal, descend)
+  function updateEnemies(deltaTime){
+    enemyMoveTimer += deltaTime;
+    if(enemyMoveTimer >= enemyMoveInterval){
+      enemyMoveTimer = 0;
+
+      // Check edges 
+      let leftMost = WIDTH, rightMost = 0;
+      enemies.forEach(e => {
+        if(e.alive){
+          leftMost = Math.min(leftMost, e.x);
+          rightMost = Math.max(rightMost, e.x + e.width);
+        }
+      });
+
+      // Aseguramos que el movimiento se ajusta a los límites de la grilla
+      const H_MARGIN = START_X; 
+
+      if((enemyDirection === 1 && rightMost + ENEMY_MOVE_STEP >= WIDTH - H_MARGIN) ||
+         (enemyDirection === -1 && leftMost - ENEMY_MOVE_STEP <= H_MARGIN)){
+        // Descend and reverse
+        enemies.forEach(e => {
+          if(e.alive) e.y += ENEMY_DESCEND_STEP;
+        });
+        enemyDirection *= -1;
+      }else{
+        enemies.forEach(e => {
+          if(e.alive) e.x += ENEMY_MOVE_STEP * enemyDirection;
+        });
+      }
+      // Gradually speed up enemy movement
+      enemyMoveInterval = Math.max(ENEMY_MOVE_INTERVAL_MIN, enemyMoveInterval * 0.97);
+    }
+  }
+
+  // Update player bullets
+  function updatePlayerBullets(){
+    for(let i = playerBullets.length-1; i >= 0; i--) {
+      const b = playerBullets[i];
+      b.y -= BULLET_SPEED;
+      // Remove out of screen bullets
+      if(b.y + b.height < 0) playerBullets.splice(i,1);
+      else {
+        // Check hits with enemies
+        for(let e of enemies){
+          if(e.alive && b.x > e.x && b.x < e.x + e.width && b.y < e.y + e.height && b.y + b.height > e.y) {
+            e.alive = false;
+            playerBullets.splice(i,1);
+            const info = getEnemyInfo(e.type);
+            score += info.score; // Add score based on enemy type
+            updateScore();
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Update enemy bullets
+  function updateEnemyBullets(){
+    for(let i = enemyBullets.length-1; i >=0; i--) {
+      const b = enemyBullets[i];
+      b.y += ENEMY_BULLET_SPEED;
+      if(b.y > HEIGHT) enemyBullets.splice(i,1);
+      else {
+        // Check hit with player ship
+        if(b.x + b.width > shipX && b.x < shipX + SHIP_WIDTH && b.y + b.height > shipY && b.y < shipY + SHIP_HEIGHT){
+          // Comprobar invulnerabilidad
+          if (invincibleTimer <= 0) {
+            enemyBullets.splice(i,1);
+            loseLife();
+            break;
+          }
+          // Si es invulnerable, la bala simplemente se elimina (no pierde vida)
+          enemyBullets.splice(i,1);
+          break; 
+        }
+      }
+    }
+  }
+
+  // Enemy firing logic
+  function enemyFire(){
+    if(gameEnded) return;
+    enemies.forEach(e => {
+      if(e.alive && Math.random() < ENEMY_FIRE_CHANCE){
+        enemyBullets.push({
+          x: e.x + e.width/2 - ENEMY_BULLET_WIDTH/2, // center bullet on enemy
+          y: e.y + e.height,
+          width: ENEMY_BULLET_WIDTH,
+          height: ENEMY_BULLET_HEIGHT,
+          speed: ENEMY_BULLET_SPEED
+        });
+      }
+    });
+  }
+
+  // Auto fire player bullets at fixed interval
+  function autoFirePlayerBullets(timestamp){
+    if(gameEnded) return;
+    if(!lastPlayerFire) lastPlayerFire = timestamp;
+    if(timestamp - lastPlayerFire > BULLET_FIRE_INTERVAL){
+      playerBullets.push({
+        x: shipX + SHIP_WIDTH/2 - BULLET_WIDTH/2,
+        y: shipY,
+        width: BULLET_WIDTH,
+        height: BULLET_HEIGHT,
+      });
+      lastPlayerFire = timestamp;
+    }
+  }
+
+  // Add new enemy row every ENEMY_ROW_ADD_INTERVAL ms
+  function addEnemyRow(){
+    // La nueva fila simplemente aparece arriba.
+    const y = 5;
+    const typeNames = Object.keys(ENEMY_TYPES);
+    for(let col=0; col<ENEMY_COLS; col++){
+      const randomType = typeNames[Math.floor(Math.random() * typeNames.length)];
+      
+      const newEnemy = createEnemy(0, col, y, randomType); 
+      enemies.push(newEnemy);
+    }
+  }
+
+  // Draw all game elements:
+  function draw(){
+    ctx.clearRect(0,0,WIDTH,HEIGHT);
+    drawShip();
+    enemies.forEach(drawEnemy);
+    playerBullets.forEach(b => drawBullet(b,true));
+    enemyBullets.forEach(b => drawBullet(b,false));
+  }
+
+  // Lose life and reset or end game
+  function loseLife(){
+    if(gameEnded) return;
+    lives--;
+    updateLives();
+    
+    if(lives <= 0) {
+      endGame(false);
+    } else {
+      // Iniciar el temporizador de invulnerabilidad
+      invincibleTimer = INVINCIBILITY_DURATION;
+      
+      // Reset ship position and bullets
+      shipX = WIDTH/2 - SHIP_WIDTH/2;
+      playerBullets = [];
+      enemyBullets = [];
+      messageElem.textContent = '¡Has sido alcanzado! Vidas restantes: ' + lives;
+      setTimeout(()=>{messageElem.textContent='';},1800);
+    }
+  }
+
+  // Check game win condition: all enemies dead
+  function checkWin(){
+    if(enemies.every(e => !e.alive)) {
+      endGame(true);
+    }
+  }
+
+  // Update UI elements
+  function updateLives() {
+    livesElem.textContent = lives;
+  }
+  function updateScore() {
+    scoreElem.textContent = score;
+  }
+
+  /*
+  Handle user input on mobile: drag horizontally to move ship
+  */
+  let isTouching = false;
+  let touchStartX = 0;
+  canvas.addEventListener('touchstart', e => {
+    if(gameEnded) return;
+    if(e.touches.length === 1) {
+      isTouching = true;
+      touchStartX = e.touches[0].clientX;
+    }
+  });
+  canvas.addEventListener('touchend', e => { isTouching = false; });
+  canvas.addEventListener('touchcancel', e => { isTouching = false; });
+  canvas.addEventListener('touchmove', e => {
+    if(gameEnded) return;
+    if(!isTouching) return;
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    let touchX = e.touches[0].clientX - rect.left;
+    // Clamp horizontal movement inside canvas width
+    if(touchX < SHIP_WIDTH/2) touchX = SHIP_WIDTH/2;
+    if(touchX > WIDTH - SHIP_WIDTH/2) touchX = WIDTH - SHIP_WIDTH/2;
+    shipX = touchX - SHIP_WIDTH/2;
+  }, {passive:false});
+
+  // Also support mouse for desktop testing
+  canvas.addEventListener('mousemove', e => {
+    if(gameEnded) return;
+    if(e.buttons !== 1) return; // only if mouse button pressed
+    const rect = canvas.getBoundingClientRect();
+    let mouseX = e.clientX - rect.left;
+    if(mouseX < SHIP_WIDTH/2) mouseX = SHIP_WIDTH/2;
+    if(mouseX > WIDTH - SHIP_WIDTH/2) mouseX = WIDTH - SHIP_WIDTH/2;
+    shipX = mouseX - SHIP_WIDTH/2;
+  });
+
+  // Función para finalizar el juego y regresar al padre (como en el ejemplo de Arkanoid)
+  function endGame(win) {
+    if(gameEnded) return;
+    gameEnded = true;
+    messageElem.textContent = win
+      ? '🎉 ¡Has eliminado todas las naves!'
+      : '💀 Fin del juego.';
+
+    // Intenta notificar a la ventana padre (index.html) que el juego terminó
+    setTimeout(() => {
+      try {
+        if (window.parent && typeof window.parent.endGame === 'function' && window.parent !== window) {
+          window.parent.endGame(win);
+        } else {
+          // Fallback seguro: redirigir al inicio app principal
+          window.location.href = '/'; 
+        }
+      } catch (e) {
+        // Fallback si hay excepción
+        window.location.href = '/'; 
+      }
+    }, 2500); // 2.5 segundos de delay para que el jugador vea el resultado
+  }
+
+  // Game loop timing and delta
+  let lastTime = 0;
+
+  function gameLoop(timestamp=0){
+    if(gameEnded) return;
+
+    const delta = timestamp - lastTime;
+    lastTime = timestamp;
+
+    // Actualizar temporizador de invulnerabilidad
+    if (invincibleTimer > 0) {
+        invincibleTimer -= delta;
+        if (invincibleTimer < 0) {
+            invincibleTimer = 0;
+        }
+    }
+    
+    // Update enemy movement
+    updateEnemies(delta);
+
+    // Auto player fire
+    autoFirePlayerBullets(timestamp);
+
+    // Update bullets
+    updatePlayerBullets();
+    updateEnemyBullets();
+
+    // Enemy firing randomly
+    enemyFire();
+
+    // Add enemy rows every ENEMY_ROW_ADD_INTERVAL
+    if(!lastEnemyRowAdd) lastEnemyRowAdd = timestamp;
+    if(timestamp - lastEnemyRowAdd > ENEMY_ROW_ADD_INTERVAL){
+      addEnemyRow();
+      lastEnemyRowAdd = timestamp;
+    }
+
+    // Draw everything
+    draw();
+
+    // Check win
+    checkWin();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // ********** Inicialización **********
+  // Función de Inicialización que se llama al inicio
+  function initializeGame() {
+    lives = 3;
+    score = 0;
+    invincibleTimer = 0;
+    updateLives();
+    updateScore();
+    gameEnded = false;
+    shipX = WIDTH/2 - SHIP_WIDTH/2; // Reposiciona la nave para que esté centrada con su nuevo tamaño
+    shipY = HEIGHT - SHIP_HEIGHT - 10; // Ajusta Y en caso de que su altura también haya cambiado
+    initEnemies();
+    playerBullets = [];
+    enemyBullets = [];
+    enemyDirection = 1;
+    enemyMoveInterval = ENEMY_MOVE_INTERVAL_INIT;
+    enemyMoveTimer = 0;
+    lastPlayerFire = 0;
+    lastEnemyRowAdd = 0;
+    messageElem.textContent = '¡Dispara sin parar y evita ser alcanzado!';
+    setTimeout(() => { messageElem.textContent = ''; }, 2500);
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  initializeGame();
+
+})();
+</script>
+
+</body>
+</html>
