@@ -120,6 +120,31 @@
       { emoji: "🔮", color: "#6f0", puntos: 25, velocidad: 4.0 }
     ];
 
+    // ------------------------------------------------------------------
+    // FUNCIÓN AÑADIDA PARA COMUNICARSE CON EL IFRAME PADRE
+    // ------------------------------------------------------------------
+    function notifyParent(playerWon) {
+      // Parámetro playerWon es true si ganó el jugador (no aplicable en Game Over).
+      // En este juego, Game Over siempre significa que el JUGADOR PERDIÓ.
+      // Por convención, usamos 'false' para indicar que el jugador perdió.
+      setTimeout(() => {
+        try {
+          if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
+            // Pasamos 'false' ya que el juego terminó por Game Over
+            window.parent.endGame(false);
+          } else {
+            // Fallback de redirección si no puede acceder al padre
+            window.location.href = '/'; 
+          }
+        } catch(e) {
+          // Fallback de redirección si la Política de Mismo Origen lo bloquea
+          window.location.href = '/';
+        }
+      }, 2500); // 2.5 segundos de retraso antes de notificar/redirigir
+    }
+    // ------------------------------------------------------------------
+
+
     /**
      * Crea un nuevo asteroide.
      * Se usa `setTimeout` en el bucle principal en lugar de `setInterval` para
@@ -191,11 +216,6 @@
       }
     }
 
-    /**
-     * **¡Se eliminó la función `manejarToqueAsteroide`!**
-     * El juego ahora se trata de esquivar, no de tocar/disparar.
-     */
-
     function actualizarHUD() {
       scoreDisplay.textContent = score;
       livesDisplay.textContent = vidas;
@@ -208,12 +228,16 @@
       if (vidas <= 0) terminarJuego();
     }
 
+    // FUNCIÓN MODIFICADA
     function terminarJuego() {
       juegoActivo = false;
       clearTimeout(generadorIntervalo); // Limpia el setTimeout
       cancelAnimationFrame(bucleJuegoFrame);
       finalScore.textContent = score;
       mensajeFinal.style.display = 'block';
+      
+      // Llama a la función del padre tras el Game Over
+      notifyParent(false);
     }
 
     function dibujarNave() {
