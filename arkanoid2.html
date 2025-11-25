@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Arkanoid Educativo</title>
+<style>
+* { box-sizing: border-box; }
+html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra horizontalmente los elementos del body */
+    color: #eee;
+    font-family: Arial, sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    width: 100%;
+}
+#scoreboard {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.4rem;
+    padding: 10px 15px;
+    box-sizing: border-box;
+}
+#lives {
+    color: #ff5555;
+}
+#completionMessage {
+    margin-top: 10px;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #0ff;
+    text-align: center;
+    min-height: 40px;
+    user-select: text;
+}
+canvas {
+    background: #222;
+    border: 3px solid #444;
+    border-radius: 8px;
+    touch-action: none;
+    max-width: 100vw;
+    height: 70vw;
+    max-height: 450px;
+    width: 100%;
+    display: block;
+    margin: 0 auto; /* ✅ Corrección de centrado */
+}
+</style>
+</head>
+<body>
+
+<div id="scoreboard" aria-live="polite" aria-atomic="true">
+    <div>Score: <span id="score">0</span></div>
+    <div>Lives: <span id="lives">3</span></div>
+</div>
+
+<canvas id="gameCanvas" width="600" height="420" aria-label="Área de juego Arkanoid educativo" role="img" tabindex="0"></canvas>
+
+<div id="completionMessage" aria-live="assertive" aria-atomic="true"></div>
+
+<script>
+(() => {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // **PUNTO 1: Definición de dimensiones para el juego (basado en los atributos del canvas)**
+    const WIDTH = 600;
+    const HEIGHT = 420;
+
+    // DPI fix for sharpness on HD/mobile screens
+    function fixDPI() {
+        let dpi = window.devicePixelRatio || 1;
+        canvas.width = WIDTH * dpi;
+        canvas.height = HEIGHT * dpi;
+        canvas.style.width = WIDTH + 'px';
+        canvas.style.height = HEIGHT + 'px';
+        ctx.scale(dpi, dpi);
+    }
+    fixDPI();
+
+    // Constants for game elements
+    const PADDLE_WIDTH = 100;
+    const PADDLE_HEIGHT = 15;
+    const PADDLE_Y_OFFSET = 30;
+    const BALL_RADIUS = 8;
+
+    const BLOCK_COLS = 8;
+    const INITIAL_BLOCK_ROWS = 4;
+    const BLOCK_WIDTH = WIDTH / BLOCK_COLS - 6;
+    const BLOCK_HEIGHT = 20;
+    const BLOCK_PADDING = 6;
+    const BLOCK_OFFSET_TOP = 40;
+
+    // Blocks colors and scores
+    const BLOCK_TYPES = [
+        { color: '#e74c3c', score: 7 }, 
+        { color: '#f1c40f', score: 5 }, 
+        { color: '#3498db', score: 3 }, 
+        { color: '#2ecc71', score: 1 } 
+    ];
+
+    // UI elements
+    const scoreElem = document.getElementById('score');
+    const livesElem = document.getElementById('lives');
+    const completionMessageElem = document.getElementById('completionMessage');
+
+    // Game state variables
+    let paddleX = (WIDTH - PADDLE_WIDTH) / 2;
+    let score = 0;
+    let lives = 3; 
+
+    // **PUNTO 2: Inicialización de la bola (corregido)**
+    let ballX = WIDTH / 2;
+    let ballY = HEIGHT - PADDLE_Y_OFFSET - PADDLE_HEIGHT - BALL_RADIUS;
+
+    // Ball state & velocity scaling
+    const ballSpeedBase = 7;
+    let ballSpeedMultiplier = 1;
+    let ballDX = ballSpeedBase * (Math.random() < 0.5 ? -1 : 1);
+    let ballDY = -ballSpeedBase;
+
+    // Blocks collection
+    let blocks = [];
+
+    // Timers
+    let lastRowAddTime = 0;
+    const ROW_ADD_INTERVAL = 15000; 
+    const SPEED_INCREASE_INTERVAL = 12000; 
+    const SPEED_INCREMENT = 0.12;
+    let lastSpeedIncreaseTime = 0;
+
+    // Game end flag
+    let gameEnded = false;
+
+    const TARGET_SCORE = null;
+
+    // --- Funciones de Lógica del Juego (No cambiadas) ---
+
+    function initBlocks() {
+        blocks = [];
+        for (let r = 0; r < INITIAL_BLOCK_ROWS; r++) {
+            blocks[r] = [];
+            for (let c = 0; c < BLOCK_COLS; c++) {
+                const typeIdx = Math.floor(Math.random() * BLOCK_TYPES.length);
+                blocks[r][c] = {
+                    x: c * (BLOCK_WIDTH + BLOCK_PADDING) + BLOCK_PADDING / 2,
+                    y: r * (BLOCK_HEIGHT + BLOCK_PADDING) + BLOCK_OFFSET_TOP,
+                    status: 1,
+                    type: BLOCK_TYPES[typeIdx]
+                };
+            }
+        }
+    }
+    initBlocks();
+
+    function addBlockRow() {
+        if (gameEnded) return;
+        for (let r = blocks.length - 1; r >= 0; r--) {
+            for (let c = 0; c < BLOCK_COLS; c++) {
+                if (blocks[r][c].status &&
+                    blocks[r][c].y + BLOCK_HEIGHT + (BLOCK_HEIGHT + BLOCK_PADDING) > HEIGHT - PADDLE_Y_OFFSET - PADDLE_HEIGHT - BALL_RADIUS*2) {
+                    loseLife();
+                    return;
+                }
+                blocks[r][c].y += BLOCK_HEIGHT + BLOCK_PADDING;
+            }
+        }
+        let newRow = [];
+        for (let c = 0; c < BLOCK_COLS; c++) {
+            const typeIdx = Math.floor(Math.random() * BLOCK_TYPES.length);
+            newRow[c] = {
+                x: c * (BLOCK_WIDTH + BLOCK_PADDING) + BLOCK_PADDING / 2,
+                y: BLOCK_OFFSET_TOP,
+                status: 1,
+                type: BLOCK_TYPES[typeIdx]
+            };
+        }
+        blocks.unshift(newRow);
+    }
+
+    function drawPaddle() {
+        const grad = ctx.createLinearGradient(paddleX, HEIGHT - PADDLE_Y_OFFSET - PADDLE_HEIGHT, paddleX + PADDLE_WIDTH, HEIGHT - PADDLE_Y_OFFSET);
+        grad.addColorStop(0, '#0ff');
+        grad.addColorStop(1, '#006');
+        ctx.beginPath();
+        ctx.roundRect(paddleX, HEIGHT - PADDLE_Y_OFFSET - PADDLE_HEIGHT, PADDLE_WIDTH, PADDLE_HEIGHT, 6);
+        ctx.fillStyle = grad;
+        ctx.shadowColor = '#0ff';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.closePath();
+    }
+
+    function drawBall() {
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, BALL_RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = '#0ff';
+        ctx.shadowColor = '#0ff';
+        ctx.shadowBlur = 18;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.closePath();
+    }
+
+    function drawBlocks() {
+        for (let r = 0; r < blocks.length; r++) {
+            for (let c = 0; c < blocks[r].length; c++) {
+                let b = blocks[r][c];
+                if (b.status) {
+                    ctx.beginPath();
+                    ctx.roundRect(b.x, b.y, BLOCK_WIDTH, BLOCK_HEIGHT, 4);
+                    ctx.fillStyle = b.type.color;
+                    ctx.shadowColor = b.type.color;
+                    ctx.shadowBlur = 12;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+
+    function constrainPaddle() {
+        if (paddleX < 0) paddleX = 0;
+        if (paddleX + PADDLE_WIDTH > WIDTH) paddleX = WIDTH - PADDLE_WIDTH;
+    }
+
+    function collisionDetection() {
+        if (gameEnded) return;
+        outer:
+        for (let r = 0; r < blocks.length; r++) {
+            for (let c = 0; c < blocks[r].length; c++) {
+                let b = blocks[r][c];
+                if (b.status) {
+                    if (
+                        ballX > b.x &&
+                        ballX < b.x + BLOCK_WIDTH &&
+                        ballY - BALL_RADIUS < b.y + BLOCK_HEIGHT &&
+                        ballY + BALL_RADIUS > b.y
+                    ) {
+                        ballDY = -ballDY;
+                        b.status = 0;
+                        score += b.type.score;
+                        updateScore();
+
+                        if (TARGET_SCORE !== null) {
+                            if (score >= TARGET_SCORE) endGame(true);
+                        } else {
+                            if (blocks.every(row => row.every(bl => bl.status === 0))) {
+                                endGame(true);
+                            }
+                        }
+                        break outer;
+                    }
+                }
+            }
+        }
+    }
+
+    function updateScore() {
+        scoreElem.textContent = score;
+    }
+    function updateLives() {
+        livesElem.textContent = lives;
+    }
+
+    function loseLife() {
+        if (gameEnded) return;
+        lives--;
+        updateLives();
+        if (lives <= 0) {
+            endGame(false);
+        } else {
+            resetBallAndPaddle();
+        }
+    }
+
+    function resetBallAndPaddle() {
+        ballX = WIDTH / 2;
+        ballY = HEIGHT - PADDLE_Y_OFFSET - PADDLE_HEIGHT - BALL_RADIUS;
+        ballSpeedMultiplier = 1;
+        ballDX = ballSpeedBase * ballSpeedMultiplier * (Math.random() < 0.5 ? -1 : 1);
+        ballDY = -ballSpeedBase * ballSpeedMultiplier;
+        paddleX = (WIDTH - PADDLE_WIDTH) / 2;
+    }
+
+    function moveBall() {
+        if (gameEnded) return;
+        ballX += ballDX;
+        ballY += ballDY;
+
+        // Rebote paredes izquierda/derecha
+        if (ballX + BALL_RADIUS > WIDTH) {
+            ballX = WIDTH - BALL_RADIUS;
+            ballDX = -ballDX;
+        }
+        if (ballX - BALL_RADIUS < 0) {
+            ballX = BALL_RADIUS;
+            ballDX = -ballDX;
+        }
+        // Rebote techo
+        if (ballY - BALL_RADIUS < 0) {
+            ballY = BALL_RADIUS;
+            ballDY = -ballDY;
+        }
+        // Rebote paddle
+        if (
+            ballY + BALL_RADIUS >= HEIGHT - PADDLE_Y_OFFSET - PADDLE_HEIGHT &&
+            ballX > paddleX &&
+            ballX < paddleX + PADDLE_WIDTH &&
+            ballDY > 0
+        ) {
+            ballY = HEIGHT - PADDLE_Y_OFFSET - PADDLE_HEIGHT - BALL_RADIUS;
+            ballDY = -ballDY;
+
+            // Ajustar velocidad horizontal según posición en el paddle
+            let hitPos = ballX - (paddleX + PADDLE_WIDTH / 2);
+            ballDX = hitPos * 0.18;
+
+            // Normalizar para que la velocidad total siga constante y aumente
+            const speed = Math.sqrt(ballDX*ballDX + ballDY*ballDY);
+            const targetSpeed = ballSpeedBase * ballSpeedMultiplier;
+            ballDX = (ballDX / speed) * targetSpeed;
+            ballDY = (ballDY / speed) * targetSpeed;
+        }
+
+        // Bola se cayó = pierde vida
+        if (ballY - BALL_RADIUS > HEIGHT) {
+            loseLife();
+        }
+    }
+
+    // Control táctil para móvil
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        if(e.touches.length > 0){
+            let touchX = e.touches[0].clientX - rect.left;
+            // Adaptar coordenada táctil a escala lógica del juego
+            let gameX = touchX * (WIDTH / rect.width);
+            paddleX = gameX - PADDLE_WIDTH / 2;
+            constrainPaddle();
+        }
+    }, { passive: false });
+
+    // Soporte mouse para pruebas escritorio
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        let mouseX = e.clientX - rect.left;
+        // Adaptar coordenada de ratón a escala lógica del juego
+        let gameX = mouseX * (WIDTH / rect.width);
+        paddleX = gameX - PADDLE_WIDTH / 2;
+        constrainPaddle();
+    });
+
+    function increaseSpeed() {
+        if (gameEnded) return;
+        const now = Date.now();
+        if (now - lastSpeedIncreaseTime > SPEED_INCREASE_INTERVAL) {
+            ballSpeedMultiplier += SPEED_INCREMENT;
+            // Ajustar vectores de velocidad proporcionalmente
+            const speed = Math.sqrt(ballDX * ballDX + ballDY * ballDY);
+            const newSpeed = ballSpeedBase * ballSpeedMultiplier;
+            ballDX = (ballDX / speed) * newSpeed;
+            ballDY = (ballDY / speed) * newSpeed;
+            lastSpeedIncreaseTime = now;
+        }
+    }
+
+    /**
+     * Función encargada de gestionar el fin del juego y el retorno.
+     */
+    function endGame(win) {
+        if (gameEnded) return;
+        gameEnded = true;
+
+        completionMessageElem.textContent = win ? '🎉 ¡Felicidades! Has ganado.' : '💀 Has perdido. Intenta de nuevo.';
+
+        setTimeout(() => {
+            try {
+                // 1. Intenta llamar a la función en la ventana padre (si existe)
+                if (window.parent && window.parent !== window && typeof window.parent.endGame === 'function') {
+                    window.parent.endGame(win);
+                } else {
+                    // 2. Fallback seguro: Redirige la ventana actual (el iframe)
+                    window.location.href = '/'; 
+                }
+            } catch (e) {
+                // 3. Fallback si hay excepción (ej. error de origen cruzado)
+                window.location.href = '/';
+            }
+        }, 2500); 
+    }
+
+    /**
+     * Bucle principal del juego que actualiza y dibuja cada frame
+     */
+    function loop() {
+        // Usar ctx.fillRect para dibujar el fondo evita parpadeos vs. ctx.clearRect
+        ctx.fillStyle = '#222';
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        drawBlocks();
+        drawPaddle();
+        drawBall();
+
+        moveBall();
+        collisionDetection();
+
+        if (Date.now() - lastRowAddTime > ROW_ADD_INTERVAL) {
+            addBlockRow();
+            lastRowAddTime = Date.now();
+        }
+
+        increaseSpeed();
+
+        if (!gameEnded) {
+            requestAnimationFrame(loop);
+        }
+    }
+
+    // Polyfill roundRect (Necesario si no todos los navegadores lo soportan)
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            this.beginPath();
+            this.moveTo(x + r, y);
+            this.arcTo(x + w, y, x + w, y + h, r);
+            this.arcTo(x + w, y + h, x, y + h, r);
+            this.arcTo(x, y + h, x, y, r);
+            this.arcTo(x, y, x + w, y, r);
+            this.closePath();
+            return this;
+        }
+    }
+
+    // Inicializar y empezar
+    updateScore();
+    updateLives();
+    lastRowAddTime = Date.now();
+    lastSpeedIncreaseTime = Date.now();
+    // No necesitamos llamar a resetBallAndPaddle() aquí porque la bola ya está inicializada.
+    loop();
+
+})();
+</script>
+
+</body>
+</html>
