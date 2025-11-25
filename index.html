@@ -3,22 +3,24 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <title>Arcade Álex 🕹️ - Retro Mobile</title>
+    <title>Arcade de Álex 🕹️ - Retro Mobile</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
     <style>
         /* Base & Background */
-        body {
+        html, body {
             margin: 0;
-            min-height: 100vh;
+            height: 100%;
             background: radial-gradient(circle at center, #2c003e, #1a1a2e 80%);
             font-family: 'Press Start 2P', cursive, monospace;
             color: #fff;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 15px 10px;
             box-sizing: border-box;
-            overflow-x: hidden;
         }
 
         /* Flickering Neon Animation */
@@ -40,7 +42,7 @@
         /* Title */
         h1 {
             font-size: 1.4em;
-            margin: 30px 0 20px;
+            margin: 20px auto 15px;
             color: #ff3399;
             letter-spacing: 3px;
             padding: 12px 18px;
@@ -55,16 +57,34 @@
             user-select: none;
             max-width: 100%;
             word-break: break-word;
+            text-align: center;
+            width: fit-content;
         }
 
-        /* Container */
+        /* Container: scrollable with all buttons visible */
         .arcade-container {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 14px;
+            gap: 12px;
             width: 100%;
             max-width: 400px;
             padding: 0 5px;
+            flex-grow: 1;
+            overflow-y: auto; /* Scroll inside container */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #ff3399 transparent;
+        }
+        /* Optional scrollbar styling for WebKit */
+        .arcade-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .arcade-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .arcade-container::-webkit-scrollbar-thumb {
+            background-color: #ff3399;
+            border-radius: 4px;
         }
 
         /* Buttons */
@@ -113,15 +133,18 @@
         @media (min-width: 600px) {
             h1 {
                 font-size: 2.8em;
-                margin: 45px 0 30px;
+                margin: 20px auto 25px;
                 letter-spacing: 7px;
                 padding: 22px 35px;
+                width: fit-content;
+                text-align: center;
             }
             .arcade-container {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 22px;
+                gap: 20px;
                 max-width: 800px;
                 padding: 0 15px;
+                flex-grow: 1;
             }
             .boton-juego {
                 font-size: 0.95em;
@@ -140,21 +163,19 @@
     </style>
 </head>
 <body>
-    <h1>🎮 ARCADE ÁLEX 🕹️</h1>
-    <div class="arcade-container">
-        <a class="boton-juego" href="arkanoid.html" target="_blank">🔴 Arkanoid Básico</a>
-        <a class="boton-juego" href="memoria.html" target="_blank">✨ Juego de Pares</a>
-        <a class="boton-juego" href="donkeykong.html" target="_blank">🦍 Donkey Kong Básico</a>
-        <a class="boton-juego" href="matamarcianos.html" target="_blank">👽 Matamarcianos Básico</a>
-        <a class="boton-juego" href="frogger.html" target="_blank">🐸 Frogger Básico</a>
-        <a class="boton-juego" href="tictactoe.html" target="_blank">🎯 Tres en Raya</a>
-        <a class="boton-juego" href="asteroides.html" target="_blank">🚀 Ataque de Asteroides</a>
-        <a class="boton-juego" href="pong.html" target="_blank">🎾 Clásico Pong</a>
-        <a class="boton-juego" href="pacman.html" target="_blank">👻 Clásico Pacman</a>
-        <a class="boton-juego" href="tetris.html" target="_blank">🧊 Clásico Tetris</a>
-        <a class="boton-juego" href="rana2.html" target="_blank">🐸 Frogger2 Básico</a>
+    <h1>🎮 ARCADE DE ÁLEX 🕹️</h1>
+    <div class="arcade-container" tabindex="0" aria-label="Lista de juegos arcade">
+        <a class="boton-juego" href="arkanoid.html" target="_blank" rel="noopener">🔴 Arkanoid Básico</a>
+        <a class="boton-juego" href="memoria.html" target="_blank" rel="noopener">✨ Juego de Pares</a>
+        <a class="boton-juego" href="donkeykong.html" target="_blank" rel="noopener">🦍 Donkey Kong Básico</a>
+        <a class="boton-juego" href="matamarcianos.html" target="_blank" rel="noopener">👽 Matamarcianos Básico</a>
+        <a class="boton-juego" href="frogger.html" target="_blank" rel="noopener">🐸 Frogger Básico</a>
+        <a class="boton-juego" href="tictactoe.html" target="_blank" rel="noopener">🎯 Tres en Raya</a>
+        <a class="boton-juego" href="asteroides.html" target="_blank" rel="noopener">🚀 Ataque de Asteroides</a>
+        <a class="boton-juego" href="pong.html" target="_blank" rel="noopener">🎾 Clásico Pong</a>
+        <a class="boton-juego" href="pacman.html" target="_blank" rel="noopener">👻 Clásico Pacman</a>
+        <a class="boton-juego" href="tetris.html" target="_blank" rel="noopener">🧊 Clásico Tetris</a>
+        <a class="boton-juego" href="rana2.html" target="_blank" rel="noopener">🐸 Frogger2 Básico</a>
     </div>
 </body>
 </html>
-
-
