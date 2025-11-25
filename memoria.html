@@ -1,207 +1,240 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>¡Premio! Juego de Pares de Emojis</title>
-  <style>
-    body {
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #fce4ec;
-      padding: 20px;
-    }
-
-    header h1 {
-      color: #d81b60;
-      font-size: 2.2em;
-      text-align: center;
-    }
-
-    p {
-      color: #4a148c;
-    }
-
-    .game-container {
-      width: 320px;
-      height: 480px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr); /* 3 columnas */
-      grid-gap: 8px;
-      perspective: 1000px;
-    }
-
-    .memory-card {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform .5s;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .memory-card.flip, .memory-card.match {
-      transform: rotateY(180deg);
-    }
-
-    .front-face, .back-face {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      backface-visibility: hidden;
-      border-radius: 8px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 40px;
-    }
-
-    .front-face {
-      transform: rotateY(180deg);
-      background-color: #ffffff;
-    }
-
-    .back-face {
-      background-color: #4db6ac;
-      color: white;
-      font-weight: bold;
-      font-size: 24px;
-      border: 3px solid #00897b;
-    }
-
-    #mensaje-victoria {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #a5d6a7;
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 0 15px rgba(0, 150, 0, 0.5);
-    }
-
-    #mensaje-victoria h2 {
-      color: #388e3c;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Juego de Memoria Educativo 5x6</title>
+<style>
+  body {
+    margin: 0; padding: 10px;
+    font-family: Arial, sans-serif;
+    background: #222;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+  }
+  h1 {
+    margin-bottom: 10px;
+  }
+  #gameContainer {
+    width: 100vw;
+    max-width: 400px;
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 8px;
+  }
+  .card {
+    background-color: #444;
+    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    transition: transform 0.3s ease;
+    perspective: 600px;
+  }
+  .card.flipped .front,
+  .card.matched .front {
+    transform: rotateY(0deg);
+  }
+  .card.flipped .back,
+  .card.matched .back {
+    transform: rotateY(180deg);
+  }
+  .card .front, .card .back {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 8px;
+    backface-visibility: hidden;
+    transition: transform 0.5s ease;
+  }
+  .card .front {
+    background-color: #fff;
+    transform: rotateY(180deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #333;
+  }
+  .card .back {
+    background-color: #0a74da;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #fff;
+    user-select:none;
+  }
+  #message {
+    margin: 12px 0 0;
+    font-size: 1.3rem;
+    min-height: 1.5em;
+    text-align: center;
+    color: #0ff;
+    font-weight: bold;
+  }
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>¡Premio! Juego de Pares de Emojis</h1>
-  </header>
+<h1>Juego de Memoria 5x6</h1>
+<div id="gameContainer" role="application" aria-label="Juego de memoria con 5 columnas y 6 filas">
+  <div id="grid" aria-live="polite" aria-relevant="additions removals" aria-atomic="true"></div>
+  <div id="message" aria-live="assertive" aria-atomic="true"></div>
+</div>
 
-  <main class="game-container"></main>
+<script>
+(() => {
+  const rows = 6;
+  const cols = 5;
+  const totalCards = rows * cols; // 30 cards total
+  const grid = document.getElementById('grid');
+  const messageElem = document.getElementById('message');
 
-  <div id="mensaje-victoria" style="display: none;">
-    <h2>¡GANASTE! 🏆 Eres increíblemente inteligente.</h2>
-    <button onclick="window.location.reload()" style="padding: 10px 20px; font-size: 1.2em; cursor: pointer; margin-top: 10px; background-color: #e91e63; color: white; border: none; border-radius: 5px;">Jugar de nuevo</button>
-  </div>
+  // We need pairs, so 15 unique cards duplicated
+  const uniqueSymbols = [
+    '🍎','🌟','🐶','🍀','🎈','🚗','🍌','🐱','⚽','🎵',
+    '💎','🎀','🍇','🚀','🌈'
+  ];
 
-  <script>
-    const cardsArray = [
-      { name: 'icono1', img: '🐱' },
-      { name: 'icono2', img: '🦄' },
-      { name: 'icono3', img: '🌈' },
-      { name: 'icono4', img: '⭐' },
-      { name: 'icono5', img: '🍎' },
-      { name: 'icono6', img: '🍕' }
-    ];
-
-    const gameCards = [...cardsArray, ...cardsArray]; // 6 pares = 12 cartas
-
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
+  // Shuffle helper
+  function shuffle(array) {
+    let currentIndex = array.length, randomIndex;
+    while(currentIndex !== 0) {
+      randomIndex = Math.floor(Math.random()*currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
+    return array;
+  }
 
-    shuffle(gameCards);
+  // Create deck: duplicate and shuffle
+  let deck = shuffle([...uniqueSymbols, ...uniqueSymbols]);
 
-    const gameContainer = document.querySelector('.game-container');
-    let hasFlippedCard = false;
-    let lockBoard = false;
-    let firstCard, secondCard;
-    let matches = 0;
-    const totalMatches = cardsArray.length;
+  // State variables
+  let flippedCards = [];
+  let matchedCount = 0;
+  let lockBoard = false;
 
-    function createBoard() {
-      gameCards.forEach(card => {
-        const cardElement = document.createElement('div');
-        cardElement.classList.add('memory-card');
-        cardElement.dataset.card = card.name;
+  function createCard(symbol, index) {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-pressed', 'false');
+    card.setAttribute('aria-label', 'Carta boca abajo');
+    card.dataset.symbol = symbol;
+    card.dataset.index = index;
 
-        const frontFace = document.createElement('div');
-        frontFace.classList.add('front-face');
-        frontFace.textContent = card.img;
+    const front = document.createElement('div');
+    front.classList.add('front');
+    front.textContent = symbol;
 
-        const backFace = document.createElement('div');
-        backFace.classList.add('back-face');
-        backFace.textContent = '✨';
+    const back = document.createElement('div');
+    back.classList.add('back');
+    back.innerHTML = '&#x1F0A0;'; // Playing card back symbol or similar
 
-        cardElement.appendChild(frontFace);
-        cardElement.appendChild(backFace);
+    card.appendChild(front);
+    card.appendChild(back);
 
-        cardElement.addEventListener('click', flipCard);
-        gameContainer.appendChild(cardElement);
-      });
-    }
+    // Click handler
+    card.addEventListener('click', () => {
+      if(lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+      flipCard(card);
+    });
 
-    function flipCard() {
-      if (lockBoard) return;
-      if (this === firstCard) return;
-
-      this.classList.add('flip');
-
-      if (!hasFlippedCard) {
-        hasFlippedCard = true;
-        firstCard = this;
-        return;
+    // Keyboard access: space or enter to flip
+    card.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        card.click();
       }
+    });
 
-      secondCard = this;
+    return card;
+  }
+
+  function flipCard(card) {
+    if(flippedCards.length === 2) return;
+    card.classList.add('flipped');
+    card.setAttribute('aria-pressed', 'true');
+    flippedCards.push(card);
+
+    if(flippedCards.length === 2) {
       checkForMatch();
     }
+  }
 
-    function checkForMatch() {
-      let isMatch = firstCard.dataset.card === secondCard.dataset.card;
-      isMatch ? disableCards() : unflipCards();
-    }
-
-    function disableCards() {
-      firstCard.removeEventListener('click', flipCard);
-      secondCard.removeEventListener('click', flipCard);
-
-      firstCard.classList.add('match');
-      secondCard.classList.add('match');
-
-      matches++;
-
-      if (matches === totalMatches) {
-        document.getElementById('mensaje-victoria').style.display = 'block';
-      }
-
-      resetBoard();
-    }
-
-    function unflipCards() {
-      lockBoard = true;
+  function checkForMatch() {
+    lockBoard = true;
+    const [cardOne, cardTwo] = flippedCards;
+    if(cardOne.dataset.symbol === cardTwo.dataset.symbol){
+      cardOne.classList.add('matched');
+      cardTwo.classList.add('matched');
+      matchedCount += 2;
       setTimeout(() => {
-        firstCard.classList.remove('flip');
-        secondCard.classList.remove('flip');
-        resetBoard();
-      }, 1000);
+        messageElem.textContent = `¡Buen trabajo! Llevas ${matchedCount/2} parejas encontradas.`;
+        resetFlip();
+        if(matchedCount === totalCards){
+          setTimeout(() => finishGame(true), 1500);
+        }
+      }, 700);
+    } else {
+      setTimeout(() => {
+        cardOne.classList.remove('flipped');
+        cardTwo.classList.remove('flipped');
+        cardOne.setAttribute('aria-pressed', 'false');
+        cardTwo.setAttribute('aria-pressed', 'false');
+        messageElem.textContent = 'Inténtalo de nuevo.';
+        resetFlip();
+      }, 1200);
     }
+  }
 
-    function resetBoard() {
-      [hasFlippedCard, lockBoard] = [false, false];
-      [firstCard, secondCard] = [null, null];
+  function resetFlip() {
+    flippedCards = [];
+    lockBoard = false;
+  }
+
+  function finishGame(won) {
+    messageElem.textContent = won ? '🎉 ¡Felicidades, completaste el juego!' : '😞 Juego terminado.';
+    // Notifica al padre después de 2.5 seg
+    setTimeout(() => {
+      try {
+        if(window.parent && typeof window.parent.endGame === 'function'){
+          window.parent.endGame(won);
+        } else {
+          window.location.href = '/';
+        }
+      } catch(e) {
+        window.location.href = '/';
+      }
+    }, 2500);
+  }
+
+  function initGame() {
+    deck = shuffle([...uniqueSymbols, ...uniqueSymbols]);
+    matchedCount = 0;
+    lockBoard = false;
+    flippedCards = [];
+    messageElem.textContent = 'Selecciona dos cartas para encontrar parejas.';
+    grid.innerHTML = '';
+    for(let i=0; i<totalCards; i++) {
+      const card = createCard(deck[i], i);
+      grid.appendChild(card);
     }
+  }
 
-    createBoard();
-  </script>
+  // Iniciar el juego
+  initGame();
+
+})();
+</script>
+
 </body>
 </html>
