@@ -1,377 +1,214 @@
-```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width,
-               initial-scale=1,
-               maximum-scale=1,
-               user-scalable=no,
-               viewport-fit=cover">
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#050509">
 
 <title>NEON MAZE</title>
 
 <style>
 *{
     box-sizing:border-box;
-    margin:0;
-    padding:0;
     -webkit-tap-highlight-color:transparent;
-    user-select:none;
-    -webkit-user-select:none;
 }
 
-html,
-body{
+html,body{
+    margin:0;
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#000;
+    background:#050509;
     color:#fff;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    touch-action:none;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-#game{
-    position:relative;
-    width:100vw;
-    height:100dvh;
-    max-width:600px;
-    overflow:hidden;
-    background:#000;
-}
-
-canvas{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    display:block;
     touch-action:none;
+}
+
+button{
+    font:inherit;
+}
+
+#app{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#050509;
+}
+
+#shell{
+    position:relative;
+    width:min(100vw,560px);
+    height:min(100vh,900px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:
+        calc(10px + env(safe-area-inset-top))
+        10px
+        calc(10px + env(safe-area-inset-bottom));
 }
 
 #hud{
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
-    z-index:20;
-
-    padding:
-        max(14px,env(safe-area-inset-top))
-        18px
-        10px;
-
+    width:min(94vw,520px);
     display:flex;
     justify-content:space-between;
-
-    pointer-events:none;
+    align-items:center;
+    margin-bottom:8px;
+    gap:8px;
 }
 
-.hudGroup{
-    min-width:100px;
+.stat{
+    min-width:92px;
+    text-align:center;
 }
 
-.hudGroup:last-child{
-    text-align:right;
-}
-
-.hudLabel{
-    font-size:9px;
-    letter-spacing:3px;
-    color:#64748b;
-    font-weight:900;
-}
-
-.hudValue{
-    font-size:21px;
-    line-height:1.2;
-    font-weight:1000;
-}
-
-#score{
-    color:#00e5ff;
-    text-shadow:
-        0 0 8px #00e5ff,
-        0 0 18px rgba(0,229,255,.5);
-}
-
-#lives{
-    color:#ff367d;
-    text-shadow:
-        0 0 8px #ff367d,
-        0 0 18px rgba(255,54,125,.5);
-}
-
-#level{
-    position:absolute;
-    left:50%;
-    top:max(17px,env(safe-area-inset-top));
-    transform:translateX(-50%);
-
-    color:#334155;
-
+.label{
     font-size:9px;
     letter-spacing:2px;
-    font-weight:900;
+    color:#777;
+    text-transform:uppercase;
+}
 
-    pointer-events:none;
+.value{
+    font-size:20px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+#gameWrap{
+    position:relative;
+    width:min(94vw,520px);
+    aspect-ratio:1/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    height:100%;
+    background:#000;
+    border:1px solid #181825;
+    border-radius:14px;
+    box-shadow:
+        0 0 22px rgba(0,220,255,.10),
+        inset 0 0 30px rgba(0,0,0,.8);
+    touch-action:none;
 }
 
 #overlay{
     position:absolute;
     inset:0;
-    z-index:50;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
-    background:
-        radial-gradient(
-            circle at center,
-            rgba(0,35,55,.45),
-            rgba(0,0,0,.97) 72%
-        );
-
     padding:25px;
+    border-radius:14px;
+    background:rgba(0,0,0,.78);
+    backdrop-filter:blur(5px);
+    z-index:5;
 }
 
 .panel{
-    width:min(390px,92%);
+    width:min(90%,390px);
     text-align:center;
+    border:1px solid #202033;
+    border-radius:20px;
+    padding:28px 22px;
+    background:rgba(9,9,16,.96);
+    box-shadow:0 0 35px rgba(0,229,255,.10);
 }
 
 .logo{
-    font-size:clamp(43px,13vw,72px);
-    line-height:.84;
+    font-size:38px;
     font-weight:1000;
-    letter-spacing:-4px;
-    color:#00e5ff;
-
-    text-shadow:
-        0 0 7px #00e5ff,
-        0 0 20px #00e5ff,
-        0 0 45px rgba(0,229,255,.6);
-
-    margin-bottom:16px;
-}
-
-.tag{
-    color:#64748b;
-    font-size:10px;
-    font-weight:900;
     letter-spacing:5px;
-    margin-bottom:30px;
+    color:#fff;
+    text-shadow:
+        0 0 12px #00e5ff,
+        0 0 28px rgba(0,229,255,.55);
 }
 
-.description{
-    color:#94a3b8;
-    font-size:14px;
-    line-height:1.7;
-    max-width:310px;
-    margin:0 auto 28px;
+.subtitle{
+    font-size:11px;
+    letter-spacing:3px;
+    color:#888;
+    margin:9px 0 24px;
 }
 
-button{
-    display:block;
+.btn{
     width:100%;
-    max-width:280px;
-    margin:0 auto;
-
-    min-height:54px;
-
     border:0;
-    border-radius:15px;
-
-    background:#00e5ff;
-    color:#001015;
-
-    font-size:15px;
-    font-weight:1000;
+    border-radius:13px;
+    padding:15px 16px;
+    margin-top:10px;
+    font-weight:900;
     letter-spacing:2px;
-
-    box-shadow:
-        0 0 12px rgba(0,229,255,.7),
-        0 0 35px rgba(0,229,255,.25);
-
+    color:#001014;
+    background:#00e5ff;
+    box-shadow:0 0 20px rgba(0,229,255,.25);
     touch-action:manipulation;
-
-    -webkit-appearance:none;
-    appearance:none;
-
     cursor:pointer;
-
-    transition:
-        transform .1s ease,
-        filter .1s ease;
 }
 
-button:active{
-    transform:scale(.94);
-    filter:brightness(1.35);
-}
-
-.secondary{
-    margin-top:12px;
-
-    background:#0b111b;
-    color:#94a3b8;
-
-    border:1px solid #1e293b;
-
+.btn.secondary{
+    background:#161622;
+    color:#ddd;
+    border:1px solid #29293b;
     box-shadow:none;
 }
 
-#gameOverPanel{
-    display:none;
-}
-
-.gameOverTitle{
-    color:#ff367d;
-
-    font-size:42px;
-    font-weight:1000;
-
-    text-shadow:
-        0 0 10px #ff367d,
-        0 0 30px rgba(255,54,125,.45);
-
-    margin-bottom:20px;
-}
-
-.finalScore{
-    color:#00e5ff;
-    font-size:54px;
-    line-height:1;
-    font-weight:1000;
-
-    text-shadow:
-        0 0 10px #00e5ff,
-        0 0 30px rgba(0,229,255,.5);
-
-    margin-bottom:8px;
-}
-
-.best{
-    color:#64748b;
+#help{
     font-size:11px;
-    font-weight:900;
-    letter-spacing:3px;
-
-    margin-bottom:28px;
+    line-height:1.6;
+    color:#888;
+    margin-top:18px;
 }
 
-#controlsPanel{
-    display:none;
-}
-
-.controlsTitle{
-    color:#00e5ff;
-    font-size:28px;
-    font-weight:1000;
-    margin-bottom:25px;
-}
-
-.controlRow{
-    display:flex;
-    align-items:center;
-    gap:15px;
-
-    text-align:left;
-
-    margin:13px auto;
-
-    max-width:280px;
-
-    color:#94a3b8;
-    font-size:13px;
-}
-
-.controlIcon{
-    width:40px;
-    height:40px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border:1px solid #164e63;
-    border-radius:10px;
-
-    color:#00e5ff;
-    font-size:18px;
-}
-
-#ready{
+#toast{
     position:absolute;
-    z-index:30;
-
     left:50%;
-    top:50%;
-
-    transform:translate(-50%,-50%);
-
-    color:#00e5ff;
-
-    font-size:13px;
-    font-weight:1000;
-    letter-spacing:5px;
-
-    text-shadow:
-        0 0 8px #00e5ff,
-        0 0 25px #00e5ff;
-
-    pointer-events:none;
-
-    opacity:1;
-    transition:opacity .2s ease;
-}
-
-.hidden{
-    opacity:0!important;
-}
-
-#powerStatus{
-    position:absolute;
-
-    left:50%;
-    bottom:
-        max(25px,env(safe-area-inset-bottom));
-
+    top:10%;
     transform:translateX(-50%);
-
-    color:#006cff;
-
-    font-size:10px;
-    letter-spacing:3px;
-    font-weight:1000;
-
-    text-shadow:
-        0 0 8px #006cff;
-
+    padding:8px 13px;
+    border-radius:999px;
+    background:rgba(0,0,0,.72);
+    border:1px solid #27273b;
+    font-size:11px;
+    letter-spacing:1px;
     opacity:0;
-
     pointer-events:none;
+    transition:opacity .2s;
+    z-index:4;
+    white-space:nowrap;
 }
 
-@media (min-width:700px){
+#toast.show{
+    opacity:1;
+}
 
-    #game{
-        border-left:1px solid #07111c;
-        border-right:1px solid #07111c;
+@media(max-height:650px){
+
+    #shell{
+        padding-top:4px;
+        padding-bottom:4px;
+    }
+
+    #hud{
+        margin-bottom:4px;
+    }
+
+    .value{
+        font-size:16px;
     }
 }
 </style>
@@ -379,169 +216,63 @@ button:active{
 
 <body>
 
-<div id="game">
+<div id="app">
 
-    <canvas id="canvas"></canvas>
+    <div id="shell">
 
-    <div id="hud">
+        <div id="hud">
 
-        <div class="hudGroup">
-
-            <div class="hudLabel">
-                SCORE
+            <div class="stat">
+                <div class="label">Puntuación</div>
+                <div id="score" class="value">0</div>
             </div>
 
-            <div id="score" class="hudValue">
-                0
+            <div class="stat">
+                <div class="label">Récord</div>
+                <div id="high" class="value">0</div>
             </div>
 
-        </div>
-
-        <div id="level">
-            LEVEL 1
-        </div>
-
-        <div class="hudGroup">
-
-            <div class="hudLabel">
-                LIVES
-            </div>
-
-            <div id="lives" class="hudValue">
-                ● ● ●
+            <div class="stat">
+                <div class="label">Vidas</div>
+                <div id="lives" class="value">●●●</div>
             </div>
 
         </div>
 
-    </div>
+        <div id="gameWrap">
 
-    <div id="ready" class="hidden">
-        READY
-    </div>
+            <canvas id="gameCanvas"></canvas>
 
-    <div id="powerStatus">
-        POWER MODE
-    </div>
+            <div id="toast"></div>
 
-    <div id="overlay">
+            <div id="overlay">
 
-        <!-- ================= START ================= -->
+                <div class="panel">
 
-        <div id="startPanel" class="panel">
+                    <div id="panelLogo" class="logo">
+                        NEON MAZE
+                    </div>
 
-            <div class="logo">
-                NEON<br>MAZE
-            </div>
+                    <div id="panelSubtitle" class="subtitle">
+                        ARCADE • MOBILE • 80s
+                    </div>
 
-            <div class="tag">
-                CYBER ARCADE
-            </div>
+                    <button id="startBtn" class="btn">
+                        JUGAR
+                    </button>
 
-            <p class="description">
-                Desliza para recorrer el laberinto,
-                recoge todos los puntos y activa
-                los núcleos de energía para cazar
-                a los fantasmas.
-            </p>
+                    <button id="controlsBtn" class="btn secondary">
+                        CONTROLES
+                    </button>
 
-            <button id="playBtn" type="button">
-                JUGAR
-            </button>
+                    <div id="help">
+                        Desliza sobre el laberinto para moverte.<br>
+                        En PC: flechas o WASD.
+                    </div>
 
-            <button id="controlsBtn"
-                    class="secondary"
-                    type="button">
-                CONTROLES
-            </button>
-
-        </div>
-
-
-        <!-- ================= CONTROLS ================= -->
-
-        <div id="controlsPanel" class="panel">
-
-            <div class="controlsTitle">
-                CONTROLES
-            </div>
-
-            <div class="controlRow">
-
-                <div class="controlIcon">
-                    ↑
-                </div>
-
-                <div>
-                    Desliza arriba / abajo / izquierda / derecha
                 </div>
 
             </div>
-
-            <div class="controlRow">
-
-                <div class="controlIcon">
-                    ⚡
-                </div>
-
-                <div>
-                    Power Pellet = fantasmas vulnerables 7 segundos
-                </div>
-
-            </div>
-
-            <div class="controlRow">
-
-                <div class="controlIcon">
-                    👻
-                </div>
-
-                <div>
-                    Fantasma azul = puedes comértelo
-                </div>
-
-            </div>
-
-            <button id="backBtn"
-                    class="secondary"
-                    type="button">
-                VOLVER
-            </button>
-
-        </div>
-
-
-        <!-- ================= GAME OVER ================= -->
-
-        <div id="gameOverPanel" class="panel">
-
-            <div class="tag">
-                SYSTEM FAILURE
-            </div>
-
-            <div class="gameOverTitle">
-                GAME OVER
-            </div>
-
-            <div id="finalScore"
-                 class="finalScore">
-                0
-            </div>
-
-            <div id="bestScore"
-                 class="best">
-                RÉCORD: 0
-            </div>
-
-            <button id="retryBtn"
-                    type="button">
-                REINTENTAR
-            </button>
-
-            <button id="menuBtn"
-                    class="secondary"
-                    type="button">
-                MENÚ
-            </button>
 
         </div>
 
@@ -550,403 +281,745 @@ button:active{
 </div>
 
 <script>
+
+(() => {
+
 "use strict";
 
+
 /* =========================================================
-   CANVAS
+   ELEMENTOS
 ========================================================= */
 
 const canvas =
-    document.getElementById("canvas");
+    document.getElementById("gameCanvas");
 
 const ctx =
     canvas.getContext("2d");
 
-let W = 0;
-let H = 0;
-let DPR = 1;
+const overlay =
+    document.getElementById("overlay");
 
-function resize(){
+const startBtn =
+    document.getElementById("startBtn");
 
-    W = window.innerWidth;
-    H = window.innerHeight;
+const controlsBtn =
+    document.getElementById("controlsBtn");
 
-    DPR =
-        Math.min(
-            window.devicePixelRatio || 1,
-            2
-        );
+const scoreEl =
+    document.getElementById("score");
 
-    canvas.width =
-        Math.floor(W * DPR);
+const highEl =
+    document.getElementById("high");
 
-    canvas.height =
-        Math.floor(H * DPR);
+const livesEl =
+    document.getElementById("lives");
 
-    canvas.style.width =
-        W + "px";
+const toast =
+    document.getElementById("toast");
 
-    canvas.style.height =
-        H + "px";
+const panelLogo =
+    document.getElementById("panelLogo");
 
-    ctx.setTransform(
-        DPR,
-        0,
-        0,
-        DPR,
-        0,
-        0
-    );
+const panelSubtitle =
+    document.getElementById("panelSubtitle");
 
-    calculateBoard();
-}
-
-window.addEventListener(
-    "resize",
-    resize
-);
+const help =
+    document.getElementById("help");
 
 
 /* =========================================================
-   MAZE
+   CONFIGURACIÓN
 ========================================================= */
 
-/*
-   Todas las filas tienen EXACTAMENTE 21 columnas.
+const COLS = 21;
+const ROWS = 21;
 
-   # = pared
-   . = pellet
-   o = power pellet
-   espacio = camino
-*/
+const DIRS = {
 
-const MAZE_TEMPLATE = [
-"#####################",
-"#o........#........o#",
-"#.###.###.#.###.###.#",
-"#...................#",
-"#.###.#.#######.#.###",
-"#.....#....#....#....#",
-"#####.###.#.#.###.###",
-"    #.#...#.#...#.#   ",
-"#####.#.#####.#.#####",
-"#.........   .........#",
-"#.###.#.#####.#.###..#",
-"#...#.#...#...#.#....#",
-"###.#.###.#.###.#.####",
-"#...#.....#.....#.....#",
-"#.#####.#######.#####.#",
-"#o...................o#",
-"#####################"
+    left:{
+        x:-1,
+        y:0
+    },
+
+    right:{
+        x:1,
+        y:0
+    },
+
+    up:{
+        x:0,
+        y:-1
+    },
+
+    down:{
+        x:0,
+        y:1
+    },
+
+    none:{
+        x:0,
+        y:0
+    }
+
+};
+
+const DIR_LIST = [
+    "left",
+    "right",
+    "up",
+    "down"
 ];
 
-/*
-   La plantilla original tiene algunas zonas de túnel.
-   Normalizamos todas las filas a la anchura máxima.
-*/
-
-const COLS =
-    Math.max(
-        ...MAZE_TEMPLATE.map(r=>r.length)
-    );
-
-const ROWS =
-    MAZE_TEMPLATE.length;
-
-let grid = [];
-
-function createGrid(){
-
-    grid = [];
-
-    for(let y=0;y<ROWS;y++){
-
-        let row =
-            MAZE_TEMPLATE[y]
-            .padEnd(COLS,"#")
-            .slice(0,COLS)
-            .split("");
-
-        grid.push(row);
-    }
-}
-
-createGrid();
-
 
 /* =========================================================
-   BOARD
+   ESTADO
 ========================================================= */
 
-let TILE = 20;
-let boardX = 0;
-let boardY = 0;
+let DPR = 1;
 
-function calculateBoard(){
+let W = 0;
+let H = 0;
 
-    const topSpace = 88;
-    const bottomSpace = 45;
+let cell = 20;
 
-    const availableW =
-        W - 12;
+let maze = [];
 
-    const availableH =
-        H -
-        topSpace -
-        bottomSpace;
+let pellets = new Set();
 
-    TILE =
-        Math.floor(
-            Math.min(
-                availableW / COLS,
-                availableH / ROWS
-            )
-        );
+let player = null;
 
-    TILE =
-        Math.max(11,TILE);
-
-    boardX =
-        Math.floor(
-            (W - COLS*TILE)/2
-        );
-
-    boardY =
-        topSpace +
-        Math.floor(
-            (
-                availableH -
-                ROWS*TILE
-            )/2
-        );
-}
-
-resize();
-
-
-/* =========================================================
-   GAME STATE
-========================================================= */
+let ghosts = [];
 
 let score = 0;
 
-let highScore =
-    Number(
-        localStorage.getItem(
-            "neonMazeHighScore"
-        ) || 0
-    );
+let highScore = loadHighScore();
 
 let lives = 3;
 
 let level = 1;
 
-let pellets = 0;
-
-let powerTimer = 0;
-
-let gameRunning = false;
+let running = false;
 
 let paused = false;
 
-let shake = 0;
-
-let particles = [];
+let frightenedUntil = 0;
 
 let lastTime = 0;
 
+let toastTimer = null;
 
-/* =========================================================
-   PLAYER
-========================================================= */
-
-const player = {
-
-    x:10,
-    y:15,
-
-    dirX:0,
-    dirY:0,
-
-    nextX:0,
-    nextY:0,
-
-    speed:4.5,
-
-    mouth:0,
-
-    moving:false
-};
+let swipeStart = null;
 
 
 /* =========================================================
-   GHOSTS
+   RÉCORD
 ========================================================= */
 
-const GHOST_STARTS = [
+function loadHighScore(){
 
-    {
-        x:9,
-        y:9,
-        color:"#ff3158",
-        cornerX:1,
-        cornerY:1
-    },
+    try{
 
-    {
-        x:10,
-        y:9,
-        color:"#ff8a00",
-        cornerX:COLS-2,
-        cornerY:1
-    },
+        return Number(
+            localStorage.getItem(
+                "neonMazeHigh"
+            ) || 0
+        );
 
-    {
-        x:11,
-        y:9,
-        color:"#00e5ff",
-        cornerX:1,
-        cornerY:ROWS-2
-    },
+    }catch(error){
 
-    {
-        x:12,
-        y:9,
-        color:"#ff54df",
-        cornerX:COLS-2,
-        cornerY:ROWS-2
-    }
-];
-
-let ghosts = [];
-
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function wrapX(x){
-
-    if(x < 0)
-        return COLS-1;
-
-    if(x >= COLS)
         return 0;
 
-    return x;
+    }
+
 }
 
-function isWall(x,y){
+function saveHighScore(){
 
-    if(y < 0 || y >= ROWS)
-        return true;
+    try{
 
-    x = wrapX(x);
+        localStorage.setItem(
+            "neonMazeHigh",
+            String(highScore)
+        );
 
-    return grid[y][x] === "#";
-}
+    }catch(error){}
 
-function canMove(x,y){
-
-    return !isWall(
-        Math.round(x),
-        Math.round(y)
-    );
-}
-
-function dist(x1,y1,x2,y2){
-
-    return Math.hypot(
-        x1-x2,
-        y1-y2
-    );
-}
-
-function clamp(v,min,max){
-
-    return Math.max(
-        min,
-        Math.min(max,v)
-    );
 }
 
 
 /* =========================================================
-   RESET MAP
+   HUD
 ========================================================= */
 
-function resetMap(){
+function updateHUD(){
 
-    createGrid();
+    scoreEl.textContent =
+        score;
 
-    pellets = 0;
+    highEl.textContent =
+        highScore;
 
-    for(let y=0;y<ROWS;y++){
+    livesEl.textContent =
+        "●".repeat(
+            Math.max(0,lives)
+        ) +
+        "○".repeat(
+            Math.max(0,3-lives)
+        );
 
-        for(let x=0;x<COLS;x++){
+}
+
+
+function addScore(points){
+
+    score += points;
+
+    if(score > highScore){
+
+        highScore = score;
+
+        saveHighScore();
+
+    }
+
+    updateHUD();
+
+}
+
+
+/* =========================================================
+   GRID
+========================================================= */
+
+function gridKey(x,y){
+
+    return x + "," + y;
+
+}
+
+
+function inside(x,y){
+
+    return (
+        x >= 0 &&
+        x < COLS &&
+        y >= 0 &&
+        y < ROWS
+    );
+
+}
+
+
+function isOpen(x,y){
+
+    return (
+        inside(x,y) &&
+        maze[y][x] === 0
+    );
+
+}
+
+
+/* =========================================================
+   GENERADOR DE LABERINTO
+========================================================= */
+
+function generateMaze(){
+
+    maze =
+        Array.from(
+            {
+                length:ROWS
+            },
+            () =>
+                Array(COLS).fill(1)
+        );
+
+
+    const stack = [
+        [1,1]
+    ];
+
+    maze[1][1] = 0;
+
+
+    while(stack.length){
+
+        const current =
+            stack[
+                stack.length - 1
+            ];
+
+        const x = current[0];
+        const y = current[1];
+
+        const candidates = [];
+
+
+        const possible = [
+
+            [ 2, 0 ],
+            [-2, 0 ],
+            [ 0, 2 ],
+            [ 0,-2 ]
+
+        ];
+
+
+        for(const d of possible){
+
+            const nx =
+                x + d[0];
+
+            const ny =
+                y + d[1];
+
 
             if(
-                grid[y][x] === "." ||
-                grid[y][x] === "o"
+
+                nx > 0 &&
+                nx < COLS - 1 &&
+                ny > 0 &&
+                ny < ROWS - 1 &&
+                maze[ny][nx] === 1
+
             ){
 
-                pellets++;
+                candidates.push([
+                    nx,
+                    ny,
+                    d[0] / 2,
+                    d[1] / 2
+                ]);
+
             }
+
         }
+
+
+        if(!candidates.length){
+
+            stack.pop();
+
+            continue;
+
+        }
+
+
+        const choice =
+            candidates[
+                Math.floor(
+                    Math.random() *
+                    candidates.length
+                )
+            ];
+
+
+        const nx = choice[0];
+        const ny = choice[1];
+
+        const wx = choice[2];
+        const wy = choice[3];
+
+
+        maze[y + wy][x + wx] = 0;
+
+        maze[ny][nx] = 0;
+
+        stack.push([
+            nx,
+            ny
+        ]);
+
     }
+
+
+    /* Abrimos algunos muros para crear
+       rutas alternativas */
+
+    for(
+        let i = 0;
+        i < 45;
+        i++
+    ){
+
+        const x =
+            1 +
+            Math.floor(
+                Math.random() *
+                (COLS - 2)
+            );
+
+        const y =
+            1 +
+            Math.floor(
+                Math.random() *
+                (ROWS - 2)
+            );
+
+
+        if(maze[y][x] !== 1)
+            continue;
+
+
+        const horizontal =
+            isOpen(x-1,y) &&
+            isOpen(x+1,y);
+
+        const vertical =
+            isOpen(x,y-1) &&
+            isOpen(x,y+1);
+
+
+        if(horizontal || vertical){
+
+            maze[y][x] = 0;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       ZONA CENTRAL
+    ===================================================== */
+
+    for(
+        let y=9;
+        y<=11;
+        y++
+    ){
+
+        for(
+            let x=8;
+            x<=12;
+            x++
+        ){
+
+            maze[y][x] = 0;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SALIDA DEL JUGADOR
+    ===================================================== */
+
+    for(
+        let x=8;
+        x<=12;
+        x++
+    ){
+
+        maze[18][x] = 0;
+
+    }
+
+    maze[17][10] = 0;
+    maze[16][10] = 0;
+
+
+    /* =====================================================
+       CONECTAR POSIBLES BOLSAS
+    ===================================================== */
+
+    ensureConnectivity();
+
 }
 
 
 /* =========================================================
-   RESET ACTORS
+   CONECTIVIDAD
 ========================================================= */
 
-function resetActors(){
+function ensureConnectivity(){
 
-    player.x = 10;
-    player.y = 15;
+    const start = [10,18];
 
-    player.dirX = 0;
-    player.dirY = 0;
+    const visited =
+        new Set([
+            gridKey(
+                start[0],
+                start[1]
+            )
+        ]);
 
-    player.nextX = 0;
-    player.nextY = 0;
+    const queue = [start];
 
-    player.speed =
-        Math.min(
-            6.3,
-            4.5 + (level-1)*.25
-        );
 
-    ghosts =
-        GHOST_STARTS.map(
-            (g,i)=>({
+    while(queue.length){
 
-                x:g.x,
-                y:g.y,
+        const current =
+            queue.shift();
 
-                color:g.color,
+        const x = current[0];
+        const y = current[1];
 
-                cornerX:g.cornerX,
-                cornerY:g.cornerY,
 
-                dirX:
-                    i%2===0 ? 1 : -1,
+        for(const dir of DIR_LIST){
 
-                dirY:0,
+            const nx =
+                x + DIRS[dir].x;
 
-                dead:false,
+            const ny =
+                y + DIRS[dir].y;
 
-                respawn:0,
 
-                index:i
-            })
-        );
+            if(
+                isOpen(nx,ny) &&
+                !visited.has(
+                    gridKey(nx,ny)
+                )
+            ){
+
+                visited.add(
+                    gridKey(nx,ny)
+                );
+
+                queue.push([
+                    nx,
+                    ny
+                ]);
+
+            }
+
+        }
+
+    }
+
 }
 
 
 /* =========================================================
-   START GAME
+   PELLETS
+========================================================= */
+
+function placePellets(){
+
+    pellets.clear();
+
+
+    for(
+        let y=1;
+        y<ROWS-1;
+        y++
+    ){
+
+        for(
+            let x=1;
+            x<COLS-1;
+            x++
+        ){
+
+            if(
+                isOpen(x,y)
+            ){
+
+                pellets.add(
+                    gridKey(x,y)
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /* Zona central vacía */
+
+    for(
+        let y=8;
+        y<=12;
+        y++
+    ){
+
+        for(
+            let x=7;
+        x<=13;
+        x++
+        ){
+
+            pellets.delete(
+                gridKey(x,y)
+            );
+
+        }
+
+    }
+
+
+    /* Salida */
+
+    pellets.delete(
+        gridKey(10,18)
+    );
+
+    pellets.delete(
+        gridKey(10,17)
+    );
+
+    pellets.delete(
+        gridKey(10,16)
+    );
+
+
+    /* Cuatro Power Pellets */
+
+    const powerPositions = [
+
+        [1,1],
+        [COLS-2,1],
+        [1,ROWS-2],
+        [COLS-2,ROWS-2]
+
+    ];
+
+
+    for(
+        const position of powerPositions
+    ){
+
+        const x = position[0];
+        const y = position[1];
+
+        if(isOpen(x,y)){
+
+            pellets.add(
+                gridKey(x,y)
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   ENTIDADES
+========================================================= */
+
+function createEntity(
+    x,
+    y,
+    dir,
+    speed
+){
+
+    return {
+
+        x:x,
+        y:y,
+
+        dir:dir,
+
+        nextDir:dir,
+
+        speed:speed,
+
+        anim:0,
+
+        id:0,
+
+        home:[x,y]
+
+    };
+
+}
+
+
+/* =========================================================
+   POSICIONES
+========================================================= */
+
+function resetPositions(){
+
+    player =
+        createEntity(
+            10,
+            18,
+            "up",
+            0.105 +
+            level * 0.003
+        );
+
+
+    const starts = [
+
+        [9,10,"left"],
+        [10,10,"up"],
+        [11,10,"right"],
+        [10,9,"down"]
+
+    ];
+
+
+    ghosts =
+        starts.map(
+            (s,index)=>{
+
+                const ghost =
+                    createEntity(
+                        s[0],
+                        s[1],
+                        s[2],
+                        0.080 +
+                        level * 0.002
+                    );
+
+
+                ghost.id =
+                    index;
+
+
+                ghost.home =
+                    [
+                        index % 2 === 0
+                            ? 1
+                            : COLS - 2,
+
+                        index < 2
+                            ? 1
+                            : ROWS - 2
+                    ];
+
+
+                return ghost;
+
+            }
+        );
+
+
+    frightenedUntil = 0;
+
+}
+
+
+/* =========================================================
+   NUEVO NIVEL
+========================================================= */
+
+function newLevel(){
+
+    generateMaze();
+
+    placePellets();
+
+    resetPositions();
+
+    showToast(
+        "NIVEL " + level
+    );
+
+}
+
+
+/* =========================================================
+   INICIO
 ========================================================= */
 
 function startGame(){
@@ -957,627 +1030,444 @@ function startGame(){
 
     level = 1;
 
-    powerTimer = 0;
-
-    particles = [];
+    running = true;
 
     paused = false;
 
-    resetMap();
 
-    resetActors();
+    panelLogo.textContent =
+        "NEON MAZE";
+
+    panelSubtitle.textContent =
+        "ARCADE • MOBILE • 80s";
+
+
+    newLevel();
+
+    overlay.style.display =
+        "none";
+
 
     updateHUD();
 
-    hideOverlay();
-
-    gameRunning = true;
-
-    showReady();
-
-    navigator.vibrate?.(25);
-}
+    lastTime =
+        performance.now();
 
 
-/* =========================================================
-   NEW LEVEL
-========================================================= */
-
-function newLevel(){
-
-    level++;
-
-    score += 1000;
-
-    resetMap();
-
-    resetActors();
-
-    powerTimer = 0;
-
-    updateHUD();
-
-    createBurst(
-        boardX + player.x*TILE + TILE/2,
-        boardY + player.y*TILE + TILE/2,
-        "#00e5ff",
-        70
+    requestAnimationFrame(
+        gameLoop
     );
 
-    shake = 8;
-
-    showReady();
-
-    navigator.vibrate?.([25,25,60]);
 }
 
 
 /* =========================================================
-   READY
+   GAME OVER
 ========================================================= */
 
-function showReady(){
+function gameOver(){
 
-    const ready =
-        document.getElementById("ready");
+    running = false;
 
-    ready.classList.remove("hidden");
+    overlay.style.display =
+        "flex";
+
+
+    panelLogo.textContent =
+        "GAME OVER";
+
+    panelSubtitle.textContent =
+        "PUNTUACIÓN " + score;
+
+
+    startBtn.textContent =
+        "JUGAR DE NUEVO";
+
+
+    help.innerHTML =
+        "Desliza sobre el laberinto para moverte.<br>" +
+        "En PC: flechas o WASD.";
+
+}
+
+
+/* =========================================================
+   PERDER VIDA
+========================================================= */
+
+function loseLife(){
+
+    lives--;
+
+    updateHUD();
+
+
+    if(lives <= 0){
+
+        gameOver();
+
+        return;
+
+    }
+
+
+    running = false;
+
+    showToast(
+        "¡TE HAN ATRAPADO!"
+    );
+
 
     setTimeout(()=>{
 
-        ready.classList.add("hidden");
+        resetPositions();
+
+        running = true;
+
+        lastTime =
+            performance.now();
+
+        requestAnimationFrame(
+            gameLoop
+        );
 
     },900);
+
 }
 
 
 /* =========================================================
-   HUD
+   DIRECCIONES
 ========================================================= */
 
-function updateHUD(){
+function canMove(
+    x,
+    y,
+    direction
+){
 
-    document.getElementById("score")
-        .textContent =
-        score.toLocaleString("es-ES");
-
-    document.getElementById("level")
-        .textContent =
-        "LEVEL " + level;
-
-    let text="";
-
-    for(let i=0;i<lives;i++){
-
-        text += "● ";
-
-    }
-
-    document.getElementById("lives")
-        .textContent =
-        text.trim();
-}
+    const d =
+        DIRS[direction];
 
 
-/* =========================================================
-   OVERLAYS
-========================================================= */
-
-function hideOverlay(){
-
-    document.getElementById("overlay")
-        .style.display="none";
-}
-
-function showStart(){
-
-    gameRunning=false;
-
-    document.getElementById("overlay")
-        .style.display="flex";
-
-    document.getElementById("startPanel")
-        .style.display="block";
-
-    document.getElementById("controlsPanel")
-        .style.display="none";
-
-    document.getElementById("gameOverPanel")
-        .style.display="none";
-}
-
-function showControls(){
-
-    document.getElementById("overlay")
-        .style.display="flex";
-
-    document.getElementById("startPanel")
-        .style.display="none";
-
-    document.getElementById("controlsPanel")
-        .style.display="block";
-
-    document.getElementById("gameOverPanel")
-        .style.display="none";
-}
-
-function showGameOver(){
-
-    gameRunning=false;
-
-    if(score > highScore){
-
-        highScore = score;
-
-        localStorage.setItem(
-            "neonMazeHighScore",
-            highScore
-        );
-    }
-
-    document.getElementById("finalScore")
-        .textContent =
-        score.toLocaleString("es-ES");
-
-    document.getElementById("bestScore")
-        .textContent =
-        "RÉCORD: " +
-        highScore.toLocaleString("es-ES");
-
-    document.getElementById("overlay")
-        .style.display="flex";
-
-    document.getElementById("startPanel")
-        .style.display="none";
-
-    document.getElementById("controlsPanel")
-        .style.display="none";
-
-    document.getElementById("gameOverPanel")
-        .style.display="block";
-}
-
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-/*
-   IMPORTANTE:
-   No utilizamos un touchend global.
-   Cada botón recibe su propio listener.
-*/
-
-function buttonAction(button,callback){
-
-    let handled=false;
-
-    button.addEventListener(
-        "touchend",
-        e=>{
-
-            e.preventDefault();
-
-            if(handled) return;
-
-            handled=true;
-
-            setTimeout(
-                ()=>handled=false,
-                400
-            );
-
-            callback();
-
-        },
-        {passive:false}
+    return isOpen(
+        Math.round(x) + d.x,
+        Math.round(y) + d.y
     );
 
-    button.addEventListener(
-        "click",
-        e=>{
+}
 
-            e.preventDefault();
 
-            if(handled) return;
+function nearCenter(value){
 
-            handled=true;
-
-            setTimeout(
-                ()=>handled=false,
-                400
-            );
-
-            callback();
-
-        }
+    return (
+        Math.abs(
+            value -
+            Math.round(value)
+        ) < 0.045
     );
+
 }
 
 
-buttonAction(
-    document.getElementById("playBtn"),
-    startGame
-);
+function legalDirections(entity){
 
-buttonAction(
-    document.getElementById("controlsBtn"),
-    showControls
-);
+    const x =
+        Math.round(entity.x);
 
-buttonAction(
-    document.getElementById("backBtn"),
-    showStart
-);
+    const y =
+        Math.round(entity.y);
 
-buttonAction(
-    document.getElementById("retryBtn"),
-    startGame
-);
 
-buttonAction(
-    document.getElementById("menuBtn"),
-    showStart
-);
+    return DIR_LIST.filter(
+        direction =>
+            isOpen(
+                x + DIRS[direction].x,
+                y + DIRS[direction].y
+            )
+    );
 
-
-/* =========================================================
-   SWIPE CONTROLS
-========================================================= */
-
-let touchStartX=0;
-let touchStartY=0;
-
-let touchActive=false;
-
-
-/*
-   EL SWIPE SOLO SE ESCUCHA EN EL CANVAS.
-   Los botones quedan completamente fuera.
-*/
-
-canvas.addEventListener(
-    "touchstart",
-    e=>{
-
-        if(!gameRunning)
-            return;
-
-        const t =
-            e.changedTouches[0];
-
-        touchStartX =
-            t.clientX;
-
-        touchStartY =
-            t.clientY;
-
-        touchActive=true;
-
-        e.preventDefault();
-
-    },
-    {passive:false}
-);
-
-
-canvas.addEventListener(
-    "touchmove",
-    e=>{
-
-        if(!gameRunning)
-            return;
-
-        e.preventDefault();
-
-    },
-    {passive:false}
-);
-
-
-canvas.addEventListener(
-    "touchend",
-    e=>{
-
-        if(!gameRunning)
-            return;
-
-        if(!touchActive)
-            return;
-
-        const t =
-            e.changedTouches[0];
-
-        const dx =
-            t.clientX-touchStartX;
-
-        const dy =
-            t.clientY-touchStartY;
-
-        touchActive=false;
-
-        if(
-            Math.abs(dx)<18 &&
-            Math.abs(dy)<18
-        ){
-
-            return;
-        }
-
-        if(
-            Math.abs(dx) >
-            Math.abs(dy)
-        ){
-
-            setDirection(
-                dx>0 ? 1 : -1,
-                0
-            );
-
-        }else{
-
-            setDirection(
-                0,
-                dy>0 ? 1 : -1
-            );
-        }
-
-        navigator.vibrate?.(7);
-
-        e.preventDefault();
-
-    },
-    {passive:false}
-);
-
-
-/* =========================================================
-   MOUSE DRAG FOR PC
-========================================================= */
-
-let mouseStartX=0;
-let mouseStartY=0;
-let mouseDown=false;
-
-canvas.addEventListener(
-    "mousedown",
-    e=>{
-
-        if(!gameRunning)
-            return;
-
-        mouseDown=true;
-
-        mouseStartX=e.clientX;
-        mouseStartY=e.clientY;
-
-    }
-);
-
-canvas.addEventListener(
-    "mouseup",
-    e=>{
-
-        if(!gameRunning || !mouseDown)
-            return;
-
-        mouseDown=false;
-
-        const dx =
-            e.clientX-mouseStartX;
-
-        const dy =
-            e.clientY-mouseStartY;
-
-        if(
-            Math.abs(dx)<15 &&
-            Math.abs(dy)<15
-        )
-            return;
-
-        if(
-            Math.abs(dx)>Math.abs(dy)
-        ){
-
-            setDirection(
-                dx>0?1:-1,
-                0
-            );
-
-        }else{
-
-            setDirection(
-                0,
-                dy>0?1:-1
-            );
-        }
-    }
-);
-
-
-/* =========================================================
-   KEYBOARD
-========================================================= */
-
-window.addEventListener(
-    "keydown",
-    e=>{
-
-        if(!gameRunning)
-            return;
-
-        const key =
-            e.key.toLowerCase();
-
-        if(
-            key==="arrowup" ||
-            key==="w"
-        ){
-
-            setDirection(0,-1);
-
-        }
-
-        else if(
-            key==="arrowdown" ||
-            key==="s"
-        ){
-
-            setDirection(0,1);
-
-        }
-
-        else if(
-            key==="arrowleft" ||
-            key==="a"
-        ){
-
-            setDirection(-1,0);
-
-        }
-
-        else if(
-            key==="arrowright" ||
-            key==="d"
-        ){
-
-            setDirection(1,0);
-
-        }
-
-        e.preventDefault();
-    }
-);
-
-
-function setDirection(dx,dy){
-
-    player.nextX=dx;
-    player.nextY=dy;
 }
 
 
 /* =========================================================
-   PLAYER UPDATE
+   MOVIMIENTO
 ========================================================= */
 
-function updatePlayer(dt){
+function moveEntity(
+    entity,
+    dt
+){
 
-    const centerX =
-        Math.round(player.x);
+    const speed =
+        entity.speed *
+        (dt / 16.6667);
 
-    const centerY =
-        Math.round(player.y);
 
-    const centered =
-        Math.abs(player.x-centerX)<.10 &&
-        Math.abs(player.y-centerY)<.10;
+    if(
+        nearCenter(entity.x) &&
+        nearCenter(entity.y)
+    ){
 
-    if(centered){
+        entity.x =
+            Math.round(entity.x);
 
-        player.x=centerX;
-        player.y=centerY;
+        entity.y =
+            Math.round(entity.y);
+
 
         if(
+            entity.nextDir !== "none" &&
             canMove(
-                player.x+player.nextX,
-                player.y+player.nextY
+                entity.x,
+                entity.y,
+                entity.nextDir
             )
         ){
 
-            player.dirX=
-                player.nextX;
+            entity.dir =
+                entity.nextDir;
 
-            player.dirY=
-                player.nextY;
         }
+
+
+        if(
+            entity.dir !== "none" &&
+            !canMove(
+                entity.x,
+                entity.y,
+                entity.dir
+            )
+        ){
+
+            entity.dir =
+                "none";
+
+        }
+
     }
 
 
-    const speed =
-        player.speed *
-        (1 + Math.min(level-1,10)*.025);
+    if(entity.dir !== "none"){
 
-    let nx =
-        player.x+
-        player.dirX*
-        speed*
-        dt;
-
-    let ny =
-        player.y+
-        player.dirY*
-        speed*
-        dt;
+        const d =
+            DIRS[entity.dir];
 
 
-    /*
-       Horizontal collision.
-    */
+        entity.x +=
+            d.x * speed;
 
-    if(player.dirX!==0){
+        entity.y +=
+            d.y * speed;
 
-        const checkX =
-            player.dirX>0
-            ? Math.floor(nx+.43)
-            : Math.ceil(nx-.43);
-
-        const checkY =
-            Math.round(player.y);
-
-        if(isWall(checkX,checkY)){
-
-            nx=player.x;
-
-            player.dirX=0;
-        }
     }
 
 
-    /*
-       Vertical collision.
-    */
+    /* túneles */
 
-    if(player.dirY!==0){
+    if(entity.x < 0)
+        entity.x = COLS - 1;
 
-        const checkY =
-            player.dirY>0
-            ? Math.floor(ny+.43)
-            : Math.ceil(ny-.43);
+    if(entity.x > COLS - 1)
+        entity.x = 0;
 
-        const checkX =
-            Math.round(player.x);
+    if(entity.y < 0)
+        entity.y = ROWS - 1;
 
-        if(isWall(checkX,checkY)){
+    if(entity.y > ROWS - 1)
+        entity.y = 0;
 
-            ny=player.y;
 
-            player.dirY=0;
-        }
-    }
+    entity.anim +=
+        dt * 0.012;
 
-    player.x =
-        wrapX(nx);
-
-    player.y =
-        ny;
-
-    player.moving =
-        player.dirX!==0 ||
-        player.dirY!==0;
-
-    player.mouth +=
-        dt*14;
-
-    eatPellet();
 }
 
 
 /* =========================================================
-   EAT PELLET
+   IA FANTASMAS
+========================================================= */
+
+function chooseGhostDirection(
+    ghost
+){
+
+    if(
+        !nearCenter(ghost.x) ||
+        !nearCenter(ghost.y)
+    ){
+
+        return;
+
+    }
+
+
+    const options =
+        legalDirections(
+            ghost
+        );
+
+
+    if(!options.length)
+        return;
+
+
+    const reverse = {
+
+        left:"right",
+        right:"left",
+        up:"down",
+        down:"up",
+        none:"none"
+
+    };
+
+
+    let choices =
+        options.filter(
+            direction =>
+                direction !==
+                reverse[ghost.dir]
+        );
+
+
+    if(!choices.length)
+        choices = options;
+
+
+    let target;
+
+
+    if(
+        Date.now() <
+        frightenedUntil
+    ){
+
+        target = {
+
+            x:
+                Math.random() *
+                (COLS-2) + 1,
+
+            y:
+                Math.random() *
+                (ROWS-2) + 1
+
+        };
+
+    }else{
+
+        const mode =
+            (
+                Math.floor(
+                    Date.now()/4500
+                ) +
+                ghost.id
+            ) % 2;
+
+
+        if(mode === 0){
+
+            target = {
+
+                x:player.x,
+
+                y:player.y
+
+            };
+
+        }else{
+
+            target = {
+
+                x:ghost.home[0],
+
+                y:ghost.home[1]
+
+            };
+
+        }
+
+    }
+
+
+    choices.sort(
+        (a,b)=>{
+
+            const da =
+                distanceAfter(
+                    ghost,
+                    a,
+                    target
+                );
+
+            const db =
+                distanceAfter(
+                    ghost,
+                    b,
+                    target
+                );
+
+            return da-db;
+
+        }
+    );
+
+
+    if(
+        Math.random() < 0.18
+    ){
+
+        ghost.nextDir =
+            choices[
+                Math.floor(
+                    Math.random() *
+                    choices.length
+                )
+            ];
+
+    }else{
+
+        ghost.nextDir =
+            choices[0];
+
+    }
+
+}
+
+
+function distanceAfter(
+    entity,
+    direction,
+    target
+){
+
+    const nx =
+        Math.round(entity.x) +
+        DIRS[direction].x;
+
+    const ny =
+        Math.round(entity.y) +
+        DIRS[direction].y;
+
+
+    return Math.hypot(
+        nx-target.x,
+        ny-target.y
+    );
+
+}
+
+
+/* =========================================================
+   COMER PELLET
 ========================================================= */
 
 function eatPellet(){
+
+    if(!player)
+        return;
+
 
     const x =
         Math.round(player.x);
@@ -1585,1092 +1475,285 @@ function eatPellet(){
     const y =
         Math.round(player.y);
 
+
+    const pelletKey =
+        gridKey(x,y);
+
+
     if(
-        y<0 ||
-        y>=ROWS ||
-        x<0 ||
-        x>=COLS
-    )
-        return;
-
-    const cell =
-        grid[y][x];
-
-    const px =
-        boardX+
-        x*TILE+
-        TILE/2;
-
-    const py =
-        boardY+
-        y*TILE+
-        TILE/2;
-
-
-    if(cell==="."){
-
-        grid[y][x]=" ";
-
-        pellets--;
-
-        score+=10;
-
-        createBurst(
-            px,
-            py,
-            "#ffe66d",
-            3
-        );
-
-        updateHUD();
-    }
-
-
-    if(cell==="o"){
-
-        grid[y][x]=" ";
-
-        pellets--;
-
-        score+=50;
-
-        powerTimer=7;
-
-        createBurst(
-            px,
-            py,
-            "#00e5ff",
-            35
-        );
-
-        shake=7;
-
-        document.getElementById(
-            "powerStatus"
-        ).style.opacity="1";
-
-        navigator.vibrate?.(
-            [20,20,50]
-        );
-
-        updateHUD();
-    }
-
-
-    if(pellets<=0){
-
-        newLevel();
-    }
-}
-
-
-/* =========================================================
-   GHOST AI
-========================================================= */
-
-function updateGhost(g,dt){
-
-    if(g.dead){
-
-        g.respawn-=dt;
-
-        if(g.respawn<=0){
-
-            g.dead=false;
-
-            g.x=g.cornerX;
-            g.y=g.cornerY;
-
-            g.dirX=1;
-            g.dirY=0;
-        }
+        !pellets.has(
+            pelletKey
+        )
+    ){
 
         return;
-    }
-
-
-    const cx=Math.round(g.x);
-    const cy=Math.round(g.y);
-
-    const centered =
-        Math.abs(g.x-cx)<.08 &&
-        Math.abs(g.y-cy)<.08;
-
-    if(centered){
-
-        g.x=cx;
-        g.y=cy;
-
-        chooseGhostDirection(g);
-    }
-
-
-    let speed =
-        3.05+
-        Math.min(
-            level*.15,
-            1.6
-        );
-
-    if(powerTimer>0){
-
-        speed*=.62;
-    }
-
-    g.x =
-        wrapX(
-            g.x+
-            g.dirX*
-            speed*
-            dt
-        );
-
-    g.y +=
-        g.dirY*
-        speed*
-        dt;
-}
-
-
-/* =========================================================
-   GHOST DECISION
-========================================================= */
-
-function chooseGhostDirection(g){
-
-    const dirs=[
-
-        {x:1,y:0},
-        {x:-1,y:0},
-        {x:0,y:1},
-        {x:0,y:-1}
-
-    ];
-
-
-    let options =
-        dirs.filter(d=>{
-
-            /*
-               Evitar reversa siempre que haya
-               otra posibilidad.
-            */
-
-            if(
-                d.x===-g.dirX &&
-                d.y===-g.dirY
-            )
-                return false;
-
-            return canMove(
-                Math.round(g.x)+d.x,
-                Math.round(g.y)+d.y
-            );
-        });
-
-
-    if(!options.length){
-
-        options =
-            dirs.filter(d=>
-                canMove(
-                    Math.round(g.x)+d.x,
-                    Math.round(g.y)+d.y
-                )
-            );
-    }
-
-
-    if(!options.length)
-        return;
-
-
-    /*
-       Power Mode:
-       huir del jugador.
-    */
-
-    if(powerTimer>0){
-
-        options.sort(
-            (a,b)=>{
-
-                const da =
-                    dist(
-                        g.x+a.x,
-                        g.y+a.y,
-                        player.x,
-                        player.y
-                    );
-
-                const db =
-                    dist(
-                        g.x+b.x,
-                        g.y+b.y,
-                        player.x,
-                        player.y
-                    );
-
-                return db-da;
-            }
-        );
-
-        const amount =
-            Math.min(
-                2,
-                options.length
-            );
-
-        const chosen =
-            options[
-                Math.floor(
-                    Math.random()*amount
-                )
-            ];
-
-        g.dirX=chosen.x;
-        g.dirY=chosen.y;
-
-        return;
-    }
-
-
-    /*
-       Pequeño comportamiento aleatorio.
-    */
-
-    if(Math.random()<.10){
-
-        const d =
-            options[
-                Math.floor(
-                    Math.random()*options.length
-                )
-            ];
-
-        g.dirX=d.x;
-        g.dirY=d.y;
-
-        return;
-    }
-
-
-    /*
-       Target diferenciado.
-    */
-
-    let targetX=player.x;
-    let targetY=player.y;
-
-
-    if(g.index===2){
-
-        /*
-           Fantasma azul:
-           apunta un poco por delante.
-        */
-
-        targetX =
-            player.x+
-            player.dirX*2;
-
-        targetY =
-            player.y+
-            player.dirY*2;
 
     }
 
-    else if(g.index===3){
 
-        /*
-           Fantasma rosa:
-           mezcla persecución y esquina.
-        */
-
-        targetX =
-            player.x*.7+
-            g.cornerX*.3;
-
-        targetY =
-            player.y*.7+
-            g.cornerY*.3;
-
-    }
-
-    else if(g.index===1){
-
-        /*
-           Fantasma naranja:
-           alterna entre perseguir y dispersarse.
-        */
-
-        const mode =
-            Math.floor(
-                performance.now()/5000
-            )%2;
-
-        if(mode===1){
-
-            targetX=g.cornerX;
-            targetY=g.cornerY;
-        }
-    }
-
-
-    options.sort(
-        (a,b)=>{
-
-            const da =
-                dist(
-                    g.x+a.x,
-                    g.y+a.y,
-                    targetX,
-                    targetY
-                );
-
-            const db =
-                dist(
-                    g.x+b.x,
-                    g.y+b.y,
-                    targetX,
-                    targetY
-                );
-
-            return da-db;
-        }
+    pellets.delete(
+        pelletKey
     );
 
 
-    const selected =
-        options[0];
+    const power =
+        (
+            x === 1 ||
+            x === COLS-2
+        ) &&
+        (
+            y === 1 ||
+            y === ROWS-2
+        );
 
-    g.dirX=
-        selected.x;
 
-    g.dirY=
-        selected.y;
+    if(power){
+
+        addScore(50);
+
+        frightenedUntil =
+            Date.now() + 7000;
+
+
+        ghosts.forEach(
+            ghost=>{
+
+                ghost.speed =
+                    0.062 +
+                    level * 0.001;
+
+            }
+        );
+
+
+        showToast(
+            "⚡ MODO PODER"
+        );
+
+    }else{
+
+        addScore(10);
+
+    }
+
+
+    if(
+        pellets.size === 0
+    ){
+
+        addScore(1000);
+
+        level++;
+
+        setTimeout(()=>{
+
+            if(running){
+
+                newLevel();
+
+            }
+
+        },500);
+
+    }
+
 }
 
 
 /* =========================================================
-   COLLISIONS
+   COLISIONES
 ========================================================= */
 
-function checkCollisions(){
+function checkGhostCollisions(){
 
-    for(const g of ghosts){
+    for(
+        const ghost of ghosts
+    ){
 
-        if(g.dead)
-            continue;
+        const distance =
+            Math.hypot(
+                player.x -
+                ghost.x,
 
-        const d =
-            dist(
-                player.x,
-                player.y,
-                g.x,
-                g.y
+                player.y -
+                ghost.y
             );
 
-        if(d<.60){
 
-            if(powerTimer>0){
+        if(distance < 0.62){
 
-                g.dead=true;
+            if(
+                Date.now() <
+                frightenedUntil
+            ){
 
-                g.respawn=2.2;
+                addScore(200);
 
-                score+=200;
 
-                createBurst(
-                    boardX+
-                    g.x*TILE+
-                    TILE/2,
+                ghost.x =
+                    ghost.home[0];
 
-                    boardY+
-                    g.y*TILE+
-                    TILE/2,
+                ghost.y =
+                    ghost.home[1];
 
-                    "#00e5ff",
-                    28
-                );
+                ghost.dir =
+                    "none";
 
-                shake=5;
+                ghost.nextDir =
+                    "none";
 
-                navigator.vibrate?.(30);
-
-                updateHUD();
 
             }else{
 
                 loseLife();
 
                 return;
+
             }
+
         }
+
     }
+
 }
 
 
 /* =========================================================
-   LOSE LIFE
+   DIRECCIÓN JUGADOR
 ========================================================= */
 
-function loseLife(){
-
-    lives--;
-
-    shake=14;
-
-    createBurst(
-        boardX+
-        player.x*TILE+
-        TILE/2,
-
-        boardY+
-        player.y*TILE+
-        TILE/2,
-
-        "#ff3158",
-        50
-    );
-
-    updateHUD();
-
-    navigator.vibrate?.(
-        [70,30,70]
-    );
-
-
-    if(lives<=0){
-
-        showGameOver();
-
-        return;
-    }
-
-
-    paused=true;
-
-    setTimeout(()=>{
-
-        resetActors();
-
-        paused=false;
-
-        showReady();
-
-    },700);
-}
-
-
-/* =========================================================
-   PARTICLES
-========================================================= */
-
-function createBurst(
-    x,
-    y,
-    color,
-    amount
+function setDirection(
+    direction
 ){
 
-    for(
-        let i=0;
-        i<amount;
-        i++
+    if(
+        !running ||
+        !player
     ){
 
-        const angle =
-            Math.random()*
-            Math.PI*2;
+        return;
 
-        const speed =
-            .5+
-            Math.random()*2.8;
-
-        const life =
-            .35+
-            Math.random()*.55;
-
-        particles.push({
-
-            x,
-            y,
-
-            vx:
-                Math.cos(angle)*
-                speed,
-
-            vy:
-                Math.sin(angle)*
-                speed,
-
-            life,
-
-            max:life,
-
-            size:
-                1+
-                Math.random()*2.8,
-
-            color
-        });
     }
-}
 
 
-function updateParticles(dt){
+    player.nextDir =
+        direction;
 
-    for(
-        let i=particles.length-1;
-        i>=0;
-        i--
-    ){
-
-        const p =
-            particles[i];
-
-        p.x+=p.vx;
-        p.y+=p.vy;
-
-        p.vx*=.97;
-        p.vy*=.97;
-
-        p.life-=dt;
-
-        if(p.life<=0){
-
-            particles.splice(i,1);
-        }
-    }
 }
 
 
 /* =========================================================
-   DRAW PARTICLES
+   MENSAJES
 ========================================================= */
 
-function drawParticles(){
+function showToast(text){
 
-    for(const p of particles){
+    toast.textContent =
+        text;
 
-        const alpha =
-            clamp(
-                p.life/p.max,
-                0,
-                1
-            );
-
-        ctx.save();
-
-        ctx.globalAlpha=alpha;
-
-        ctx.fillStyle=p.color;
-
-        ctx.shadowColor=p.color;
-
-        ctx.shadowBlur=10;
-
-        ctx.beginPath();
-
-        ctx.arc(
-            p.x,
-            p.y,
-            p.size,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-        ctx.restore();
-    }
-}
-
-
-/* =========================================================
-   DRAW MAZE
-========================================================= */
-
-function drawMaze(){
-
-    /*
-       Fondo.
-    */
-
-    ctx.fillStyle="#000";
-
-    ctx.fillRect(
-        boardX,
-        boardY,
-        COLS*TILE,
-        ROWS*TILE
+    toast.classList.add(
+        "show"
     );
 
 
-    /*
-       Paredes.
-    */
+    clearTimeout(
+        toastTimer
+    );
 
-    ctx.save();
 
-    ctx.lineWidth =
+    toastTimer =
+        setTimeout(()=>{
+
+            toast.classList.remove(
+                "show"
+            );
+
+        },900);
+
+}
+
+
+/* =========================================================
+   RESIZE CANVAS
+========================================================= */
+
+function resizeCanvas(){
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    DPR =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
+
+    W =
         Math.max(
-            1.5,
-            TILE*.075
+            1,
+            rect.width
         );
 
-    ctx.strokeStyle="#0647ff";
 
-    ctx.shadowColor="#0647ff";
+    H =
+        Math.max(
+            1,
+            rect.height
+        );
 
-    ctx.shadowBlur=8;
 
+    canvas.width =
+        Math.round(
+            W * DPR
+        );
 
-    for(
-        let y=0;
-        y<ROWS;
-        y++
-    ){
 
-        for(
-            let x=0;
-            x<COLS;
-            x++
-        ){
+    canvas.height =
+        Math.round(
+            H * DPR
+        );
 
-            if(
-                grid[y][x]!=="#"
-            )
-                continue;
 
-            const px =
-                boardX+
-                x*TILE;
-
-            const py =
-                boardY+
-                y*TILE;
-
-
-            ctx.beginPath();
-
-            ctx.roundRect(
-                px+
-                TILE*.12,
-
-                py+
-                TILE*.12,
-
-                TILE*.76,
-
-                TILE*.76,
-
-                TILE*.16
-            );
-
-            ctx.stroke();
-        }
-    }
-
-    ctx.restore();
-
-
-    /*
-       Pellets.
-    */
-
-    for(
-        let y=0;
-        y<ROWS;
-        y++
-    ){
-
-        for(
-            let x=0;
-            x<COLS;
-            x++
-        ){
-
-            const cell =
-                grid[y][x];
-
-            const cx =
-                boardX+
-                x*TILE+
-                TILE/2;
-
-            const cy =
-                boardY+
-                y*TILE+
-                TILE/2;
-
-
-            if(cell==="."){
-
-                ctx.save();
-
-                ctx.fillStyle="#ffe66d";
-
-                ctx.shadowColor="#ffe66d";
-
-                ctx.shadowBlur=5;
-
-                ctx.beginPath();
-
-                ctx.arc(
-                    cx,
-                    cy,
-                    Math.max(
-                        1.3,
-                        TILE*.075
-                    ),
-                    0,
-                    Math.PI*2
-                );
-
-                ctx.fill();
-
-                ctx.restore();
-            }
-
-
-            if(cell==="o"){
-
-                const pulse =
-                    1+
-                    Math.sin(
-                        performance.now()*.007
-                    )*.18;
-
-                ctx.save();
-
-                ctx.fillStyle="#fff";
-
-                ctx.shadowColor="#00e5ff";
-
-                ctx.shadowBlur=20;
-
-                ctx.beginPath();
-
-                ctx.arc(
-                    cx,
-                    cy,
-                    TILE*.22*pulse,
-                    0,
-                    Math.PI*2
-                );
-
-                ctx.fill();
-
-                ctx.restore();
-            }
-        }
-    }
-}
-
-
-/* =========================================================
-   DRAW PLAYER
-========================================================= */
-
-function drawPlayer(){
-
-    const cx =
-        boardX+
-        player.x*TILE+
-        TILE/2;
-
-    const cy =
-        boardY+
-        player.y*TILE+
-        TILE/2;
-
-    const r =
-        TILE*.40;
-
-
-    let angle=0;
-
-    if(player.dirX<0)
-        angle=Math.PI;
-
-    if(player.dirY<0)
-        angle=-Math.PI/2;
-
-    if(player.dirY>0)
-        angle=Math.PI/2;
-
-
-    const mouth =
-        player.moving
-        ? .20+
-          Math.abs(
-              Math.sin(
-                  player.mouth
-              )
-          )*.28
-        : .18;
-
-
-    ctx.save();
-
-    ctx.translate(
-        cx,
-        cy
-    );
-
-    ctx.rotate(angle);
-
-    ctx.fillStyle="#ffe600";
-
-    ctx.shadowColor="#ffe600";
-
-    ctx.shadowBlur=18;
-
-    ctx.beginPath();
-
-    ctx.moveTo(0,0);
-
-    ctx.arc(
+    ctx.setTransform(
+        DPR,
         0,
         0,
-        r,
-        mouth,
-        Math.PI*2-mouth
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-
-    ctx.restore();
-}
-
-
-/* =========================================================
-   DRAW GHOST
-========================================================= */
-
-function drawGhost(g){
-
-    const cx =
-        boardX+
-        g.x*TILE+
-        TILE/2;
-
-    const cy =
-        boardY+
-        g.y*TILE+
-        TILE/2;
-
-    const r =
-        TILE*.39;
-
-
-    let color =
-        g.color;
-
-
-    if(powerTimer>0){
-
-        if(
-            powerTimer<2 &&
-            Math.floor(
-                powerTimer*7
-            )%2===0
-        ){
-
-            color="#fff";
-
-        }else{
-
-            color="#006cff";
-        }
-    }
-
-
-    ctx.save();
-
-    ctx.translate(
-        cx,
-        cy
-    );
-
-
-    /*
-       Cuerpo.
-    */
-
-    ctx.fillStyle=color;
-
-    ctx.shadowColor=color;
-
-    ctx.shadowBlur=16;
-
-    ctx.beginPath();
-
-    ctx.arc(
+        DPR,
         0,
-        -r*.05,
-        r,
-        Math.PI,
         0
     );
 
-    ctx.lineTo(
-        r,
-        r*.72
-    );
 
-    ctx.lineTo(
-        r*.45,
-        r*.50
-    );
-
-    ctx.lineTo(
-        0,
-        r*.78
-    );
-
-    ctx.lineTo(
-        -r*.45,
-        r*.50
-    );
-
-    ctx.lineTo(
-        -r,
-        r*.72
-    );
-
-    ctx.closePath();
-
-    ctx.fill();
-
-
-    /*
-       Ojos.
-    */
-
-    if(powerTimer<=0){
-
-        ctx.fillStyle="#fff";
-
-        ctx.beginPath();
-
-        ctx.ellipse(
-            -r*.34,
-            -r*.10,
-            r*.20,
-            r*.28,
-            0,
-            0,
-            Math.PI*2
+    cell =
+        Math.min(
+            W / COLS,
+            H / ROWS
         );
 
-        ctx.ellipse(
-            r*.34,
-            -r*.10,
-            r*.20,
-            r*.28,
-            0,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-
-        ctx.fillStyle="#07111d";
-
-        const eyeX =
-            g.dirX*r*.08;
-
-        const eyeY =
-            g.dirY*r*.08;
-
-
-        ctx.beginPath();
-
-        ctx.arc(
-            -r*.34+eyeX,
-            -r*.10+eyeY,
-            r*.09,
-            0,
-            Math.PI*2
-        );
-
-        ctx.arc(
-            r*.34+eyeX,
-            -r*.10+eyeY,
-            r*.09,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-    }else{
-
-        /*
-           Fantasma asustado.
-        */
-
-        ctx.fillStyle="#fff";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            -r*.25,
-            -r*.10,
-            r*.09,
-            0,
-            Math.PI*2
-        );
-
-        ctx.arc(
-            r*.25,
-            -r*.10,
-            r*.09,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-        ctx.strokeStyle="#fff";
-
-        ctx.lineWidth=1;
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            -r*.35,
-            r*.25
-        );
-
-        for(let i=0;i<5;i++){
-
-            ctx.lineTo(
-                -r*.35+
-                i*r*.18,
-
-                r*.25+
-                (i%2
-                    ? r*.10
-                    : 0)
-            );
-        }
-
-        ctx.stroke();
-    }
-
-    ctx.restore();
 }
 
 
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
+
+window.addEventListener(
+    "orientationchange",
+    ()=>{
+        setTimeout(
+            resizeCanvas,
+            100
+        );
+    }
+);
+
+
 /* =========================================================
-   DRAW
+   DIBUJO
 ========================================================= */
 
 function draw(){
@@ -2682,7 +1765,16 @@ function draw(){
         H
     );
 
-    ctx.fillStyle="#000";
+
+    const offsetX =
+        (W - cell*COLS) / 2;
+
+    const offsetY =
+        (H - cell*ROWS) / 2;
+
+
+    ctx.fillStyle =
+        "#000";
 
     ctx.fillRect(
         0,
@@ -2692,68 +1784,671 @@ function draw(){
     );
 
 
-    let sx=0;
-    let sy=0;
+    drawBackgroundGrid(
+        offsetX,
+        offsetY
+    );
 
-    if(shake>0){
 
-        sx =
-            (Math.random()-.5)*
-            shake;
+    drawWalls(
+        offsetX,
+        offsetY
+    );
 
-        sy =
-            (Math.random()-.5)*
-            shake;
+
+    drawPellets(
+        offsetX,
+        offsetY
+    );
+
+
+    if(player){
+
+        drawPlayer(
+            offsetX,
+            offsetY
+        );
+
     }
+
+
+    ghosts.forEach(
+        (ghost,index)=>{
+
+            drawGhost(
+                ghost,
+                index,
+                offsetX,
+                offsetY
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   GRID FONDO
+========================================================= */
+
+function drawBackgroundGrid(
+    ox,
+    oy
+){
+
+    ctx.save();
+
+    ctx.globalAlpha =
+        0.10;
+
+    ctx.strokeStyle =
+        "#06343d";
+
+    ctx.lineWidth = 1;
+
+
+    for(
+        let x=0;
+        x<=COLS;
+        x++
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            ox + x*cell,
+            oy
+        );
+
+        ctx.lineTo(
+            ox + x*cell,
+            oy + ROWS*cell
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for(
+        let y=0;
+        y<=ROWS;
+        y++
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            ox,
+            oy + y*cell
+        );
+
+        ctx.lineTo(
+            ox + COLS*cell,
+            oy + y*cell
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   PAREDES
+========================================================= */
+
+function drawWalls(
+    ox,
+    oy
+){
+
+    ctx.save();
+
+
+    ctx.lineWidth =
+        Math.max(
+            1.5,
+            cell * 0.11
+        );
+
+
+    ctx.strokeStyle =
+        "#00d9ff";
+
+
+    ctx.shadowColor =
+        "#00d9ff";
+
+
+    ctx.shadowBlur =
+        Math.min(
+            14,
+            cell * 0.55
+        );
+
+
+    for(
+        let y=0;
+        y<ROWS;
+        y++
+    ){
+
+        for(
+            let x=0;
+            x<COLS;
+            x++
+        ){
+
+            if(
+                maze[y][x] !== 1
+            ){
+
+                continue;
+
+            }
+
+
+            const px =
+                ox + x*cell;
+
+            const py =
+                oy + y*cell;
+
+
+            ctx.fillStyle =
+                "#041017";
+
+
+            ctx.fillRect(
+                px,
+                py,
+                cell,
+                cell
+            );
+
+
+            ctx.beginPath();
+
+
+            if(
+                !isOpen(x,y-1)
+            ){
+
+                ctx.moveTo(
+                    px,
+                    py
+                );
+
+                ctx.lineTo(
+                    px+cell,
+                    py
+                );
+
+            }
+
+
+            if(
+                !isOpen(x+1,y)
+            ){
+
+                ctx.moveTo(
+                    px+cell,
+                    py
+                );
+
+                ctx.lineTo(
+                    px+cell,
+                    py+cell
+                );
+
+            }
+
+
+            if(
+                !isOpen(x,y+1)
+            ){
+
+                ctx.moveTo(
+                    px,
+                    py+cell
+                );
+
+                ctx.lineTo(
+                    px+cell,
+                    py+cell
+                );
+
+            }
+
+
+            if(
+                !isOpen(x-1,y)
+            ){
+
+                ctx.moveTo(
+                    px,
+                    py
+                );
+
+                ctx.lineTo(
+                    px,
+                    py+cell
+                );
+
+            }
+
+
+            ctx.stroke();
+
+        }
+
+    }
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   PELLETS
+========================================================= */
+
+function drawPellets(
+    ox,
+    oy
+){
+
+    const now =
+        performance.now();
+
+
+    for(
+        const pelletKey of pellets
+    ){
+
+        const parts =
+            pelletKey
+                .split(",")
+                .map(Number);
+
+
+        const x = parts[0];
+        const y = parts[1];
+
+
+        const px =
+            ox + (x+0.5)*cell;
+
+        const py =
+            oy + (y+0.5)*cell;
+
+
+        const power =
+            (
+                x===1 ||
+                x===COLS-2
+            ) &&
+            (
+                y===1 ||
+                y===ROWS-2
+            );
+
+
+        const radius =
+            power
+                ? cell*0.25
+                : cell*0.075;
+
+
+        const pulse =
+            power
+                ? 1 +
+                    0.18 *
+                    Math.sin(
+                        now*0.008
+                    )
+                : 1;
+
+
+        ctx.save();
+
+
+        ctx.fillStyle =
+            power
+                ? "#fff"
+                : "#a8f7ff";
+
+
+        ctx.shadowColor =
+            "#00e5ff";
+
+
+        ctx.shadowBlur =
+            power ? 16 : 7;
+
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+            px,
+            py,
+            radius*pulse,
+            0,
+            Math.PI*2
+        );
+
+
+        ctx.fill();
+
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   JUGADOR
+========================================================= */
+
+function drawPlayer(
+    ox,
+    oy
+){
+
+    const px =
+        ox +
+        (player.x+0.5)*cell;
+
+    const py =
+        oy +
+        (player.y+0.5)*cell;
+
+
+    let angle = 0;
+
+
+    if(
+        player.dir === "left"
+    )
+        angle = Math.PI;
+
+
+    if(
+        player.dir === "up"
+    )
+        angle = -Math.PI/2;
+
+
+    if(
+        player.dir === "down"
+    )
+        angle = Math.PI/2;
+
+
+    const mouth =
+        0.24 +
+        0.12 *
+        Math.abs(
+            Math.sin(
+                player.anim
+            )
+        );
+
+
+    const radius =
+        cell*0.38;
 
 
     ctx.save();
 
+
     ctx.translate(
-        sx,
-        sy
+        px,
+        py
     );
 
-    drawMaze();
+
+    ctx.rotate(
+        angle
+    );
 
 
-    for(const g of ghosts){
-
-        if(!g.dead){
-
-            drawGhost(g);
-        }
-    }
+    ctx.fillStyle =
+        "#ffe600";
 
 
-    drawPlayer();
+    ctx.shadowColor =
+        "#ffe600";
 
-    drawParticles();
+
+    ctx.shadowBlur =
+        15;
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        0,
+        0
+    );
+
+
+    ctx.arc(
+        0,
+        0,
+        radius,
+        mouth,
+        Math.PI*2-mouth
+    );
+
+
+    ctx.closePath();
+
+    ctx.fill();
+
 
     ctx.restore();
 
+}
 
-    /*
-       Estado POWER MODE.
-    */
 
-    const power =
-        document.getElementById(
-            "powerStatus"
+/* =========================================================
+   FANTASMAS
+========================================================= */
+
+function drawGhost(
+    ghost,
+    index,
+    ox,
+    oy
+){
+
+    const colors = [
+
+        "#ff3b72",
+        "#ff7a00",
+        "#39e75f",
+        "#b76cff"
+
+    ];
+
+
+    const frightened =
+        Date.now() <
+        frightenedUntil;
+
+
+    const px =
+        ox +
+        (ghost.x+0.5)*cell;
+
+
+    const py =
+        oy +
+        (ghost.y+0.5)*cell;
+
+
+    const radius =
+        cell*0.36;
+
+
+    const color =
+        frightened
+            ? "#287dff"
+            : colors[
+                index %
+                colors.length
+            ];
+
+
+    ctx.save();
+
+
+    ctx.translate(
+        px,
+        py
+    );
+
+
+    ctx.fillStyle =
+        color;
+
+
+    ctx.shadowColor =
+        color;
+
+
+    ctx.shadowBlur =
+        13;
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+        0,
+        -radius*0.05,
+        radius,
+        -Math.PI,
+        0
+    );
+
+
+    ctx.lineTo(
+        radius,
+        radius*0.78
+    );
+
+
+    for(
+        let i=0;
+        i<3;
+        i++
+    ){
+
+        ctx.lineTo(
+            radius -
+            radius*(i+0.5)/3,
+            radius*0.55
         );
 
-    if(powerTimer<=0){
 
-        power.style.opacity="0";
+        ctx.lineTo(
+            radius -
+            radius*(i+1)/3,
+            radius*0.78
+        );
 
-    }else{
-
-        power.style.opacity =
-            .55+
-            Math.sin(
-                performance.now()*.015
-            )*.35;
     }
+
+
+    ctx.lineTo(
+        -radius,
+        radius*0.78
+    );
+
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.shadowBlur = 0;
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.beginPath();
+
+
+    ctx.ellipse(
+        -radius*0.34,
+        -radius*0.08,
+        radius*0.18,
+        radius*0.23,
+        0,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.ellipse(
+        radius*0.34,
+        -radius*0.08,
+        radius*0.18,
+        radius*0.23,
+        0,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.fill();
+
+
+    ctx.fillStyle =
+        "#101018";
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+        -radius*0.30,
+        -radius*0.05,
+        radius*0.08,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.arc(
+        radius*0.30,
+        -radius*0.05,
+        radius*0.08,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.fill();
+
+
+    ctx.restore();
+
 }
 
 
@@ -2761,167 +2456,347 @@ function draw(){
    UPDATE
 ========================================================= */
 
-function update(dt){
+function update(
+    dt
+){
 
-    if(!gameRunning || paused)
+    if(
+        !running ||
+        paused
+    ){
+
         return;
 
-
-    if(powerTimer>0){
-
-        powerTimer-=dt;
-
-        if(powerTimer<0)
-            powerTimer=0;
     }
 
 
-    updatePlayer(dt);
+    moveEntity(
+        player,
+        dt
+    );
 
 
-    for(const g of ghosts){
+    eatPellet();
 
-        updateGhost(
-            g,
+
+    for(
+        const ghost of ghosts
+    ){
+
+        chooseGhostDirection(
+            ghost
+        );
+
+
+        moveEntity(
+            ghost,
             dt
         );
+
     }
 
 
-    checkCollisions();
+    checkGhostCollisions();
 
-    updateParticles(dt);
-
-
-    shake*=.88;
-
-    if(shake<.1)
-        shake=0;
 }
 
 
 /* =========================================================
-   MAIN LOOP
+   GAME LOOP
 ========================================================= */
 
-function loop(time){
+function gameLoop(
+    timestamp
+){
 
-    if(!lastTime)
-        lastTime=time;
+    if(!running)
+        return;
 
-    let dt =
-        (time-lastTime)/1000;
 
-    lastTime=time;
-
-    dt =
+    const dt =
         Math.min(
-            dt,
-            .035
+            34,
+            timestamp -
+            lastTime ||
+            16.67
         );
+
+
+    lastTime =
+        timestamp;
+
 
     update(dt);
 
     draw();
 
-    requestAnimationFrame(loop);
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
 }
 
-requestAnimationFrame(loop);
+
+/* =========================================================
+   CONTROLES
+========================================================= */
+
+function showControls(){
+
+    running = false;
+
+
+    overlay.style.display =
+        "flex";
+
+
+    panelLogo.textContent =
+        "CONTROLES";
+
+
+    panelSubtitle.textContent =
+        "MUÉVETE POR EL LABERINTO";
+
+
+    startBtn.textContent =
+        "VOLVER A JUGAR";
+
+
+    help.innerHTML =
+        "📱 <b>iPhone:</b> desliza sobre el laberinto.<br><br>" +
+        "🖥️ <b>PC:</b> flechas o WASD.<br><br>" +
+        "⚡ Las bolas grandes activan el modo poder durante 7 segundos.";
+
+}
 
 
 /* =========================================================
-   IOS SAFETY
+   BOTÓN JUGAR
 ========================================================= */
 
-/*
-   Evitar zoom con gestos.
-*/
+startBtn.addEventListener(
+    "click",
+    function(){
 
-document.addEventListener(
-    "gesturestart",
-    e=>e.preventDefault(),
-    {passive:false}
-);
+        startGame();
 
-document.addEventListener(
-    "gesturechange",
-    e=>e.preventDefault(),
-    {passive:false}
-);
-
-document.addEventListener(
-    "gestureend",
-    e=>e.preventDefault(),
-    {passive:false}
-);
-
-
-/*
-   Evitar doble tap zoom.
-*/
-
-let lastTap=0;
-
-document.addEventListener(
-    "touchend",
-    e=>{
-
-        const now =
-            Date.now();
-
-        if(now-lastTap<300){
-
-            e.preventDefault();
-        }
-
-        lastTap=now;
-
-    },
-    {passive:false}
-);
-
-
-/* =========================================================
-   VISIBILITY
-========================================================= */
-
-document.addEventListener(
-    "visibilitychange",
-    ()=>{
-
-        if(document.hidden){
-
-            paused=true;
-
-        }else{
-
-            if(gameRunning){
-
-                paused=false;
-            }
-
-            lastTime=
-                performance.now();
-        }
     }
 );
 
 
 /* =========================================================
-   INITIAL
+   BOTÓN CONTROLES
 ========================================================= */
 
-resetMap();
+controlsBtn.addEventListener(
+    "click",
+    function(){
 
-resetActors();
+        showControls();
+
+    }
+);
+
+
+/* =========================================================
+   TECLADO PC
+========================================================= */
+
+window.addEventListener(
+    "keydown",
+    function(event){
+
+        const keyboardDirections = {
+
+            ArrowLeft:"left",
+            ArrowRight:"right",
+            ArrowUp:"up",
+            ArrowDown:"down",
+
+            a:"left",
+            d:"right",
+            w:"up",
+            s:"down",
+
+            A:"left",
+            D:"right",
+            W:"up",
+            S:"down"
+
+        };
+
+
+        const direction =
+            keyboardDirections[
+                event.key
+            ];
+
+
+        if(direction){
+
+            event.preventDefault();
+
+
+            if(!running){
+
+                startGame();
+
+            }
+
+
+            setDirection(
+                direction
+            );
+
+        }
+
+
+        if(
+            event.key === "Escape" &&
+            running
+        ){
+
+            paused =
+                !paused;
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   SWIPE IPHONE / POINTER EVENTS
+   IMPORTANTE:
+   SOLO CANVAS.
+   NUNCA CAPTURAMOS TOUCHEND EN DOCUMENT.
+========================================================= */
+
+canvas.addEventListener(
+    "pointerdown",
+    function(event){
+
+        if(!running)
+            return;
+
+
+        swipeStart = {
+
+            x:event.clientX,
+
+            y:event.clientY,
+
+            id:event.pointerId
+
+        };
+
+
+        try{
+
+            canvas.setPointerCapture(
+                event.pointerId
+            );
+
+        }catch(error){}
+
+    }
+);
+
+
+canvas.addEventListener(
+    "pointerup",
+    function(event){
+
+        if(
+            !swipeStart ||
+            event.pointerId !==
+            swipeStart.id
+        ){
+
+            return;
+
+        }
+
+
+        const dx =
+            event.clientX -
+            swipeStart.x;
+
+
+        const dy =
+            event.clientY -
+            swipeStart.y;
+
+
+        swipeStart = null;
+
+
+        const distance =
+            Math.max(
+                Math.abs(dx),
+                Math.abs(dy)
+            );
+
+
+        if(distance < 18)
+            return;
+
+
+        if(
+            Math.abs(dx) >
+            Math.abs(dy)
+        ){
+
+            setDirection(
+                dx > 0
+                    ? "right"
+                    : "left"
+            );
+
+        }else{
+
+            setDirection(
+                dy > 0
+                    ? "down"
+                    : "up"
+            );
+
+        }
+
+    }
+);
+
+
+canvas.addEventListener(
+    "pointercancel",
+    function(){
+
+        swipeStart = null;
+
+    }
+);
+
+
+/* =========================================================
+   INICIALIZACIÓN
+========================================================= */
+
+resizeCanvas();
+
+generateMaze();
+
+placePellets();
+
+resetPositions();
 
 updateHUD();
 
-showStart();
+draw();
 
+
+})();
 </script>
 
 </body>
 </html>
-```
