@@ -1,488 +1,2140 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Conecta 4 Educativo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#07080d">
+
+<title>Conecta 4</title>
+
 <style>
-  body {
-    margin: 0; padding: 10px;
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: #eee;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    user-select: none;
-  }
-  #controls {
-    margin-bottom: 15px;
-  }
-  button {
-    background: #0a74da;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    margin: 0 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    user-select: none;
-  }
-  button:disabled {
-    background: #555;
-    cursor: default;
-  }
-  #message {
-    margin: 15px 0;
-    font-size: 1.2rem;
-    min-height: 1.6em;
-    text-align: center;
-  }
-  canvas {
-    background-color: #0052cc;
-    border-radius: 12px;
-    box-shadow: 0 0 10px #003d99;
-    touch-action: manipulation;
-    max-width: 100vw;
-    height: auto;
-  }
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#07080d;
+    color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    touch-action:none;
+}
+
+body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+button{
+    font:inherit;
+    border:0;
+    outline:0;
+    cursor:pointer;
+    -webkit-appearance:none;
+    touch-action:manipulation;
+}
+
+#app{
+    width:100%;
+    height:100%;
+    position:relative;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at 50% 0%,#17204a 0%,#0b0d18 38%,#07080d 75%);
+}
+
+/* =========================
+   PANTALLAS
+========================= */
+
+.screen{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:
+        max(20px,env(safe-area-inset-top))
+        max(20px,env(safe-area-inset-right))
+        max(20px,env(safe-area-inset-bottom))
+        max(20px,env(safe-area-inset-left));
+}
+
+.screen.active{
+    display:flex;
+}
+
+/* =========================
+   MENU
+========================= */
+
+.menu{
+    width:min(440px,100%);
+    text-align:center;
+}
+
+.logo{
+    width:100px;
+    height:100px;
+    margin:0 auto 22px;
+    border-radius:28px;
+    background:linear-gradient(145deg,#263bff,#1420a0);
+    box-shadow:
+        0 20px 50px rgba(25,45,255,.3),
+        inset 0 2px 2px rgba(255,255,255,.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+}
+
+.logo:before,
+.logo:after{
+    content:"";
+    position:absolute;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#ff334d;
+    box-shadow:0 0 20px rgba(255,51,77,.6);
+}
+
+.logo:before{
+    top:18px;
+    left:20px;
+}
+
+.logo:after{
+    bottom:18px;
+    right:20px;
+    background:#ffd32a;
+    box-shadow:0 0 20px rgba(255,211,42,.6);
+}
+
+.logo span{
+    font-size:42px;
+    font-weight:900;
+    letter-spacing:-4px;
+    z-index:2;
+}
+
+h1{
+    margin:0;
+    font-size:clamp(42px,12vw,68px);
+    line-height:.95;
+    letter-spacing:-3px;
+    font-weight:900;
+}
+
+.subtitle{
+    margin:12px 0 34px;
+    color:#9098b3;
+    font-size:14px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+}
+
+.menu-buttons{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.btn{
+    width:100%;
+    min-height:58px;
+    border-radius:18px;
+    color:#fff;
+    font-weight:800;
+    font-size:16px;
+    letter-spacing:.4px;
+    background:#171a27;
+    border:1px solid #292e42;
+    box-shadow:0 8px 25px rgba(0,0,0,.25);
+    transition:transform .12s,background .12s;
+}
+
+.btn:active{
+    transform:scale(.97);
+}
+
+.btn.primary{
+    background:linear-gradient(135deg,#3548ff,#1725c7);
+    border-color:#5060ff;
+    box-shadow:0 12px 30px rgba(38,57,255,.28);
+}
+
+.btn.danger{
+    background:linear-gradient(135deg,#e52e46,#a9162b);
+}
+
+.btn.small{
+    min-height:48px;
+    font-size:14px;
+}
+
+/* =========================
+   INSTRUCCIONES
+========================= */
+
+.panel{
+    width:min(470px,100%);
+    background:rgba(17,20,32,.94);
+    border:1px solid #2a3046;
+    border-radius:26px;
+    padding:28px;
+    box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+
+.panel h2{
+    margin:0 0 20px;
+    font-size:28px;
+}
+
+.rules{
+    color:#c5cadb;
+    line-height:1.65;
+    font-size:15px;
+}
+
+.rules strong{
+    color:#fff;
+}
+
+.rules-row{
+    display:flex;
+    gap:12px;
+    margin:12px 0;
+    align-items:flex-start;
+}
+
+.dot{
+    width:22px;
+    height:22px;
+    flex:none;
+    border-radius:50%;
+    margin-top:2px;
+}
+
+.dot.red{
+    background:#ff304b;
+}
+
+.dot.yellow{
+    background:#ffd429;
+}
+
+/* =========================
+   JUEGO
+========================= */
+
+#gameScreen{
+    flex-direction:column;
+    justify-content:flex-start;
+    padding-top:max(12px,env(safe-area-inset-top));
+}
+
+.game-top{
+    width:min(680px,96vw);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+}
+
+.top-side{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.icon-btn{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    background:#151925;
+    border:1px solid #292f42;
+    color:#fff;
+    font-size:21px;
+}
+
+.score-box{
+    text-align:center;
+    min-width:120px;
+}
+
+.score-label{
+    color:#777f99;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:2px;
+    text-transform:uppercase;
+}
+
+.score-value{
+    font-size:22px;
+    font-weight:900;
+}
+
+.turn{
+    width:min(680px,96vw);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:9px;
+    height:32px;
+    color:#aeb5ca;
+    font-size:14px;
+    font-weight:700;
+}
+
+.turn-dot{
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:#ff304b;
+    box-shadow:0 0 12px rgba(255,48,75,.65);
+}
+
+.turn-dot.yellow{
+    background:#ffd429;
+    box-shadow:0 0 12px rgba(255,212,41,.65);
+}
+
+/* =========================
+   TABLERO
+========================= */
+
+.board-wrap{
+    width:min(680px,96vw);
+    position:relative;
+    flex:1;
+    min-height:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+#board{
+    display:block;
+    width:100%;
+    height:auto;
+    max-height:calc(100vh - 190px);
+    border-radius:24px;
+    filter:drop-shadow(0 25px 35px rgba(0,0,0,.45));
+    touch-action:none;
+}
+
+.hint{
+    width:min(680px,96vw);
+    text-align:center;
+    min-height:34px;
+    padding-top:5px;
+    color:#666e86;
+    font-size:12px;
+}
+
+/* =========================
+   OVERLAYS
+========================= */
+
+.overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(3,4,8,.78);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    z-index:20;
+}
+
+.overlay.show{
+    display:flex;
+}
+
+.overlay-card{
+    width:min(400px,100%);
+    padding:30px;
+    border-radius:26px;
+    text-align:center;
+    background:#111420;
+    border:1px solid #2d3348;
+    box-shadow:0 30px 90px rgba(0,0,0,.6);
+}
+
+.overlay-card h2{
+    margin:0 0 8px;
+    font-size:32px;
+}
+
+.overlay-card p{
+    color:#8e96ad;
+    margin:0 0 24px;
+}
+
+.result-piece{
+    width:64px;
+    height:64px;
+    margin:0 auto 18px;
+    border-radius:50%;
+    background:#ff304b;
+    box-shadow:inset 0 -8px 12px rgba(0,0,0,.2),0 0 25px rgba(255,48,75,.4);
+}
+
+.result-piece.yellow{
+    background:#ffd429;
+    box-shadow:inset 0 -8px 12px rgba(0,0,0,.2),0 0 25px rgba(255,212,41,.4);
+}
+
+.overlay-buttons{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-height:650px){
+    .logo{
+        width:72px;
+        height:72px;
+        border-radius:20px;
+        margin-bottom:12px;
+    }
+
+    .logo span{
+        font-size:30px;
+    }
+
+    .subtitle{
+        margin-bottom:18px;
+    }
+
+    .btn{
+        min-height:50px;
+    }
+
+    .board-wrap{
+        margin-top:-4px;
+    }
+}
+
+@media(max-width:380px){
+    .game-top{
+        width:94vw;
+    }
+
+    .score-box{
+        min-width:90px;
+    }
+
+    .icon-btn{
+        width:42px;
+        height:42px;
+    }
+}
 </style>
 </head>
+
 <body>
 
-<h1>Conecta 4 Educativo</h1>
+<div id="app">
 
-<div id="controls" role="group" aria-label="Modo de juego">
-  <button id="btnPvP" aria-pressed="true">2 Jugadores</button>
-  <button id="btnPvC" aria-pressed="false">Jugador vs Máquina</button>
+    <!-- =========================
+         MENU
+    ========================== -->
+
+    <section id="menuScreen" class="screen active">
+
+        <div class="menu">
+
+            <div class="logo">
+                <span>4</span>
+            </div>
+
+            <h1>CONecta 4</h1>
+
+            <div class="subtitle">
+                El clásico juego de estrategia
+            </div>
+
+            <div class="menu-buttons">
+
+                <button id="playBtn" class="btn primary">
+                    ▶ JUGAR
+                </button>
+
+                <button id="instructionsBtn" class="btn">
+                    ❔ INSTRUCCIONES
+                </button>
+
+                <button id="soundBtn" class="btn">
+                    🔊 SONIDO: ON
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         INSTRUCCIONES
+    ========================== -->
+
+    <section id="instructionsScreen" class="screen">
+
+        <div class="panel">
+
+            <h2>Cómo jugar</h2>
+
+            <div class="rules">
+
+                <div class="rules-row">
+                    <div class="dot red"></div>
+                    <div>
+                        Tú juegas con las <strong>fichas rojas</strong>.
+                    </div>
+                </div>
+
+                <div class="rules-row">
+                    <div class="dot yellow"></div>
+                    <div>
+                        La máquina juega con las <strong>fichas amarillas</strong>.
+                    </div>
+                </div>
+
+                <p>
+                    Pulsa una columna para dejar caer tu ficha.
+                    La ficha ocupará automáticamente la posición más baja
+                    disponible.
+                </p>
+
+                <p>
+                    El objetivo es conseguir <strong>4 fichas consecutivas</strong>
+                    en horizontal, vertical o diagonal.
+                </p>
+
+                <p>
+                    Si se llena el tablero y nadie consigue cuatro,
+                    la partida termina en <strong>empate</strong>.
+                </p>
+
+            </div>
+
+            <button id="backInstructionsBtn" class="btn primary">
+                VOLVER
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         JUEGO
+    ========================== -->
+
+    <section id="gameScreen" class="screen">
+
+        <div class="game-top">
+
+            <div class="top-side">
+                <button id="gameMenuBtn" class="icon-btn">⌂</button>
+                <button id="pauseBtn" class="icon-btn">Ⅱ</button>
+            </div>
+
+            <div class="score-box">
+                <div class="score-label">PUNTOS</div>
+                <div id="scoreValue" class="score-value">0</div>
+            </div>
+
+            <div class="top-side">
+                <button id="gameSoundBtn" class="icon-btn">🔊</button>
+            </div>
+
+        </div>
+
+        <div id="turnText" class="turn">
+            <span id="turnDot" class="turn-dot"></span>
+            <span id="turnLabel">Tu turno</span>
+        </div>
+
+        <div class="board-wrap">
+            <canvas id="board" width="700" height="600"></canvas>
+        </div>
+
+        <div id="hint" class="hint">
+            Pulsa una columna para colocar tu ficha
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         PAUSA
+    ========================== -->
+
+    <div id="pauseOverlay" class="overlay">
+
+        <div class="overlay-card">
+
+            <h2>PAUSA</h2>
+            <p>La partida está pausada.</p>
+
+            <div class="overlay-buttons">
+
+                <button id="resumeBtn" class="btn primary">
+                    ▶ CONTINUAR
+                </button>
+
+                <button id="restartPauseBtn" class="btn">
+                    ↻ REINICIAR
+                </button>
+
+                <button id="menuPauseBtn" class="btn">
+                    ⌂ MENÚ
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         RESULTADO
+    ========================== -->
+
+    <div id="resultOverlay" class="overlay">
+
+        <div class="overlay-card">
+
+            <div id="resultPiece" class="result-piece"></div>
+
+            <h2 id="resultTitle">¡Has ganado!</h2>
+
+            <p id="resultMessage">
+                Cuatro en línea.
+            </p>
+
+            <div class="overlay-buttons">
+
+                <button id="againBtn" class="btn primary">
+                    ▶ JUGAR OTRA VEZ
+                </button>
+
+                <button id="resultMenuBtn" class="btn">
+                    ⌂ MENÚ
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-<canvas id="gameCanvas" width="420" height="360" aria-label="Tablero de Conecta 4" role="img" tabindex="0"></canvas>
-
-<div id="message" aria-live="polite"></div>
 
 <script>
-(() => {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const messageElem = document.getElementById('message');
-    const btnPvP = document.getElementById('btnPvP');
-    const btnPvC = document.getElementById('btnPvC');
+"use strict";
 
-    // Board config
-    const COLS = 7;
-    const ROWS = 6;
+/* =========================================================
+   CONECTA 4
+   Motor completo
+========================================================= */
 
-    // Canvas dimensions and constants
-    const CANVAS_WIDTH = canvas.width;
-    const CANVAS_HEIGHT = canvas.height;
-    const SLOT_SIZE = CANVAS_WIDTH / COLS;
-    const RADIUS = SLOT_SIZE * 0.4;
+const ROWS = 6;
+const COLS = 7;
 
-    // Game state
-    let board = [];
-    let currentPlayer = 1; // 1=Red, 2=Yellow (Máquina)
-    let vsComputer = false;
-    let gameActive = true;
-    
-    // Configuración de la IA
-    // Profundidad de búsqueda: 1-3 (Fácil/Medio), 4-5 (Difícil), 6+ (Muy Difícil / Lento)
-    const AI_DEPTH = 4; 
+const EMPTY = 0;
+const HUMAN = 1;
+const AI = 2;
 
-    // Initialize board: 0 = empty, 1 = player 1 disk, 2 = player 2 disk
-    function initBoard() {
-        board = [];
-        for(let r=0; r<ROWS; r++) {
-            const row = [];
-            for(let c=0; c<COLS; c++) {
-                row.push(0);
-            }
-            board.push(row);
+let board = [];
+let currentPlayer = HUMAN;
+
+let gameState = "MENU";
+
+let score = 0;
+let bestScore = 0;
+
+let soundEnabled = true;
+let audioContext = null;
+
+let animating = false;
+let animationData = null;
+
+let winningCells = [];
+let winPulse = 0;
+
+let aiTimer = null;
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const menuScreen = document.getElementById("menuScreen");
+const instructionsScreen = document.getElementById("instructionsScreen");
+const gameScreen = document.getElementById("gameScreen");
+
+const playBtn = document.getElementById("playBtn");
+const instructionsBtn = document.getElementById("instructionsBtn");
+const soundBtn = document.getElementById("soundBtn");
+const backInstructionsBtn = document.getElementById("backInstructionsBtn");
+
+const gameMenuBtn = document.getElementById("gameMenuBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const gameSoundBtn = document.getElementById("gameSoundBtn");
+
+const pauseOverlay = document.getElementById("pauseOverlay");
+const resumeBtn = document.getElementById("resumeBtn");
+const restartPauseBtn = document.getElementById("restartPauseBtn");
+const menuPauseBtn = document.getElementById("menuPauseBtn");
+
+const resultOverlay = document.getElementById("resultOverlay");
+const againBtn = document.getElementById("againBtn");
+const resultMenuBtn = document.getElementById("resultMenuBtn");
+
+const resultPiece = document.getElementById("resultPiece");
+const resultTitle = document.getElementById("resultTitle");
+const resultMessage = document.getElementById("resultMessage");
+
+const scoreValue = document.getElementById("scoreValue");
+const turnLabel = document.getElementById("turnLabel");
+const turnDot = document.getElementById("turnDot");
+const hint = document.getElementById("hint");
+
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+
+
+/* =========================================================
+   LOCAL STORAGE
+========================================================= */
+
+try{
+    bestScore = Number(localStorage.getItem("conecta4_best")) || 0;
+
+    const storedSound = localStorage.getItem("conecta4_sound");
+
+    if(storedSound !== null){
+        soundEnabled = storedSound === "true";
+    }
+}catch(e){
+    bestScore = 0;
+}
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+function initAudio(){
+
+    if(!soundEnabled) return;
+
+    try{
+
+        if(!audioContext){
+
+            const AudioCtx =
+                window.AudioContext ||
+                window.webkitAudioContext;
+
+            if(!AudioCtx) return;
+
+            audioContext = new AudioCtx();
+        }
+
+        if(audioContext.state === "suspended"){
+            audioContext.resume();
+        }
+
+    }catch(e){
+        /* El juego continúa aunque el audio no esté disponible */
+    }
+}
+
+
+function beep(frequency,duration,type="sine",volume=.035){
+
+    if(!soundEnabled) return;
+
+    try{
+
+        initAudio();
+
+        if(!audioContext) return;
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+        oscillator.type = type;
+        oscillator.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(
+            volume,
+            audioContext.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + duration
+        );
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        oscillator.start();
+
+        oscillator.stop(
+            audioContext.currentTime + duration
+        );
+
+    }catch(e){}
+}
+
+
+function playDropSound(){
+
+    beep(230,.07,"sine",.035);
+
+    setTimeout(()=>{
+        beep(340,.06,"sine",.025);
+    },45);
+}
+
+
+function playWinSound(){
+
+    beep(523,.12,"triangle",.05);
+
+    setTimeout(()=>{
+        beep(659,.12,"triangle",.05);
+    },100);
+
+    setTimeout(()=>{
+        beep(784,.2,"triangle",.06);
+    },200);
+}
+
+
+function playLoseSound(){
+
+    beep(280,.15,"sawtooth",.035);
+
+    setTimeout(()=>{
+        beep(180,.22,"sawtooth",.03);
+    },130);
+}
+
+
+function updateSoundButtons(){
+
+    soundBtn.textContent =
+        soundEnabled ? "🔊 SONIDO: ON" : "🔇 SONIDO: OFF";
+
+    gameSoundBtn.textContent =
+        soundEnabled ? "🔊" : "🔇";
+}
+
+
+function toggleSound(){
+
+    soundEnabled = !soundEnabled;
+
+    try{
+        localStorage.setItem(
+            "conecta4_sound",
+            String(soundEnabled)
+        );
+    }catch(e){}
+
+    if(soundEnabled){
+        initAudio();
+        beep(600,.07,"sine",.04);
+    }
+
+    updateSoundButtons();
+}
+
+
+/* =========================================================
+   PANTALLAS
+========================================================= */
+
+function showScreen(screen){
+
+    menuScreen.classList.remove("active");
+    instructionsScreen.classList.remove("active");
+    gameScreen.classList.remove("active");
+
+    screen.classList.add("active");
+}
+
+
+function showMenu(){
+
+    clearTimeout(aiTimer);
+
+    gameState = "MENU";
+    animating = false;
+
+    pauseOverlay.classList.remove("show");
+    resultOverlay.classList.remove("show");
+
+    showScreen(menuScreen);
+}
+
+
+function showInstructions(){
+
+    gameState = "INSTRUCTIONS";
+
+    showScreen(instructionsScreen);
+}
+
+
+function startGame(){
+
+    initAudio();
+
+    clearTimeout(aiTimer);
+
+    gameState = "PLAYING";
+
+    score = 0;
+
+    updateScore();
+
+    createEmptyBoard();
+
+    currentPlayer = HUMAN;
+
+    winningCells = [];
+
+    animating = false;
+    animationData = null;
+
+    pauseOverlay.classList.remove("show");
+    resultOverlay.classList.remove("show");
+
+    showScreen(gameScreen);
+
+    updateTurn();
+
+    draw();
+}
+
+
+function restartGame(){
+
+    initAudio();
+
+    clearTimeout(aiTimer);
+
+    gameState = "PLAYING";
+
+    score = 0;
+
+    createEmptyBoard();
+
+    currentPlayer = HUMAN;
+
+    winningCells = [];
+
+    animating = false;
+    animationData = null;
+
+    pauseOverlay.classList.remove("show");
+    resultOverlay.classList.remove("show");
+
+    updateScore();
+    updateTurn();
+
+    draw();
+}
+
+
+function pauseGame(){
+
+    if(gameState !== "PLAYING") return;
+
+    gameState = "PAUSED";
+
+    pauseOverlay.classList.add("show");
+}
+
+
+function resumeGame(){
+
+    if(gameState !== "PAUSED") return;
+
+    gameState = "PLAYING";
+
+    pauseOverlay.classList.remove("show");
+
+    updateTurn();
+    draw();
+}
+
+
+/* =========================================================
+   TABLERO
+========================================================= */
+
+function createEmptyBoard(){
+
+    board = [];
+
+    for(let r=0;r<ROWS;r++){
+
+        const row = [];
+
+        for(let c=0;c<COLS;c++){
+            row.push(EMPTY);
+        }
+
+        board.push(row);
+    }
+}
+
+
+function getValidColumns(){
+
+    const result = [];
+
+    for(let c=0;c<COLS;c++){
+
+        if(board[0][c] === EMPTY){
+            result.push(c);
         }
     }
 
-    // Draw empty board and disks
-    function drawBoard() {
-        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        // Draw slots background
-        ctx.fillStyle = '#0052cc';
-        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    return result;
+}
 
-        // Draw slots and disks
-        for(let r=0; r<ROWS; r++){
-            for(let c=0; c<COLS; c++){
-                const x = c * SLOT_SIZE + SLOT_SIZE/2;
-                const y = (ROWS - 1 - r) * SLOT_SIZE + SLOT_SIZE/2;
 
-                // Draw slot background: circle in blue
-                ctx.beginPath();
-                ctx.arc(x, y, RADIUS, 0, 2*Math.PI);
-                ctx.fillStyle = '#003d99';
-                ctx.fill();
+function getAvailableRow(column){
 
-                // Draw disk if any
-                if(board[r][c] === 1) {
-                    ctx.fillStyle = '#ff0000'; // Red
-                } else if(board[r][c] === 2) {
-                    ctx.fillStyle = '#ffff00'; // Yellow
-                } else {
-                    ctx.fillStyle = '#1a1a66'; // Empty slot darker circle inside
-                    ctx.beginPath();
-                    ctx.arc(x, y, RADIUS * 0.8, 0, 2*Math.PI);
-                    ctx.fill();
-                    continue;
+    for(let r=ROWS-1;r>=0;r--){
+
+        if(board[r][column] === EMPTY){
+            return r;
+        }
+    }
+
+    return -1;
+}
+
+
+/* =========================================================
+   VICTORIA
+========================================================= */
+
+function checkWin(player){
+
+    const directions = [
+        [0,1],
+        [1,0],
+        [1,1],
+        [1,-1]
+    ];
+
+    for(let r=0;r<ROWS;r++){
+
+        for(let c=0;c<COLS;c++){
+
+            if(board[r][c] !== player) continue;
+
+            for(const [dr,dc] of directions){
+
+                const cells = [
+                    [r,c]
+                ];
+
+                let valid = true;
+
+                for(let i=1;i<4;i++){
+
+                    const nr = r + dr*i;
+                    const nc = c + dc*i;
+
+                    if(
+                        nr < 0 ||
+                        nr >= ROWS ||
+                        nc < 0 ||
+                        nc >= COLS ||
+                        board[nr][nc] !== player
+                    ){
+                        valid = false;
+                        break;
+                    }
+
+                    cells.push([nr,nc]);
                 }
 
-                ctx.beginPath();
-                ctx.arc(x, y, RADIUS * 0.85, 0, 2*Math.PI);
-                ctx.fill();
+                if(valid){
+                    return cells;
+                }
             }
         }
     }
 
-    // *** FUNCIÓN MODIFICADA ***
-    // Get first empty row in a column, or -1 if full. Acepta tablero simulado.
-    function getAvailableRow(col, boardToCheck = board) {
-        for(let r = 0; r < ROWS; r++){
-            if(boardToCheck[r][col] === 0){
-                return r;
+    return null;
+}
+
+
+function boardFull(){
+
+    return getValidColumns().length === 0;
+}
+
+
+/* =========================================================
+   MOVIMIENTO
+========================================================= */
+
+function humanMove(column){
+
+    if(gameState !== "PLAYING") return;
+    if(currentPlayer !== HUMAN) return;
+    if(animating) return;
+
+    const row = getAvailableRow(column);
+
+    if(row === -1){
+
+        beep(130,.08,"square",.025);
+
+        hint.textContent =
+            "Esa columna está llena";
+
+        setTimeout(()=>{
+
+            if(gameState === "PLAYING"){
+                hint.textContent =
+                    "Pulsa una columna para colocar tu ficha";
             }
-        }
-        return -1;
+
+        },900);
+
+        return;
     }
 
-    // Drop piece for player in column, return true if successful
-    function dropPiece(col, player) {
-        if(!gameActive) return false;
+    makeMove(column,row,HUMAN);
+}
+
+
+function makeMove(column,row,player){
+
+    animating = true;
+
+    animationData = {
+        column,
+        row,
+        player,
+        progress:0
+    };
+
+    playDropSound();
+
+    const duration = 260;
+    const start = performance.now();
+
+    function animate(now){
+
+        const elapsed = now - start;
+
+        animationData.progress =
+            Math.min(1,elapsed / duration);
+
+        draw();
+
+        if(animationData.progress < 1){
+
+            requestAnimationFrame(animate);
+
+        }else{
+
+            board[row][column] = player;
+
+            animating = false;
+            animationData = null;
+
+            afterMove(player);
+        }
+    }
+
+    requestAnimationFrame(animate);
+}
+
+
+function afterMove(player){
+
+    const win = checkWin(player);
+
+    if(win){
+
+        winningCells = win;
+
+        finishGame(player);
+
+        return;
+    }
+
+    if(boardFull()){
+
+        finishDraw();
+
+        return;
+    }
+
+    currentPlayer =
+        player === HUMAN ? AI : HUMAN;
+
+    updateTurn();
+
+    if(currentPlayer === AI){
+
+        hint.textContent =
+            "La máquina está pensando…";
+
+        aiTimer = setTimeout(()=>{
+
+            if(gameState === "PLAYING"){
+                aiMove();
+            }
+
+        },420);
+
+    }else{
+
+        hint.textContent =
+            "Pulsa una columna para colocar tu ficha";
+    }
+
+    draw();
+}
+
+
+/* =========================================================
+   IA
+========================================================= */
+
+function aiMove(){
+
+    if(gameState !== "PLAYING") return;
+    if(currentPlayer !== AI) return;
+    if(animating) return;
+
+    const column = chooseAIColumn();
+
+    const row = getAvailableRow(column);
+
+    if(row === -1) return;
+
+    makeMove(column,row,AI);
+}
+
+
+function chooseAIColumn(){
+
+    const valid = getValidColumns();
+
+    if(valid.length === 0){
+        return 0;
+    }
+
+    /* 1. Si puede ganar, gana */
+
+    for(const col of valid){
+
         const row = getAvailableRow(col);
-        if(row === -1) return false;
-        board[row][col] = player;
-        return true;
-    }
-    
-    // *** FUNCIÓN MODIFICADA ***
-    // Check horizontal, vertical and diagonal for 4 in a row. Acepta tablero simulado.
-    function checkWin(player, boardToCheck = board) {
-        // Horizontal
-        for(let r=0; r<ROWS; r++){
-            for(let c=0; c<=COLS-4; c++){
-                if(boardToCheck[r][c] === player &&
-                   boardToCheck[r][c+1] === player &&
-                   boardToCheck[r][c+2] === player &&
-                   boardToCheck[r][c+3] === player) return true;
-            }
-        }
-        // Vertical
-        for(let c=0; c<COLS; c++){
-            for(let r=0; r<=ROWS-4; r++){
-                if(boardToCheck[r][c] === player &&
-                   boardToCheck[r+1][c] === player &&
-                   boardToCheck[r+2][c] === player &&
-                   boardToCheck[r+3][c] === player) return true;
-            }
-        }
-        // Diagonal down-right
-        for(let r=0; r<=ROWS-4; r++){
-            for(let c=0; c<=COLS-4; c++){
-                if(boardToCheck[r][c] === player &&
-                   boardToCheck[r+1][c+1] === player &&
-                   boardToCheck[r+2][c+2] === player &&
-                   boardToCheck[r+3][c+3] === player) return true;
-            }
-        }
-        // Diagonal up-right
-        for(let r=3; r<ROWS; r++){
-            for(let c=0; c<=COLS-4; c++){
-                if(boardToCheck[r][c] === player &&
-                   boardToCheck[r-1][c+1] === player &&
-                   boardToCheck[r-2][c+2] === player &&
-                   boardToCheck[r-3][c+3] === player) return true;
-            }
-        }
-        return false;
-    }
 
+        board[row][col] = AI;
 
-    // Check for draw (no empty slots)
-    function checkDraw() {
-        for(let c=0; c<COLS; c++){
-            if(getAvailableRow(c) !== -1) return false;
-        }
-        return true;
-    }
+        const win = checkWin(AI);
 
-    // Show message in panel
-    function showMessage(msg) {
-        messageElem.textContent = msg;
-    }
+        board[row][col] = EMPTY;
 
-    // Update turn message
-    function updateTurnMessage() {
-        if(!gameActive) return;
-        if(vsComputer) {
-            showMessage(currentPlayer === 1 ? "Tu turno (Rojo)" : "Turno de la máquina (Amarillo)");
-        } else {
-            showMessage(`Turno jugador ${currentPlayer === 1 ? 'Rojo' : 'Amarillo'}`);
+        if(win){
+            return col;
         }
     }
 
-    // Switch player turn
-    function switchTurn() {
-        currentPlayer = 3 - currentPlayer;
-        updateTurnMessage();
+
+    /* 2. Si el jugador puede ganar, bloquear */
+
+    for(const col of valid){
+
+        const row = getAvailableRow(col);
+
+        board[row][col] = HUMAN;
+
+        const win = checkWin(HUMAN);
+
+        board[row][col] = EMPTY;
+
+        if(win){
+            return col;
+        }
     }
 
-    // Reset game state
-    function resetGame() {
-        initBoard();
-        currentPlayer = 1;
-        gameActive = true;
-        showMessage('');
-        updateTurnMessage();
-        drawBoard();
+
+    /* 3. Buscar la mejor jugada */
+
+    let bestScore = -Infinity;
+    let bestColumns = [];
+
+    for(const col of valid){
+
+        const row = getAvailableRow(col);
+
+        board[row][col] = AI;
+
+        let value = evaluatePosition();
+
+        /* Preferencia por el centro */
+
+        value +=
+            8 -
+            Math.abs(3-col)*2;
+
+        /* Pequeña variación para que no sea
+           completamente predecible */
+
+        value += Math.random()*1.8;
+
+        board[row][col] = EMPTY;
+
+        if(value > bestScore){
+
+            bestScore = value;
+            bestColumns = [col];
+
+        }else if(Math.abs(value-bestScore)<1.5){
+
+            bestColumns.push(col);
+        }
     }
 
+    return bestColumns[
+        Math.floor(Math.random()*bestColumns.length)
+    ];
+}
 
-    // ------------------------------------------------------------------
-    // -------- ALGORITMO MINIMAX (PARA AUMENTAR LA DIFICULTAD) ---------
-    // ------------------------------------------------------------------
 
-    // Puntuación heurística simple: cuenta 2 en raya, 3 en raya, etc.
-    function evaluateWindow(window, player) {
-        let score = 0;
-        const opp = 3 - player; 
+function evaluatePosition(){
 
-        const player_count = window.filter(x => x === player).length;
-        const empty_count = window.filter(x => x === 0).length;
-        const opp_count = window.filter(x => x === opp).length;
+    let total = 0;
 
-        if (player_count === 4) {
-            score += 100000; // ¡Victoria!
-        } else if (player_count === 3 && empty_count === 1) {
-            score += 50; // 3 en raya con un hueco
-        } else if (player_count === 2 && empty_count === 2) {
-            score += 10; // 2 en raya con dos huecos
+    /* Centro */
+
+    for(let r=0;r<ROWS;r++){
+
+        if(board[r][3] === AI){
+            total += 6;
         }
 
-        // Bloquea las amenazas del oponente
-        if (opp_count === 3 && empty_count === 1) {
-            score -= 5000; // Bloquea una posible victoria
+        if(board[r][3] === HUMAN){
+            total -= 5;
         }
-
-        return score;
     }
 
-    // Función principal de puntuación de tablero
-    function scorePosition(board, player) {
-        let score = 0;
 
-        // Puntuación por control del centro (estratégico)
-        const center_col = Math.floor(COLS / 2);
-        const center_array = board.map(r => r[center_col]);
-        score += center_array.filter(x => x === player).length * 3;
+    /* Todas las ventanas de 4 */
 
-        // Evaluar 4 casillas en todas las direcciones
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                // Horizontal
-                if (c <= COLS - 4) {
-                    score += evaluateWindow(board[r].slice(c, c + 4), player);
+    const directions = [
+        [0,1],
+        [1,0],
+        [1,1],
+        [1,-1]
+    ];
+
+    for(let r=0;r<ROWS;r++){
+
+        for(let c=0;c<COLS;c++){
+
+            for(const [dr,dc] of directions){
+
+                const cells = [];
+
+                for(let i=0;i<4;i++){
+
+                    const nr = r + dr*i;
+                    const nc = c + dc*i;
+
+                    if(
+                        nr<0 ||
+                        nr>=ROWS ||
+                        nc<0 ||
+                        nc>=COLS
+                    ){
+                        break;
+                    }
+
+                    cells.push(board[nr][nc]);
                 }
-                // Vertical
-                if (r <= ROWS - 4) {
-                    const window = [board[r][c], board[r + 1][c], board[r + 2][c], board[r + 3][c]];
-                    score += evaluateWindow(window, player);
-                }
-                // Diagonal (Down-Right)
-                if (c <= COLS - 4 && r <= ROWS - 4) {
-                    const window = [board[r][c], board[r + 1][c + 1], board[r + 2][c + 2], board[r + 3][c + 3]];
-                    score += evaluateWindow(window, player);
-                }
-                // Diagonal (Up-Right)
-                if (c <= COLS - 4 && r >= 3) {
-                    const window = [board[r][c], board[r - 1][c + 1], board[r - 2][c + 2], board[r - 3][c + 3]];
-                    score += evaluateWindow(window, player);
+
+                if(cells.length === 4){
+                    total += evaluateWindow(cells);
                 }
             }
         }
-        return score;
     }
 
-    // Algoritmo Minimax (Busca la mejor jugada asumiendo que el oponente también juega óptimamente)
-    function minimax(currentBoard, depth, alpha, beta, maximizingPlayer) {
-        const validCols = [];
-        for(let i=0; i<COLS; i++){
-            // Usamos la versión modificada de getAvailableRow
-            if(getAvailableRow(i, currentBoard) !== -1) validCols.push(i);
-        }
-        
-        // Condiciones terminales (fin del juego o profundidad máxima alcanzada)
-        if (depth === 0 || checkWin(1, currentBoard) || checkWin(2, currentBoard) || validCols.length === 0) {
-            if (checkWin(2, currentBoard)) return [null, 100000000000000]; // Máquina gana
-            if (checkWin(1, currentBoard)) return [null, -100000000000000]; // Jugador gana
-            if (validCols.length === 0) return [null, 0]; // Empate
-            
-            return [null, scorePosition(currentBoard, 2)]; // Puntuación heurística
-        }
+    return total;
+}
 
-        if (maximizingPlayer) {
-            let value = -Infinity;
-            let best_col = validCols[Math.floor(Math.random() * validCols.length)]; // Movimiento aleatorio como fallback
 
-            for (const col of validCols) {
-                const tempBoard = JSON.parse(JSON.stringify(currentBoard)); // Crear copia profunda
-                const row = getAvailableRow(col, tempBoard);
-                tempBoard[row][col] = 2; // Simular jugada de la máquina
+function evaluateWindow(cells){
 
-                const new_score = minimax(tempBoard, depth - 1, alpha, beta, false)[1];
+    let aiCount = 0;
+    let humanCount = 0;
+    let emptyCount = 0;
 
-                if (new_score > value) {
-                    value = new_score;
-                    best_col = col;
-                }
-                alpha = Math.max(alpha, value);
-                if (alpha >= beta) break; // Alpha-Beta Pruning
-            }
-            return [best_col, value];
-        } else { // Minimizing player (jugador 1)
-            let value = Infinity;
-            let best_col = validCols[Math.floor(Math.random() * validCols.length)];
+    for(const cell of cells){
 
-            for (const col of validCols) {
-                const tempBoard = JSON.parse(JSON.stringify(currentBoard));
-                const row = getAvailableRow(col, tempBoard);
-                tempBoard[row][col] = 1; // Simular jugada del jugador
+        if(cell === AI) aiCount++;
+        else if(cell === HUMAN) humanCount++;
+        else emptyCount++;
+    }
 
-                const new_score = minimax(tempBoard, depth - 1, alpha, beta, true)[1];
+    if(aiCount === 4) return 10000;
+    if(humanCount === 4) return -10000;
 
-                if (new_score < value) {
-                    value = new_score;
-                    best_col = col;
-                }
-                beta = Math.min(beta, value);
-                if (alpha >= beta) break; // Alpha-Beta Pruning
-            }
-            return [best_col, value];
+    if(aiCount === 3 && emptyCount === 1) return 90;
+    if(aiCount === 2 && emptyCount === 2) return 18;
+
+    if(humanCount === 3 && emptyCount === 1) return -110;
+    if(humanCount === 2 && emptyCount === 2) return -20;
+
+    return 0;
+}
+
+
+/* =========================================================
+   RESULTADOS
+========================================================= */
+
+function finishGame(player){
+
+    gameState = "GAME_OVER";
+
+    if(player === HUMAN){
+
+        score += 100;
+
+        resultPiece.className =
+            "result-piece";
+
+        resultTitle.textContent =
+            "¡HAS GANADO!";
+
+        resultMessage.textContent =
+            "Cuatro en línea. ¡Gran jugada!";
+
+        playWinSound();
+
+    }else{
+
+        score = Math.max(0,score-20);
+
+        resultPiece.className =
+            "result-piece yellow";
+
+        resultTitle.textContent =
+            "GANA LA MÁQUINA";
+
+        resultMessage.textContent =
+            "La máquina consiguió cuatro en línea.";
+
+        playLoseSound();
+    }
+
+    updateScore();
+
+    if(score > bestScore){
+
+        bestScore = score;
+
+        try{
+            localStorage.setItem(
+                "conecta4_best",
+                String(bestScore)
+            );
+        }catch(e){}
+    }
+
+    setTimeout(()=>{
+
+        resultOverlay.classList.add("show");
+
+    },500);
+
+    draw();
+}
+
+
+function finishDraw(){
+
+    gameState = "GAME_OVER";
+
+    resultPiece.className =
+        "result-piece";
+
+    resultPiece.style.background =
+        "linear-gradient(135deg,#ff304b 50%,#ffd429 50%)";
+
+    resultTitle.textContent =
+        "EMPATE";
+
+    resultMessage.textContent =
+        "El tablero está completo.";
+
+    beep(440,.1,"triangle",.035);
+
+    setTimeout(()=>{
+        resultOverlay.classList.add("show");
+    },300);
+
+    draw();
+}
+
+
+/* =========================================================
+   MARCADOR
+========================================================= */
+
+function updateScore(){
+
+    scoreValue.textContent = score;
+}
+
+
+/* =========================================================
+   TURNO
+========================================================= */
+
+function updateTurn(){
+
+    if(currentPlayer === HUMAN){
+
+        turnLabel.textContent =
+            "Tu turno";
+
+        turnDot.className =
+            "turn-dot";
+
+    }else{
+
+        turnLabel.textContent =
+            "Turno de la máquina";
+
+        turnDot.className =
+            "turn-dot yellow";
+    }
+}
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+function draw(){
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0,0,W,H);
+
+    drawBackground(W,H);
+
+    const boardX = 20;
+    const boardY = 20;
+
+    const boardW = W - 40;
+    const boardH = H - 40;
+
+    const cellW = boardW / COLS;
+    const cellH = boardH / ROWS;
+
+    /* Sombra */
+
+    ctx.save();
+
+    ctx.shadowColor = "rgba(0,0,0,.55)";
+    ctx.shadowBlur = 25;
+    ctx.shadowOffsetY = 12;
+
+    roundedRect(
+        ctx,
+        boardX,
+        boardY,
+        boardW,
+        boardH,
+        28
+    );
+
+    ctx.fillStyle = "#1726bd";
+    ctx.fill();
+
+    ctx.restore();
+
+
+    /* Fondo del tablero */
+
+    roundedRect(
+        ctx,
+        boardX,
+        boardY,
+        boardW,
+        boardH,
+        28
+    );
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,boardY,
+            0,boardY+boardH
+        );
+
+    gradient.addColorStop(0,"#263bff");
+    gradient.addColorStop(1,"#14209f");
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+
+    /* Agujeros */
+
+    for(let r=0;r<ROWS;r++){
+
+        for(let c=0;c<COLS;c++){
+
+            const cx =
+                boardX +
+                cellW*c +
+                cellW/2;
+
+            const cy =
+                boardY +
+                cellH*r +
+                cellH/2;
+
+            drawCellHole(cx,cy,Math.min(cellW,cellH)*.37);
+
         }
     }
 
-    // Lógica del turno de la máquina (sustituye a simpleAIPlay)
-    async function aiTurn() {
-        if(!gameActive || currentPlayer !== 2) return;
-        showMessage('Turno de la máquina...');
-        
-        // Ejecutar Minimax para encontrar el mejor movimiento
-        const [best_col, score] = minimax(board, AI_DEPTH, -Infinity, Infinity, true); 
 
-        // Retardo simulado para que parezca que la máquina "piensa"
-        await new Promise(resolve => setTimeout(resolve, 600)); 
+    /* Fichas colocadas */
 
-        if(best_col !== null && dropPiece(best_col, 2)){
-            drawBoard();
-            if(checkWin(2)) {
-                gameActive = false;
-                showMessage('La máquina gana. ¡Fin del juego! 😭');
-                notifyParent(false);
-                return;
-            }
-            if(checkDraw()) {
-                gameActive = false;
-                showMessage('Empate. ¡Fin del juego!');
-                notifyParent(null);
-                return;
-            }
-            switchTurn();
-        }
-    }
-    // ------------------------------------------------------------------
-    // -------------------- FIN CÓDIGO MINIMAX --------------------------
-    // ------------------------------------------------------------------
+    for(let r=0;r<ROWS;r++){
 
+        for(let c=0;c<COLS;c++){
 
-    // Notify parent frame about game end, with fallback
-    function notifyParent(playerWon) {
-        // Parámetro true si ganó jugador, false si máquina, null empate
-        setTimeout(() => {
-            try {
-                if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
-                    window.parent.endGame(playerWon === true);
-                } else {
-                    // Fallback para reiniciar o redirigir
-                    resetGame(); 
-                }
-            } catch(e) {
-                // Fallback para reiniciar o redirigir
-                resetGame(); 
-            }
-        }, 2500);
-    }
+            const value = board[r][c];
 
-    // Handle user clicking on board to place disk
-    function handleClick(event) {
-        if(!gameActive || currentPlayer !== 1) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const colClicked = Math.floor(x / SLOT_SIZE);
-        if(colClicked < 0 || colClicked >= COLS) return;
-        if(dropPiece(colClicked, 1)){
-            drawBoard();
-            if(checkWin(1)){
-                gameActive = false;
-                showMessage('¡Has ganado! 🎉');
-                notifyParent(true);
-                return;
-            }
-            if(checkDraw()){
-                gameActive = false;
-                showMessage('Empate. Fin del juego.');
-                notifyParent(null);
-                return;
-            }
-            switchTurn();
-            // Llama a la IA para su turno
-            if(vsComputer) {
-                aiTurn();
-            }
+            if(value === EMPTY) continue;
+
+            const cx =
+                boardX +
+                cellW*c +
+                cellW/2;
+
+            const cy =
+                boardY +
+                cellH*r +
+                cellH/2;
+
+            drawPiece(
+                cx,
+                cy,
+                Math.min(cellW,cellH)*.36,
+                value,
+                false
+            );
         }
     }
 
-    // Touch support: treat touch as click for simplicity
-    canvas.addEventListener('touchstart', e => {
-        if(e.touches.length === 1){
-            handleClick(e.touches[0]);
+
+    /* Ficha animada */
+
+    if(animationData){
+
+        const {
+            column,
+            row,
+            player,
+            progress
+        } = animationData;
+
+        const startY =
+            boardY -
+            cellH/2;
+
+        const targetY =
+            boardY +
+            cellH*row +
+            cellH/2;
+
+        const eased =
+            1-Math.pow(1-progress,3);
+
+        const cy =
+            startY +
+            (targetY-startY)*eased;
+
+        const cx =
+            boardX +
+            cellW*column +
+            cellW/2;
+
+        drawPiece(
+            cx,
+            cy,
+            Math.min(cellW,cellH)*.36,
+            player,
+            false
+        );
+    }
+
+
+    /* Destacar victoria */
+
+    if(winningCells.length > 0){
+
+        winPulse += .08;
+
+        const glow =
+            0.5 +
+            Math.sin(winPulse)*.25;
+
+        for(const [r,c] of winningCells){
+
+            const cx =
+                boardX +
+                cellW*c +
+                cellW/2;
+
+            const cy =
+                boardY +
+                cellH*r +
+                cellH/2;
+
+            ctx.save();
+
+            ctx.beginPath();
+
+            ctx.arc(
+                cx,
+                cy,
+                Math.min(cellW,cellH)*.40,
+                0,
+                Math.PI*2
+            );
+
+            ctx.strokeStyle =
+                `rgba(255,255,255,${glow})`;
+
+            ctx.lineWidth = 5;
+
+            ctx.shadowColor =
+                "rgba(255,255,255,.9)";
+
+            ctx.shadowBlur = 18;
+
+            ctx.stroke();
+
+            ctx.restore();
         }
-    });
 
-    // Mouse support
-    canvas.addEventListener('click', handleClick);
+        requestAnimationFrame(draw);
+    }
+}
 
-    // Buttons for mode selection
-    btnPvP.addEventListener('click', () => {
-        // Permitir cambiar modo solo si el juego está inactivo o al inicio
-        if (gameActive) return; 
-        vsComputer = false;
-        btnPvP.setAttribute('aria-pressed', 'true');
-        btnPvC.setAttribute('aria-pressed', 'false');
-        showMessage('Modo 2 Jugadores activado');
-        resetGame();
-    });
-    btnPvC.addEventListener('click', () => {
-        // Permitir cambiar modo solo si el juego está inactivo o al inicio
-        if (gameActive) return; 
-        vsComputer = true;
-        btnPvP.setAttribute('aria-pressed', 'false');
-        btnPvC.setAttribute('aria-pressed', 'true');
-        showMessage('Modo Jugador vs Máquina activado');
-        resetGame();
-    });
 
-    // On load initialize PvC by default
-    vsComputer = true;
-    btnPvC.setAttribute('aria-pressed', 'true');
-    btnPvP.setAttribute('aria-pressed', 'false');
-    resetGame();
-})();
+function drawBackground(W,H){
+
+    const gradient =
+        ctx.createLinearGradient(0,0,0,H);
+
+    gradient.addColorStop(0,"#11182e");
+    gradient.addColorStop(1,"#070912");
+
+    ctx.fillStyle = gradient;
+
+    ctx.fillRect(0,0,W,H);
+}
+
+
+function drawCellHole(cx,cy,r){
+
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.arc(cx,cy,r+5,0,Math.PI*2);
+
+    ctx.fillStyle =
+        "rgba(5,8,30,.35)";
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+
+    const gradient =
+        ctx.createRadialGradient(
+            cx-r*.25,
+            cy-r*.25,
+            r*.1,
+            cx,
+            cy,
+            r
+        );
+
+    gradient.addColorStop(0,"#050817");
+    gradient.addColorStop(1,"#0b1040");
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.restore();
+}
+
+
+function drawPiece(cx,cy,r,player,highlight){
+
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+
+    ctx.shadowColor =
+        player === HUMAN
+        ? "rgba(255,48,75,.5)"
+        : "rgba(255,212,41,.5)";
+
+    ctx.shadowBlur =
+        highlight ? 25 : 12;
+
+    ctx.shadowOffsetY = 5;
+
+    const gradient =
+        ctx.createRadialGradient(
+            cx-r*.35,
+            cy-r*.4,
+            r*.1,
+            cx,
+            cy,
+            r
+        );
+
+    if(player === HUMAN){
+
+        gradient.addColorStop(0,"#ff7180");
+        gradient.addColorStop(.35,"#ff304b");
+        gradient.addColorStop(1,"#b90f29");
+
+    }else{
+
+        gradient.addColorStop(0,"#fff58a");
+        gradient.addColorStop(.35,"#ffd429");
+        gradient.addColorStop(1,"#d59600");
+    }
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.shadowColor = "transparent";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx-r*.25,
+        cy-r*.3,
+        r*.22,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fillStyle =
+        "rgba(255,255,255,.27)";
+
+    ctx.fill();
+
+    ctx.restore();
+}
+
+
+function roundedRect(ctx,x,y,w,h,r){
+
+    const radius =
+        Math.min(r,w/2,h/2);
+
+    ctx.beginPath();
+
+    ctx.moveTo(x+radius,y);
+
+    ctx.arcTo(
+        x+w,y,
+        x+w,y+h,
+        radius
+    );
+
+    ctx.arcTo(
+        x+w,y+h,
+        x,y+h,
+        radius
+    );
+
+    ctx.arcTo(
+        x,y+h,
+        x,y,
+        radius
+    );
+
+    ctx.arcTo(
+        x,y,
+        x+w,y,
+        radius
+    );
+
+    ctx.closePath();
+}
+
+
+/* =========================================================
+   CONTROLES CANVAS
+========================================================= */
+
+function getColumnFromPointer(event){
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    const x =
+        event.clientX - rect.left;
+
+    const normalized =
+        x / rect.width;
+
+    let column =
+        Math.floor(normalized*COLS);
+
+    if(column < 0) column = 0;
+    if(column >= COLS) column = COLS-1;
+
+    return column;
+}
+
+
+canvas.addEventListener(
+    "pointerdown",
+    function(event){
+
+        event.preventDefault();
+
+        if(gameState !== "PLAYING") return;
+        if(currentPlayer !== HUMAN) return;
+        if(animating) return;
+
+        initAudio();
+
+        const column =
+            getColumnFromPointer(event);
+
+        humanMove(column);
+    },
+    {passive:false}
+);
+
+
+/* =========================================================
+   BOTONES
+========================================================= */
+
+/*
+   TODOS LOS BOTONES SE REGISTRAN AQUÍ.
+   No dependemos de onclick dentro del HTML.
+*/
+
+playBtn.addEventListener("click",function(){
+
+    startGame();
+
+});
+
+
+instructionsBtn.addEventListener("click",function(){
+
+    showInstructions();
+
+});
+
+
+soundBtn.addEventListener("click",function(){
+
+    toggleSound();
+
+});
+
+
+backInstructionsBtn.addEventListener("click",function(){
+
+    showMenu();
+
+});
+
+
+gameMenuBtn.addEventListener("click",function(){
+
+    showMenu();
+
+});
+
+
+pauseBtn.addEventListener("click",function(){
+
+    pauseGame();
+
+});
+
+
+gameSoundBtn.addEventListener("click",function(){
+
+    toggleSound();
+
+});
+
+
+resumeBtn.addEventListener("click",function(){
+
+    resumeGame();
+
+});
+
+
+restartPauseBtn.addEventListener("click",function(){
+
+    restartGame();
+
+});
+
+
+menuPauseBtn.addEventListener("click",function(){
+
+    showMenu();
+
+});
+
+
+againBtn.addEventListener("click",function(){
+
+    restartGame();
+
+});
+
+
+resultMenuBtn.addEventListener("click",function(){
+
+    showMenu();
+
+});
+
+
+/* =========================================================
+   TECLADO
+========================================================= */
+
+document.addEventListener("keydown",function(event){
+
+    if(event.key === "Escape"){
+
+        if(gameState === "PLAYING"){
+            pauseGame();
+        }else if(gameState === "PAUSED"){
+            resumeGame();
+        }
+
+    }
+
+    if(
+        gameState === "PLAYING" &&
+        currentPlayer === HUMAN &&
+        !animating
+    ){
+
+        const number = Number(event.key);
+
+        if(number >= 1 && number <= 7){
+
+            humanMove(number-1);
+        }
+    }
+});
+
+
+/* =========================================================
+   VISIBILIDAD
+========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    function(){
+
+        if(
+            document.hidden &&
+            gameState === "PLAYING"
+        ){
+
+            pauseGame();
+        }
+    }
+);
+
+
+/* =========================================================
+   INICIO
+========================================================= */
+
+updateSoundButtons();
+updateScore();
+createEmptyBoard();
+
+/*
+   Dibujamos una vez al cargar.
+   El menú sigue siendo la pantalla visible.
+*/
+
+draw();
+
 </script>
 
 </body>
