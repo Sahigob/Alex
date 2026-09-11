@@ -1,182 +1,3654 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Arcanoid Táctil Básico</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-    body {
-        margin: 0;
-        background: #202020;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        touch-action: none;
-        overflow: hidden;
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1,
+               maximum-scale=1,
+               user-scalable=no,
+               viewport-fit=cover">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+
+<title>Neon Arkanoid</title>
+
+<style>
+:root{
+    --bg:#0d1117;
+    --panel:#111827;
+    --cyan:#22d3ee;
+    --pink:#f472b6;
+    --purple:#a78bfa;
+    --green:#34d399;
+    --yellow:#facc15;
+    --white:#f8fafc;
+}
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    -webkit-user-select:none;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:var(--bg);
+    color:white;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    touch-action:none;
+}
+
+body{
+    position:fixed;
+    inset:0;
+}
+
+#game{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    background:#0d1117;
+}
+
+/* =========================
+   HUD
+========================= */
+
+#hud{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    z-index:10;
+
+    padding:
+        max(12px, env(safe-area-inset-top))
+        14px
+        10px;
+
+    pointer-events:none;
+
+    display:flex;
+    justify-content:center;
+}
+
+.hud-inner{
+    width:min(100%, 520px);
+
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+}
+
+.hud-box{
+    min-width:0;
+    padding:7px 8px;
+
+    text-align:center;
+
+    background:rgba(13,17,23,.78);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:12px;
+
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+
+    box-shadow:
+        0 0 18px rgba(34,211,238,.04);
+}
+
+.hud-label{
+    font-size:9px;
+    letter-spacing:1.4px;
+    text-transform:uppercase;
+    color:#64748b;
+}
+
+.hud-value{
+    margin-top:1px;
+    font-size:16px;
+    font-weight:800;
+    letter-spacing:.5px;
+}
+
+#scoreValue{
+    color:var(--cyan);
+    text-shadow:0 0 10px rgba(34,211,238,.7);
+}
+
+#highValue{
+    color:var(--yellow);
+    text-shadow:0 0 10px rgba(250,204,21,.5);
+}
+
+/* =========================
+   POWER UP INDICATOR
+========================= */
+
+#powerStatus{
+    position:fixed;
+    z-index:11;
+
+    left:50%;
+    transform:translateX(-50%);
+
+    top:
+        calc(
+            max(12px, env(safe-area-inset-top))
+            + 65px
+        );
+
+    min-width:130px;
+    max-width:90%;
+
+    padding:6px 13px;
+
+    border-radius:999px;
+
+    background:rgba(17,24,39,.9);
+    border:1px solid rgba(255,255,255,.12);
+
+    text-align:center;
+
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.5px;
+
+    opacity:0;
+    transition:opacity .2s ease;
+
+    pointer-events:none;
+}
+
+#powerStatus.show{
+    opacity:1;
+}
+
+/* =========================
+   SCREENS
+========================= */
+
+.screen{
+    position:fixed;
+    inset:0;
+    z-index:30;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:25px;
+
+    background:
+        radial-gradient(
+            circle at 50% 35%,
+            rgba(34,211,238,.09),
+            transparent 38%
+        ),
+        rgba(5,8,13,.92);
+
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+}
+
+.screen.hidden{
+    display:none;
+}
+
+.panel{
+    width:min(100%, 420px);
+
+    padding:34px 25px 27px;
+
+    text-align:center;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,24,39,.97),
+            rgba(10,15,23,.97)
+        );
+
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:26px;
+
+    box-shadow:
+        0 0 60px rgba(34,211,238,.08),
+        inset 0 0 30px rgba(255,255,255,.015);
+}
+
+.logo{
+    width:82px;
+    height:82px;
+
+    margin:0 auto 18px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:23px;
+
+    font-size:35px;
+    font-weight:900;
+
+    color:#fff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--cyan),
+            var(--purple),
+            var(--pink)
+        );
+
+    box-shadow:
+        0 0 20px rgba(34,211,238,.5),
+        0 0 50px rgba(167,139,250,.18);
+
+    transform:rotate(-4deg);
+}
+
+h1{
+    margin:0;
+
+    font-size:clamp(38px,11vw,58px);
+    line-height:.95;
+    letter-spacing:-2px;
+
+    text-transform:uppercase;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--cyan),
+            #fff,
+            var(--pink)
+        );
+
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+.subtitle{
+    margin:13px 0 27px;
+
+    color:#94a3b8;
+    font-size:13px;
+    line-height:1.5;
+}
+
+.controls-info{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+
+    margin-bottom:23px;
+}
+
+.info{
+    padding:11px 8px;
+
+    background:#0d141f;
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:12px;
+
+    color:#94a3b8;
+    font-size:10px;
+}
+
+.info strong{
+    display:block;
+    color:#e2e8f0;
+    margin-bottom:3px;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.button{
+    width:100%;
+    min-height:58px;
+
+    border:0;
+    border-radius:17px;
+
+    color:#061018;
+
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:.6px;
+
+    background:
+        linear-gradient(
+            100deg,
+            var(--cyan),
+            var(--purple)
+        );
+
+    box-shadow:
+        0 8px 30px rgba(34,211,238,.2);
+
+    transition:
+        transform .1s ease,
+        filter .1s ease;
+}
+
+.button:active{
+    transform:scale(.96);
+    filter:brightness(1.2);
+}
+
+.secondary-button{
+    margin-top:10px;
+
+    background:#172033;
+    color:#e2e8f0;
+
+    box-shadow:none;
+}
+
+/* =========================
+   GAME OVER
+========================= */
+
+.result-title{
+    font-size:35px;
+    font-weight:900;
+    margin-bottom:20px;
+}
+
+.result-score{
+    margin:20px 0 4px;
+
+    font-size:55px;
+    font-weight:900;
+
+    color:var(--cyan);
+    text-shadow:0 0 22px rgba(34,211,238,.55);
+}
+
+.result-label{
+    color:#64748b;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+}
+
+.new-record{
+    margin:17px auto 22px;
+
+    width:max-content;
+
+    padding:7px 13px;
+
+    border-radius:999px;
+
+    color:#0f172a;
+    background:var(--yellow);
+
+    font-size:11px;
+    font-weight:900;
+
+    box-shadow:
+        0 0 22px rgba(250,204,21,.35);
+}
+
+/* =========================
+   LEVEL COMPLETE
+========================= */
+
+.level-number{
+    font-size:64px;
+    font-weight:900;
+
+    color:var(--green);
+
+    text-shadow:
+        0 0 25px rgba(52,211,153,.6);
+}
+
+/* =========================
+   LANDSCAPE WARNING
+========================= */
+
+#portraitWarning{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:100;
+
+    align-items:center;
+    justify-content:center;
+
+    text-align:center;
+    padding:35px;
+
+    background:#0d1117;
+}
+
+@media (orientation:landscape) and (max-height:500px){
+    #portraitWarning{
+        display:flex;
     }
-    canvas {
-        border: 4px solid #fff;
-        background: #000;
-        display: block;
-        width: 100vw;
-        height: calc(100vh - 80px);
-        max-height: 400px;
+}
+
+.warning-inner{
+    max-width:350px;
+}
+
+.warning-icon{
+    font-size:50px;
+    margin-bottom:15px;
+}
+
+.warning-title{
+    font-size:24px;
+    font-weight:900;
+}
+
+.warning-text{
+    color:#94a3b8;
+    margin-top:10px;
+    line-height:1.5;
+}
+
+/* =========================
+   SMALL DEVICES
+========================= */
+
+@media(max-height:650px){
+    .panel{
+        padding:23px 20px;
     }
-    </style>
+
+    .logo{
+        width:65px;
+        height:65px;
+        font-size:28px;
+        margin-bottom:12px;
+    }
+
+    h1{
+        font-size:40px;
+    }
+
+    .subtitle{
+        margin:9px 0 16px;
+    }
+
+    .controls-info{
+        margin-bottom:14px;
+    }
+}
+</style>
 </head>
+
 <body>
-    <canvas id="juegoCanvas" width="320" height="480"></canvas>
-    <script>
-        const canvas = document.getElementById("juegoCanvas");
-        const ctx = canvas.getContext("2d");
 
-        function ajustarCanvas() {
-            canvas.style.width = window.innerWidth + "px";
-            canvas.style.height = window.innerHeight + "px";
-        }
-        window.addEventListener("resize", ajustarCanvas);
-        ajustarCanvas();
+<canvas id="game"></canvas>
 
-        const ancho = canvas.width;
-        const alto = canvas.height;
+<!-- =========================
+     HUD
+========================= -->
 
-        const paletaAltura = 10;
-        const paletaAncho = 64; // reducido un 15%
-        let paletaX = (ancho - paletaAncho) / 2;
+<div id="hud">
+    <div class="hud-inner">
 
-        let bolaRadio = 5;
-        let bolaX = ancho / 2;
-        let bolaY = alto - 30;
-        let velocidadX = 4;
-        let velocidadY = -4;
-        const velocidadMaxima = 10;
+        <div class="hud-box">
+            <div class="hud-label">Vidas</div>
+            <div class="hud-value" id="livesValue">3</div>
+        </div>
 
-        const ladrilloFila = 5;
-        const ladrilloColumna = 8;
-        const ladrilloAncho = 30;
-        const ladrilloAltura = 10;
-        const ladrilloPadding = 5;
-        const ladrilloOffsetSuperior = 30;
-        const ladrilloOffsetIzquierda = 10;
+        <div class="hud-box">
+            <div class="hud-label">Puntos</div>
+            <div class="hud-value" id="scoreValue">0</div>
+        </div>
 
-        const colores = ["#FF004D", "#FFA300", "#00E436", "#29ADFF", "#B2B2B2"];
+        <div class="hud-box">
+            <div class="hud-label">Récord</div>
+            <div class="hud-value" id="highValue">0</div>
+        </div>
 
-        let bloques = [];
-        for(let c=0; c<ladrilloColumna; c++) {
-            bloques[c] = [];
-            for(let r=0; r<ladrilloFila; r++) {
-                bloques[c][r] = {
-                    x: 0,
-                    y: 0,
-                    status: 1,
-                    color: colores[r % colores.length]
-                };
-            }
-        }
+    </div>
+</div>
 
-        function dibujarBola() {
-            ctx.beginPath();
-            ctx.arc(bolaX, bolaY, bolaRadio, 0, Math.PI * 2);
-            ctx.fillStyle = "#FF0077";
-            ctx.fill();
-            ctx.closePath();
-        }
+<div id="powerStatus"></div>
 
-        function dibujarPaleta() {
-            ctx.beginPath();
-            ctx.rect(paletaX, alto - paletaAltura, paletaAncho, paletaAltura);
-            ctx.fillStyle = "#00FFC0";
-            ctx.fill();
-            ctx.closePath();
-        }
+<!-- =========================
+     START SCREEN
+========================= -->
 
-        function dibujarBloques() {
-            for(let c=0; c<ladrilloColumna; c++) {
-                for(let r=0; r<ladrilloFila; r++) {
-                    const b = bloques[c][r];
-                    if(b.status == 1) {
-                        const x = (c * (ladrilloAncho + ladrilloPadding)) + ladrilloOffsetIzquierda;
-                        const y = (r * (ladrilloAltura + ladrilloPadding)) + ladrilloOffsetSuperior;
-                        b.x = x;
-                        b.y = y;
+<div id="startScreen" class="screen">
 
-                        ctx.beginPath();
-                        ctx.rect(x, y, ladrilloAncho, ladrilloAltura);
-                        ctx.fillStyle = b.color;
-                        ctx.fill();
-                        ctx.closePath();
-                    }
-                }
-            }
-        }
+    <div class="panel">
 
-        function colisionBloques() {
-            for(let c=0; c<ladrilloColumna; c++) {
-                for(let r=0; r<ladrilloFila; r++) {
-                    const b = bloques[c][r];
-                    if(b.status == 1) {
-                        if(bolaX > b.x && bolaX < b.x + ladrilloAncho &&
-                           bolaY > b.y && bolaY < b.y + ladrilloAltura) {
-                            velocidadY = -velocidadY;
-                            b.status = 0;
-                        }
-                    }
-                }
-            }
-        }
+        <div class="logo">⚡</div>
 
-        function moverPaleta(clientX) {
-            const rect = canvas.getBoundingClientRect();
-            let x = clientX - rect.left;
-            paletaX = x - paletaAncho / 2;
-            if (paletaX < 0) paletaX = 0;
-            if (paletaX + paletaAncho > ancho) paletaX = ancho - paletaAncho;
-        }
+        <h1>ARKANOID</h1>
 
-        canvas.addEventListener('mousemove', e => moverPaleta(e.clientX));
-        canvas.addEventListener('touchmove', e => {
-            e.preventDefault();
-            if(e.touches.length > 0) moverPaleta(e.touches[0].clientX);
+        <div class="subtitle">
+            NEON ARCADE<br>
+            Rompe. Rebota. Sobrevive.
+        </div>
+
+        <div class="controls-info">
+
+            <div class="info">
+                <strong>☝️ MOVER</strong>
+                Arrastra la pala
+            </div>
+
+            <div class="info">
+                <strong>⚡ LÁSER</strong>
+                Toca la pantalla
+            </div>
+
+            <div class="info">
+                <strong>◆ POWER-UPS</strong>
+                Atrapa las cápsulas
+            </div>
+
+            <div class="info">
+                <strong>● MULTIBOLA</strong>
+                No pierdas todas
+            </div>
+
+        </div>
+
+        <button class="button" id="playButton">
+            JUGAR
+        </button>
+
+    </div>
+
+</div>
+
+<!-- =========================
+     GAME OVER
+========================= -->
+
+<div id="gameOverScreen" class="screen hidden">
+
+    <div class="panel">
+
+        <div class="result-title">GAME OVER</div>
+
+        <div class="result-label">Puntuación</div>
+
+        <div class="result-score" id="finalScore">
+            0
+        </div>
+
+        <div class="result-label">
+            Récord: <span id="finalHigh">0</span>
+        </div>
+
+        <div
+            id="newRecord"
+            class="new-record"
+            style="display:none">
+            ★ NUEVO RÉCORD ★
+        </div>
+
+        <button class="button" id="retryButton">
+            REINTENTAR
+        </button>
+
+        <button
+            class="button secondary-button"
+            id="menuButton">
+            MENÚ
+        </button>
+
+    </div>
+
+</div>
+
+<!-- =========================
+     LEVEL COMPLETE
+========================= -->
+
+<div id="levelScreen" class="screen hidden">
+
+    <div class="panel">
+
+        <div class="result-title">
+            NIVEL SUPERADO
+        </div>
+
+        <div class="level-number" id="levelNumber">
+            1
+        </div>
+
+        <div class="subtitle">
+            Prepárate.<br>
+            El siguiente nivel será más rápido.
+        </div>
+
+        <button class="button" id="nextLevelButton">
+            SIGUIENTE NIVEL
+        </button>
+
+    </div>
+
+</div>
+
+<!-- =========================
+     PORTRAIT WARNING
+========================= -->
+
+<div id="portraitWarning">
+
+    <div class="warning-inner">
+
+        <div class="warning-icon">📱</div>
+
+        <div class="warning-title">
+            Gira el iPhone
+        </div>
+
+        <div class="warning-text">
+            Neon Arkanoid está diseñado
+            para jugarse en vertical.
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+"use strict";
+
+/* =========================================================
+   NEON ARKANOID
+   Todo el juego funciona en este único archivo.
+========================================================= */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d", {
+    alpha:false
+});
+
+/* =========================
+   DOM
+========================= */
+
+const startScreen =
+    document.getElementById("startScreen");
+
+const gameOverScreen =
+    document.getElementById("gameOverScreen");
+
+const levelScreen =
+    document.getElementById("levelScreen");
+
+const playButton =
+    document.getElementById("playButton");
+
+const retryButton =
+    document.getElementById("retryButton");
+
+const menuButton =
+    document.getElementById("menuButton");
+
+const nextLevelButton =
+    document.getElementById("nextLevelButton");
+
+const scoreValue =
+    document.getElementById("scoreValue");
+
+const highValue =
+    document.getElementById("highValue");
+
+const livesValue =
+    document.getElementById("livesValue");
+
+const finalScore =
+    document.getElementById("finalScore");
+
+const finalHigh =
+    document.getElementById("finalHigh");
+
+const newRecord =
+    document.getElementById("newRecord");
+
+const levelNumber =
+    document.getElementById("levelNumber");
+
+const powerStatus =
+    document.getElementById("powerStatus");
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+let W = 0;
+let H = 0;
+let dpr = 1;
+
+let gameState = "menu";
+
+let score = 0;
+let highScore =
+    Number(localStorage.getItem("neonArkanoidHighScore")) || 0;
+
+let lives = 3;
+let level = 1;
+
+let lastTime = 0;
+let accumulator = 0;
+
+let shake = 0;
+
+let balls = [];
+let bricks = [];
+let particles = [];
+let powerUps = [];
+let lasers = [];
+
+let stars = [];
+
+let pointerX = 0;
+let pointerActive = false;
+
+let paddle = {
+    x:0,
+    y:0,
+    width:100,
+    height:13,
+    baseWidth:100,
+    targetX:0
+};
+
+let powerState = {
+    laser:0,
+    slow:0,
+    wide:0,
+    pierce:0
+};
+
+let autoLaserTimer = 0;
+
+
+/* =========================================================
+   PALETTE
+========================================================= */
+
+const COLORS = [
+    "#22d3ee",
+    "#a78bfa",
+    "#f472b6",
+    "#34d399",
+    "#facc15"
+];
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+function resize(){
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    dpr =
+        Math.min(window.devicePixelRatio || 1, 2);
+
+    W = rect.width;
+    H = rect.height;
+
+    canvas.width =
+        Math.floor(W * dpr);
+
+    canvas.height =
+        Math.floor(H * dpr);
+
+    ctx.setTransform(
+        dpr,0,0,dpr,0,0
+    );
+
+    paddle.y =
+        H - Math.max(58, H * .105);
+
+    if(!paddle.x){
+        paddle.x = W / 2;
+        paddle.targetX = W / 2;
+    }
+
+    paddle.x =
+        Math.max(
+            paddle.width / 2,
+            Math.min(
+                W - paddle.width / 2,
+                paddle.x
+            )
+        );
+
+    createStars();
+
+}
+
+window.addEventListener(
+    "resize",
+    resize,
+    {passive:true}
+);
+
+
+/* =========================================================
+   STARS
+========================================================= */
+
+function createStars(){
+
+    stars = [];
+
+    const count =
+        Math.floor(W * H / 9000);
+
+    for(let i=0;i<count;i++){
+
+        stars.push({
+            x:Math.random()*W,
+            y:Math.random()*H,
+            r:.4+Math.random()*1.3,
+            a:.15+Math.random()*.5,
+            speed:.1+Math.random()*.35
         });
 
-        function dibujar() {
-            ctx.clearRect(0, 0, ancho, alto);
-            dibujarBloques();
-            dibujarBola();
-            dibujarPaleta();
-            colisionBloques();
+    }
 
-            bolaX += velocidadX;
-            bolaY += velocidadY;
+}
 
-            if(bolaX + velocidadX > ancho - bolaRadio || bolaX + velocidadX < bolaRadio) {
-                velocidadX = -velocidadX;
-            }
-            if(bolaY + velocidadY < bolaRadio) {
-                velocidadY = -velocidadY;
-            }
 
-            if(bolaY + velocidadY > alto - bolaRadio - paletaAltura) {
-                if(bolaX > paletaX && bolaX < paletaX + paletaAncho) {
-                    velocidadY = -velocidadY;
+/* =========================================================
+   UTILS
+========================================================= */
 
-                    // Aumentar velocidad progresivamente
-                    if (Math.abs(velocidadY) < velocidadMaxima) {
-                        velocidadY *= 1.1;
-                    }
-                    if (Math.abs(velocidadX) < velocidadMaxima) {
-                        velocidadX *= 1.1;
-                    }
-                } else if (bolaY + velocidadY > alto - bolaRadio) {
-                    alert("¡FIN DEL JUEGO!");
-                    document.location.reload();
+function clamp(v,min,max){
+    return Math.max(min,Math.min(max,v));
+}
+
+function rand(min,max){
+    return min +
+        Math.random() * (max-min);
+}
+
+function vibrate(pattern){
+
+    try{
+        if(navigator.vibrate){
+            navigator.vibrate(pattern);
+        }
+    }catch(e){}
+
+}
+
+function showPower(text){
+
+    powerStatus.textContent = text;
+
+    powerStatus.classList.add("show");
+
+}
+
+function hidePower(){
+
+    powerStatus.classList.remove("show");
+
+}
+
+function updateHUD(){
+
+    scoreValue.textContent =
+        Math.floor(score).toLocaleString("es-ES");
+
+    highValue.textContent =
+        Math.floor(highScore).toLocaleString("es-ES");
+
+    livesValue.textContent =
+        "♥ ".repeat(Math.max(0,lives)) ||
+        "0";
+
+}
+
+
+/* =========================================================
+   GAME START
+========================================================= */
+
+function startGame(){
+
+    startScreen.classList.add("hidden");
+    gameOverScreen.classList.add("hidden");
+    levelScreen.classList.add("hidden");
+
+    score = 0;
+    lives = 3;
+    level = 1;
+
+    powerState.laser = 0;
+    powerState.slow = 0;
+    powerState.wide = 0;
+    powerState.pierce = 0;
+
+    hidePower();
+
+    paddle.width =
+        paddle.baseWidth;
+
+    paddle.x = W/2;
+    paddle.targetX = W/2;
+
+    createLevel();
+
+    gameState = "playing";
+
+    updateHUD();
+
+}
+
+
+/* =========================================================
+   LEVEL CREATION
+========================================================= */
+
+function createLevel(){
+
+    balls = [];
+    bricks = [];
+    particles = [];
+    powerUps = [];
+    lasers = [];
+
+    paddle.y =
+        H - Math.max(58,H*.105);
+
+    paddle.width =
+        powerState.wide > 0
+            ? paddle.baseWidth * 1.5
+            : paddle.baseWidth;
+
+    /* Número de filas creciente */
+    const rows =
+        Math.min(
+            9,
+            4 + level
+        );
+
+    const cols =
+        W < 390 ? 7 : 8;
+
+    const gap = 5;
+
+    const side = 13;
+
+    const brickWidth =
+        (W - side*2 - gap*(cols-1))
+        / cols;
+
+    const brickHeight =
+        clamp(H*.027,16,24);
+
+    const top =
+        Math.max(
+            105,
+            H*.16
+        );
+
+    for(let r=0;r<rows;r++){
+
+        for(let c=0;c<cols;c++){
+
+            /* Algunos patrones no llenan todo */
+            let exists = true;
+
+            if(level >= 3){
+
+                if(
+                    r === 0 &&
+                    (c === 0 || c === cols-1)
+                ){
+                    exists = false;
                 }
+
             }
 
-            requestAnimationFrame(dibujar);
+            if(level >= 5){
+
+                if(
+                    r === rows-1 &&
+                    c % 3 === 0
+                ){
+                    exists = false;
+                }
+
+            }
+
+            if(!exists) continue;
+
+            let hp = 1;
+
+            /* A partir del segundo nivel */
+
+            if(
+                level >= 2 &&
+                (
+                    r === 0 ||
+                    (r + c + level) % 5 === 0
+                )
+            ){
+                hp = 2;
+            }
+
+            /* Tercer impacto opcional en niveles altos */
+
+            if(
+                level >= 6 &&
+                (r+c)%7 === 0
+            ){
+                hp = 3;
+            }
+
+            bricks.push({
+
+                x:
+                    side +
+                    c*(brickWidth+gap),
+
+                y:
+                    top +
+                    r*(brickHeight+gap),
+
+                w:brickWidth,
+                h:brickHeight,
+
+                hp:hp,
+                maxHp:hp,
+
+                color:
+                    COLORS[
+                        (r+c+level)%COLORS.length
+                    ],
+
+                alive:true,
+
+                hitFlash:0
+
+            });
+
         }
 
-        dibujar();
-    </script>
+    }
+
+    createBall(true);
+
+}
+
+
+/* =========================================================
+   CREATE BALL
+========================================================= */
+
+function createBall(initial=false){
+
+    /*
+     * Velocidad normal aumentada ligeramente:
+     * antes 330 px/s
+     * ahora 390 px/s
+     */
+
+    const speed =
+        (
+            initial
+                ? 390
+                : 390
+        ) *
+        (
+            1 +
+            (level-1)*.075
+        );
+
+    const angle =
+        rand(
+            -Math.PI*.78,
+            -Math.PI*.22
+        );
+
+    balls.push({
+
+        x:W/2,
+        y:paddle.y - 15,
+
+        radius:
+            clamp(W*.018,7,9),
+
+        vx:
+            Math.cos(angle)*speed,
+
+        vy:
+            Math.sin(angle)*speed,
+
+        baseSpeed:speed,
+
+        trail:[],
+
+        alive:true,
+
+        color:
+            COLORS[
+                Math.floor(Math.random()*COLORS.length)
+            ]
+
+    });
+
+}
+
+
+/* =========================================================
+   CREATE EXTRA BALL
+========================================================= */
+
+function createExtraBall(original, angleOffset){
+
+    if(!original)
+        return;
+
+    const speed =
+        Math.sqrt(
+            original.vx*original.vx +
+            original.vy*original.vy
+        );
+
+    const angle =
+        Math.atan2(
+            original.vy,
+            original.vx
+        ) + angleOffset;
+
+    balls.push({
+
+        x:original.x,
+        y:original.y,
+
+        radius:original.radius,
+
+        vx:
+            Math.cos(angle)*speed,
+
+        vy:
+            Math.sin(angle)*speed,
+
+        baseSpeed:speed,
+
+        trail:[],
+
+        alive:true,
+
+        color:
+            COLORS[
+                Math.floor(Math.random()*COLORS.length)
+            ]
+
+    });
+
+}
+
+
+/* =========================================================
+   RESET AFTER LOST BALL
+========================================================= */
+
+function resetBall(){
+
+    balls = [];
+
+    createBall(true);
+
+    paddle.x = W/2;
+    paddle.targetX = W/2;
+
+}
+
+
+/* =========================================================
+   COLLISION HELPERS
+========================================================= */
+
+function circleRectCollision(ball,rect){
+
+    const closestX =
+        clamp(
+            ball.x,
+            rect.x,
+            rect.x+rect.w
+        );
+
+    const closestY =
+        clamp(
+            ball.y,
+            rect.y,
+            rect.y+rect.h
+        );
+
+    const dx =
+        ball.x-closestX;
+
+    const dy =
+        ball.y-closestY;
+
+    return (
+        dx*dx +
+        dy*dy
+    ) <
+    ball.radius*ball.radius;
+
+}
+
+
+/* =========================================================
+   UPDATE
+========================================================= */
+
+function update(dt){
+
+    if(gameState !== "playing")
+        return;
+
+    /* Cap delta para evitar saltos */
+    dt =
+        Math.min(dt,.025);
+
+    updateStars(dt);
+
+    updatePowerUps(dt);
+    updateLasers(dt);
+    updateParticles(dt);
+
+    /* Pala */
+    const paddleSpeed = 22;
+
+    paddle.x +=
+        (
+            paddle.targetX -
+            paddle.x
+        ) *
+        Math.min(
+            1,
+            paddleSpeed*dt
+        );
+
+    paddle.x =
+        clamp(
+            paddle.x,
+            paddle.width/2,
+            W-paddle.width/2
+        );
+
+    /* Power states */
+
+    if(powerState.laser > 0){
+
+        powerState.laser -= dt;
+
+        autoLaserTimer += dt;
+
+        if(autoLaserTimer >= .65){
+
+            autoLaserTimer = 0;
+
+            fireLaser();
+
+        }
+
+        if(powerState.laser <= 0){
+            powerState.laser = 0;
+        }
+
+    }
+
+    if(powerState.slow > 0){
+
+        powerState.slow -= dt;
+
+        if(powerState.slow <= 0){
+            powerState.slow = 0;
+        }
+
+    }
+
+    if(powerState.wide > 0){
+
+        powerState.wide -= dt;
+
+        if(powerState.wide <= 0){
+
+            powerState.wide = 0;
+
+            paddle.width =
+                paddle.baseWidth;
+
+        }
+
+    }
+
+    /* NUEVO: BOLA PERFORANTE */
+
+    if(powerState.pierce > 0){
+
+        powerState.pierce -= dt;
+
+        if(powerState.pierce <= 0){
+            powerState.pierce = 0;
+        }
+
+    }
+
+    updatePowerText();
+
+    /* Pelotas */
+
+    for(let i=balls.length-1;i>=0;i--){
+
+        const ball = balls[i];
+
+        if(!ball.alive){
+            balls.splice(i,1);
+            continue;
+        }
+
+        let speedMultiplier =
+            powerState.slow > 0
+                ? .5
+                : 1;
+
+        const oldX = ball.x;
+        const oldY = ball.y;
+
+        ball.x +=
+            ball.vx *
+            speedMultiplier *
+            dt;
+
+        ball.y +=
+            ball.vy *
+            speedMultiplier *
+            dt;
+
+        ball.trail.push({
+            x:oldX,
+            y:oldY
+        });
+
+        if(ball.trail.length > 7){
+            ball.trail.shift();
+        }
+
+        /* paredes */
+
+        if(
+            ball.x-ball.radius <= 0
+        ){
+
+            ball.x =
+                ball.radius;
+
+            ball.vx =
+                Math.abs(ball.vx);
+
+            impact(
+                ball.x,
+                ball.y,
+                ball.color,
+                4
+            );
+
+        }
+
+        if(
+            ball.x+ball.radius >= W
+        ){
+
+            ball.x =
+                W-ball.radius;
+
+            ball.vx =
+                -Math.abs(ball.vx);
+
+            impact(
+                ball.x,
+                ball.y,
+                ball.color,
+                4
+            );
+
+        }
+
+        if(
+            ball.y-ball.radius <= 0
+        ){
+
+            ball.y =
+                ball.radius;
+
+            ball.vy =
+                Math.abs(ball.vy);
+
+            impact(
+                ball.x,
+                ball.y,
+                ball.color,
+                5
+            );
+
+        }
+
+        /* pala */
+
+        if(
+            ball.vy > 0 &&
+            circleRectCollision(
+                ball,
+                {
+                    x:
+                        paddle.x-
+                        paddle.width/2,
+
+                    y:paddle.y,
+
+                    w:paddle.width,
+
+                    h:paddle.height
+                }
+            )
+        ){
+
+            ball.y =
+                paddle.y -
+                ball.radius -
+                1;
+
+            /*
+             * El ángulo depende del punto
+             * de contacto.
+             */
+
+            const relative =
+                (
+                    ball.x-paddle.x
+                ) /
+                (paddle.width/2);
+
+            const maxAngle =
+                Math.PI*.42;
+
+            const angle =
+                relative*maxAngle;
+
+            const speed =
+                Math.sqrt(
+                    ball.vx*ball.vx+
+                    ball.vy*ball.vy
+                );
+
+            ball.vx =
+                Math.sin(angle)*speed;
+
+            ball.vy =
+                -Math.cos(angle)*speed;
+
+            impact(
+                ball.x,
+                paddle.y,
+                "#22d3ee",
+                7
+            );
+
+            vibrate(8);
+
+        }
+
+        /* bloques */
+
+        for(let j=0;j<bricks.length;j++){
+
+            const brick = bricks[j];
+
+            if(!brick.alive)
+                continue;
+
+            if(
+                circleRectCollision(
+                    ball,
+                    brick
+                )
+            ){
+
+                /*
+                 * Cuando está activo el poder
+                 * perforante NO se invierte la
+                 * trayectoria.
+                 *
+                 * La bola atraviesa el ladrillo.
+                 */
+
+                resolveBrickCollision(
+                    ball,
+                    brick
+                );
+
+                /*
+                 * En modo perforante seguimos
+                 * comprobando los demás ladrillos
+                 * para que pueda atravesar varios
+                 * en la misma trayectoria.
+                 */
+
+                if(powerState.pierce <= 0){
+                    break;
+                }
+
+            }
+
+        }
+
+        /* fuera de pantalla */
+
+        if(
+            ball.y-ball.radius > H
+        ){
+
+            ball.alive = false;
+
+        }
+
+    }
+
+    /* ¿No quedan bolas? */
+
+    if(balls.length === 0){
+
+        lives--;
+
+        shake = 10;
+
+        vibrate([20,30,20]);
+
+        if(lives <= 0){
+
+            endGame();
+
+        }else{
+
+            resetBall();
+
+        }
+
+        updateHUD();
+
+    }
+
+    /* comprobar nivel */
+
+    const remaining =
+        bricks.some(
+            b => b.alive
+        );
+
+    if(!remaining){
+
+        completeLevel();
+
+    }
+
+    /* shake */
+
+    if(shake > 0){
+        shake -= dt*35;
+
+        if(shake < 0)
+            shake = 0;
+    }
+
+}
+
+
+/* =========================================================
+   STARS UPDATE
+========================================================= */
+
+function updateStars(dt){
+
+    for(const s of stars){
+
+        s.y += s.speed*dt*20;
+
+        if(s.y > H){
+            s.y = 0;
+            s.x = Math.random()*W;
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   BRICK COLLISION
+========================================================= */
+
+function resolveBrickCollision(
+    ball,
+    brick
+){
+
+    /*
+     * BOLA PERFORANTE
+     *
+     * Si está activa, la bola NO rebota.
+     * Solamente daña el ladrillo y continúa
+     * en la misma dirección.
+     */
+
+    if(powerState.pierce > 0){
+
+        brick.hp--;
+
+        brick.hitFlash = .16;
+
+        impact(
+            ball.x,
+            ball.y,
+            "#facc15",
+            brick.hp <= 0 ? 16 : 7
+        );
+
+        if(brick.hp <= 0){
+
+            brick.alive = false;
+
+            score +=
+                brick.maxHp === 3
+                    ? 40
+                    : brick.maxHp === 2
+                        ? 25
+                        : 10;
+
+            /*
+             * Power-up aleatorio.
+             */
+
+            if(Math.random() < .28){
+
+                spawnPowerUp(
+                    brick.x+brick.w/2,
+                    brick.y+brick.h/2
+                );
+
+            }
+
+            shake = 2.8;
+
+            vibrate(5);
+
+            if(score > highScore){
+
+                highScore = score;
+
+                localStorage.setItem(
+                    "neonArkanoidHighScore",
+                    Math.floor(highScore)
+                );
+
+            }
+
+            updateHUD();
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+     * Funcionamiento original:
+     * determinar lado aproximado del impacto.
+     */
+
+    const centerX =
+        brick.x+brick.w/2;
+
+    const centerY =
+        brick.y+brick.h/2;
+
+    const dx =
+        ball.x-centerX;
+
+    const dy =
+        ball.y-centerY;
+
+    const overlapX =
+        brick.w/2+
+        ball.radius-
+        Math.abs(dx);
+
+    const overlapY =
+        brick.h/2+
+        ball.radius-
+        Math.abs(dy);
+
+    if(overlapX < overlapY){
+
+        ball.vx *= -1;
+
+    }else{
+
+        ball.vy *= -1;
+
+    }
+
+    brick.hp--;
+
+    brick.hitFlash = .16;
+
+    impact(
+        ball.x,
+        ball.y,
+        brick.color,
+        brick.hp <= 0 ? 13 : 5
+    );
+
+    if(brick.hp <= 0){
+
+        brick.alive = false;
+
+        score +=
+            brick.maxHp === 3
+                ? 40
+                : brick.maxHp === 2
+                    ? 25
+                    : 10;
+
+        /* Power-up 28% */
+
+        if(Math.random() < .28){
+
+            spawnPowerUp(
+                brick.x+brick.w/2,
+                brick.y+brick.h/2
+            );
+
+        }
+
+        shake = 2.8;
+
+        vibrate(5);
+
+        if(score > highScore){
+
+            highScore = score;
+
+            localStorage.setItem(
+                "neonArkanoidHighScore",
+                Math.floor(highScore)
+            );
+
+        }
+
+        updateHUD();
+
+    }
+
+}
+
+
+/* =========================================================
+   POWER UPS
+========================================================= */
+
+const POWER_TYPES = [
+    "laser",
+    "multi",
+    "slow",
+    "wide",
+    "life",
+    "pierce",
+    "five"
+];
+
+function spawnPowerUp(x,y){
+
+    const type =
+        POWER_TYPES[
+            Math.floor(
+                Math.random()*
+                POWER_TYPES.length
+            )
+        ];
+
+    powerUps.push({
+
+        x:x,
+        y:y,
+
+        w:32,
+        h:15,
+
+        vy:95,
+
+        type:type,
+
+        rotation:0
+
+    });
+
+}
+
+
+function updatePowerUps(dt){
+
+    for(
+        let i=powerUps.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p =
+            powerUps[i];
+
+        p.y +=
+            p.vy*dt;
+
+        p.rotation +=
+            dt*3;
+
+        const px =
+            paddle.x-paddle.width/2;
+
+        const py =
+            paddle.y;
+
+        if(
+            p.x+p.w/2 >= px &&
+            p.x-p.w/2 <= px+paddle.width &&
+            p.y+p.h/2 >= py &&
+            p.y-p.h/2 <= py+paddle.height
+        ){
+
+            activatePower(p.type);
+
+            powerUps.splice(i,1);
+
+            continue;
+
+        }
+
+        if(p.y-p.h > H){
+
+            powerUps.splice(i,1);
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   POWER ACTIVATION
+========================================================= */
+
+function activatePower(type){
+
+    vibrate([12,30,12]);
+
+    createBurst(
+        paddle.x,
+        paddle.y,
+        powerColor(type),
+        22
+    );
+
+    switch(type){
+
+        case "laser":
+
+            powerState.laser = 8;
+            autoLaserTimer = 0;
+
+            showPower(
+                "⚡ LÁSER · 8s"
+            );
+
+            break;
+
+
+        case "multi":
+
+            if(balls.length < 4){
+
+                const original =
+                    balls[
+                        Math.floor(
+                            Math.random()*
+                            balls.length
+                        )
+                    ];
+
+                if(original){
+
+                    createExtraBall(
+                        original,
+                        .45
+                    );
+
+                }
+
+            }
+
+            showPower(
+                "◆ MULTIBOLA"
+            );
+
+            break;
+
+
+        case "slow":
+
+            powerState.slow = 10;
+
+            showPower(
+                "◐ VELOCIDAD ½ · 10s"
+            );
+
+            break;
+
+
+        case "wide":
+
+            powerState.wide = 10;
+
+            paddle.width =
+                paddle.baseWidth*1.5;
+
+            showPower(
+                "▰ RAQUETA ANCHA · 10s"
+            );
+
+            break;
+
+
+        case "life":
+
+            lives++;
+
+            showPower(
+                "♥ VIDA EXTRA"
+            );
+
+            updateHUD();
+
+            break;
+
+
+        /*
+         * NUEVO POWER-UP
+         *
+         * La bola atraviesa ladrillos
+         * durante 10 segundos.
+         */
+
+        case "pierce":
+
+            powerState.pierce = 10;
+
+            showPower(
+                "✦ BOLA PERFORANTE · 10s"
+            );
+
+            break;
+
+
+        /*
+         * NUEVO POWER-UP
+         *
+         * Añade 5 bolas adicionales.
+         */
+
+        case "five":{
+
+            const original =
+                balls.find(
+                    b => b.alive
+                );
+
+            if(original){
+
+                /*
+                 * Cinco bolas adicionales.
+                 *
+                 * La bola original continúa
+                 * existiendo.
+                 */
+
+                const angles = [
+                    -0.90,
+                    -0.45,
+                     0,
+                     0.45,
+                     0.90
+                ];
+
+                for(const offset of angles){
+
+                    createExtraBall(
+                        original,
+                        offset
+                    );
+
+                }
+
+            }
+
+            showPower(
+                "● +5 BOLAS"
+            );
+
+            vibrate([
+                20,
+                40,
+                20,
+                40,
+                30
+            ]);
+
+            break;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   POWER COLORS
+========================================================= */
+
+function powerColor(type){
+
+    switch(type){
+
+        case "laser":
+            return "#f472b6";
+
+        case "multi":
+            return "#a78bfa";
+
+        case "slow":
+            return "#22d3ee";
+
+        case "wide":
+            return "#34d399";
+
+        case "life":
+            return "#facc15";
+
+        case "pierce":
+            return "#facc15";
+
+        case "five":
+            return "#22d3ee";
+
+    }
+
+    return "#fff";
+
+}
+
+
+/* =========================================================
+   POWER TEXT
+========================================================= */
+
+function updatePowerText(){
+
+    if(
+        powerState.laser <= 0 &&
+        powerState.slow <= 0 &&
+        powerState.wide <= 0 &&
+        powerState.pierce <= 0
+    ){
+
+        /*
+         * No ocultamos inmediatamente
+         * si se acaba de recoger una vida
+         * o una multibola.
+         */
+
+        return;
+
+    }
+
+    let text = "";
+
+    if(powerState.laser > 0){
+
+        text +=
+            "⚡ LÁSER " +
+            Math.ceil(powerState.laser) +
+            "s";
+
+    }
+
+    if(powerState.slow > 0){
+
+        if(text) text += "  ·  ";
+
+        text +=
+            "◐ " +
+            Math.ceil(powerState.slow) +
+            "s";
+
+    }
+
+    if(powerState.wide > 0){
+
+        if(text) text += "  ·  ";
+
+        text +=
+            "▰ " +
+            Math.ceil(powerState.wide) +
+            "s";
+
+    }
+
+    if(powerState.pierce > 0){
+
+        if(text) text += "  ·  ";
+
+        text +=
+            "✦ PERFORANTE " +
+            Math.ceil(powerState.pierce) +
+            "s";
+
+    }
+
+    if(text){
+        showPower(text);
+    }
+
+}
+
+
+/* =========================================================
+   LASER
+========================================================= */
+
+function fireLaser(){
+
+    if(gameState !== "playing")
+        return;
+
+    /*
+     * Dos proyectiles desde los extremos
+     * de la pala.
+     */
+
+    const spread =
+        Math.max(
+            18,
+            paddle.width*.25
+        );
+
+    lasers.push({
+        x:paddle.x-spread,
+        y:paddle.y-4,
+        vy:-520,
+        w:4,
+        h:18,
+        life:2
+    });
+
+    lasers.push({
+        x:paddle.x+spread,
+        y:paddle.y-4,
+        vy:-520,
+        w:4,
+        h:18,
+        life:2
+    });
+
+}
+
+
+/* =========================================================
+   LASER UPDATE
+========================================================= */
+
+function updateLasers(dt){
+
+    for(
+        let i=lasers.length-1;
+        i>=0;
+        i--
+    ){
+
+        const l =
+            lasers[i];
+
+        l.y +=
+            l.vy*dt;
+
+        l.life -= dt;
+
+        let destroyed = false;
+
+        for(const brick of bricks){
+
+            if(!brick.alive)
+                continue;
+
+            if(
+                l.x+l.w/2 >= brick.x &&
+                l.x-l.w/2 <= brick.x+brick.w &&
+                l.y-l.h/2 <= brick.y+brick.h &&
+                l.y+l.h/2 >= brick.y
+            ){
+
+                brick.hp--;
+
+                brick.hitFlash=.12;
+
+                impact(
+                    l.x,
+                    l.y,
+                    "#f472b6",
+                    brick.hp<=0 ? 10 : 4
+                );
+
+                if(brick.hp<=0){
+
+                    brick.alive=false;
+
+                    score +=
+                        brick.maxHp===3
+                            ? 40
+                            : brick.maxHp===2
+                                ? 25
+                                : 10;
+
+                    if(Math.random()<.28){
+
+                        spawnPowerUp(
+                            brick.x+brick.w/2,
+                            brick.y+brick.h/2
+                        );
+
+                    }
+
+                    if(score>highScore){
+
+                        highScore=score;
+
+                        localStorage.setItem(
+                            "neonArkanoidHighScore",
+                            Math.floor(highScore)
+                        );
+
+                    }
+
+                    updateHUD();
+
+                }
+
+                destroyed=true;
+
+                break;
+
+            }
+
+        }
+
+        if(
+            destroyed ||
+            l.y < -30 ||
+            l.life <= 0
+        ){
+
+            lasers.splice(i,1);
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function impact(
+    x,
+    y,
+    color,
+    count=8
+){
+
+    for(let i=0;i<count;i++){
+
+        const angle =
+            Math.random()*
+            Math.PI*2;
+
+        const speed =
+            rand(40,180);
+
+        particles.push({
+
+            x:x,
+            y:y,
+
+            vx:
+                Math.cos(angle)*speed,
+
+            vy:
+                Math.sin(angle)*speed,
+
+            size:
+                rand(1,3.5),
+
+            life:
+                rand(.25,.65),
+
+            maxLife:
+                .65,
+
+            color:color
+
+        });
+
+    }
+
+}
+
+
+function createBurst(
+    x,
+    y,
+    color,
+    count=20
+){
+
+    for(let i=0;i<count;i++){
+
+        const angle =
+            Math.random()*Math.PI*2;
+
+        const speed =
+            rand(60,240);
+
+        particles.push({
+
+            x:x,
+            y:y,
+
+            vx:
+                Math.cos(angle)*speed,
+
+            vy:
+                Math.sin(angle)*speed,
+
+            size:
+                rand(2,5),
+
+            life:
+                rand(.35,.9),
+
+            maxLife:.9,
+
+            color:color
+
+        });
+
+    }
+
+}
+
+
+/* =========================================================
+   PARTICLE UPDATE
+========================================================= */
+
+function updateParticles(dt){
+
+    for(
+        let i=particles.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p =
+            particles[i];
+
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+
+        p.vy += 120*dt;
+
+        p.life -= dt;
+
+        if(p.life<=0){
+
+            particles.splice(i,1);
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW
+========================================================= */
+
+function draw(){
+
+    ctx.save();
+
+    if(shake>0){
+
+        const amount =
+            shake;
+
+        ctx.translate(
+            rand(-amount,amount),
+            rand(-amount,amount)
+        );
+
+    }
+
+    drawBackground();
+
+    drawBricks();
+
+    drawPowerUps();
+
+    drawLasers();
+
+    drawPaddle();
+
+    drawBalls();
+
+    drawParticles();
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+
+function drawBackground(){
+
+    ctx.fillStyle =
+        "#0d1117";
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    /* Glow central */
+
+    const gradient =
+        ctx.createRadialGradient(
+            W/2,
+            H*.45,
+            10,
+            W/2,
+            H*.45,
+            H*.7
+        );
+
+    gradient.addColorStop(
+        0,
+        "rgba(34,211,238,.045)"
+    );
+
+    gradient.addColorStop(
+        1,
+        "rgba(13,17,23,0)"
+    );
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    /* estrellas */
+
+    for(const s of stars){
+
+        ctx.globalAlpha=s.a;
+
+        ctx.fillStyle="#94a3b8";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            s.x,
+            s.y,
+            s.r,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+    ctx.globalAlpha=1;
+
+}
+
+
+/* =========================================================
+   DRAW BRICKS
+========================================================= */
+
+function drawBricks(){
+
+    for(const b of bricks){
+
+        if(!b.alive)
+            continue;
+
+        if(b.hitFlash > 0){
+            b.hitFlash -= .016;
+        }
+
+        const alpha =
+            b.hitFlash > 0
+                ? 1
+                : .9;
+
+        ctx.save();
+
+        ctx.globalAlpha=alpha;
+
+        /* glow */
+
+        ctx.shadowColor=b.color;
+
+        ctx.shadowBlur =
+            b.hp < b.maxHp
+                ? 15
+                : 8;
+
+        roundRect(
+            ctx,
+            b.x,
+            b.y,
+            b.w,
+            b.h,
+            5
+        );
+
+        ctx.fillStyle =
+            b.color;
+
+        ctx.fill();
+
+        /* interior */
+
+        ctx.shadowBlur=0;
+
+        const inner =
+            ctx.createLinearGradient(
+                b.x,
+                b.y,
+                b.x,
+                b.y+b.h
+            );
+
+        inner.addColorStop(
+            0,
+            "rgba(255,255,255,.42)"
+        );
+
+        inner.addColorStop(
+            .25,
+            "rgba(255,255,255,.12)"
+        );
+
+        inner.addColorStop(
+            1,
+            "rgba(0,0,0,.25)"
+        );
+
+        roundRect(
+            ctx,
+            b.x+1,
+            b.y+1,
+            b.w-2,
+            b.h-2,
+            4
+        );
+
+        ctx.fillStyle=inner;
+
+        ctx.fill();
+
+        /* resistencia */
+
+        if(b.maxHp>1){
+
+            ctx.fillStyle=
+                "rgba(255,255,255,.8)";
+
+            for(
+                let i=0;
+                i<b.hp;
+                i++
+            ){
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    b.x+b.w/2 +
+                    (i-(b.hp-1)/2)*7,
+                    b.y+b.h/2,
+                    1.5,
+                    0,
+                    Math.PI*2
+                );
+
+                ctx.fill();
+
+            }
+
+        }
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW PADDLE
+========================================================= */
+
+function drawPaddle(){
+
+    const x =
+        paddle.x-paddle.width/2;
+
+    const y =
+        paddle.y;
+
+    ctx.save();
+
+    ctx.shadowColor =
+        "#22d3ee";
+
+    ctx.shadowBlur =
+        18;
+
+    const gradient =
+        ctx.createLinearGradient(
+            x,
+            y,
+            x+paddle.width,
+            y
+        );
+
+    gradient.addColorStop(
+        0,
+        "#22d3ee"
+    );
+
+    gradient.addColorStop(
+        .5,
+        "#ffffff"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#a78bfa"
+    );
+
+    roundRect(
+        ctx,
+        x,
+        y,
+        paddle.width,
+        paddle.height,
+        7
+    );
+
+    ctx.fillStyle=gradient;
+
+    ctx.fill();
+
+    /* brillo superior */
+
+    ctx.shadowBlur=0;
+
+    ctx.fillStyle=
+        "rgba(255,255,255,.8)";
+
+    roundRect(
+        ctx,
+        x+8,
+        y+2,
+        paddle.width-16,
+        2,
+        2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   DRAW BALLS
+========================================================= */
+
+function drawBalls(){
+
+    for(const ball of balls){
+
+        ctx.save();
+
+        /* NUEVO: aspecto de bola perforante */
+
+        if(powerState.pierce > 0){
+
+            ctx.shadowColor =
+                "#facc15";
+
+            ctx.shadowBlur =
+                25;
+
+            /*
+             * Anillo exterior para indicar
+             * claramente que atraviesa ladrillos.
+             */
+
+            ctx.strokeStyle =
+                "#facc15";
+
+            ctx.lineWidth = 2;
+
+            ctx.globalAlpha = .8;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                ball.x,
+                ball.y,
+                ball.radius*1.65,
+                0,
+                Math.PI*2
+            );
+
+            ctx.stroke();
+
+            ctx.globalAlpha = 1;
+
+        }
+
+        /* trail */
+
+        for(
+            let i=0;
+            i<ball.trail.length;
+            i++
+        ){
+
+            const t =
+                ball.trail[i];
+
+            const alpha =
+                (i+1)/
+                ball.trail.length*
+                .2;
+
+            ctx.globalAlpha=alpha;
+
+            ctx.fillStyle =
+                powerState.pierce > 0
+                    ? "#facc15"
+                    : ball.color;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                t.x,
+                t.y,
+                ball.radius*(i+1)/
+                ball.trail.length,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+
+        }
+
+        ctx.globalAlpha=1;
+
+        ctx.shadowColor=
+            powerState.pierce > 0
+                ? "#facc15"
+                : ball.color;
+
+        ctx.shadowBlur=18;
+
+        const gradient =
+            ctx.createRadialGradient(
+                ball.x-ball.radius*.35,
+                ball.y-ball.radius*.35,
+                1,
+                ball.x,
+                ball.y,
+                ball.radius*1.5
+            );
+
+        gradient.addColorStop(
+            0,
+            "#ffffff"
+        );
+
+        gradient.addColorStop(
+            .35,
+            powerState.pierce > 0
+                ? "#facc15"
+                : ball.color
+        );
+
+        gradient.addColorStop(
+            1,
+            "rgba(255,255,255,0)"
+        );
+
+        ctx.fillStyle=gradient;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            ball.x,
+            ball.y,
+            ball.radius*1.35,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW POWER UPS
+========================================================= */
+
+function drawPowerUps(){
+
+    for(const p of powerUps){
+
+        const color =
+            powerColor(p.type);
+
+        ctx.save();
+
+        ctx.translate(
+            p.x,
+            p.y
+        );
+
+        ctx.rotate(
+            Math.sin(p.rotation)*.04
+        );
+
+        ctx.shadowColor=color;
+        ctx.shadowBlur=18;
+
+        roundRect(
+            ctx,
+            -p.w/2,
+            -p.h/2,
+            p.w,
+            p.h,
+            7
+        );
+
+        ctx.fillStyle=color;
+
+        ctx.fill();
+
+        ctx.shadowBlur=0;
+
+        ctx.fillStyle=
+            "rgba(255,255,255,.9)";
+
+        ctx.font=
+            "bold 10px -apple-system";
+
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+
+        let symbol="";
+
+        switch(p.type){
+
+            case "laser":
+                symbol="⚡";
+                break;
+
+            case "multi":
+                symbol="◆";
+                break;
+
+            case "slow":
+                symbol="◐";
+                break;
+
+            case "wide":
+                symbol="▰";
+                break;
+
+            case "life":
+                symbol="♥";
+                break;
+
+            case "pierce":
+                symbol="✦";
+                break;
+
+            case "five":
+                symbol="⑤";
+                break;
+
+        }
+
+        ctx.fillText(
+            symbol,
+            0,
+            0
+        );
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW LASERS
+========================================================= */
+
+function drawLasers(){
+
+    for(const l of lasers){
+
+        ctx.save();
+
+        ctx.shadowColor="#f472b6";
+        ctx.shadowBlur=14;
+
+        const gradient =
+            ctx.createLinearGradient(
+                l.x,
+                l.y-l.h/2,
+                l.x,
+                l.y+l.h/2
+            );
+
+        gradient.addColorStop(
+            0,
+            "#ffffff"
+        );
+
+        gradient.addColorStop(
+            .4,
+            "#f472b6"
+        );
+
+        gradient.addColorStop(
+            1,
+            "rgba(244,114,182,0)"
+        );
+
+        ctx.fillStyle=gradient;
+
+        roundRect(
+            ctx,
+            l.x-l.w/2,
+            l.y-l.h/2,
+            l.w,
+            l.h,
+            3
+        );
+
+        ctx.fill();
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW PARTICLES
+========================================================= */
+
+function drawParticles(){
+
+    for(const p of particles){
+
+        ctx.save();
+
+        ctx.globalAlpha =
+            Math.max(
+                0,
+                p.life/p.maxLife
+            );
+
+        ctx.fillStyle=p.color;
+
+        ctx.shadowColor=p.color;
+        ctx.shadowBlur=10;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =========================================================
+   ROUND RECT
+========================================================= */
+
+function roundRect(
+    context,
+    x,
+    y,
+    w,
+    h,
+    r
+){
+
+    context.beginPath();
+
+    context.moveTo(
+        x+r,
+        y
+    );
+
+    context.lineTo(
+        x+w-r,
+        y
+    );
+
+    context.quadraticCurveTo(
+        x+w,
+        y,
+        x+w,
+        y+r
+    );
+
+    context.lineTo(
+        x+w,
+        y+h-r
+    );
+
+    context.quadraticCurveTo(
+        x+w,
+        y+h,
+        x+w-r,
+        y+h
+    );
+
+    context.lineTo(
+        x+r,
+        y+h
+    );
+
+    context.quadraticCurveTo(
+        x,
+        y+h,
+        x,
+        y+h-r
+    );
+
+    context.lineTo(
+        x,
+        y+r
+    );
+
+    context.quadraticCurveTo(
+        x,
+        y,
+        x+r,
+        y
+    );
+
+    context.closePath();
+
+}
+
+
+/* =========================================================
+   LEVEL COMPLETE
+========================================================= */
+
+function completeLevel(){
+
+    if(gameState !== "playing")
+        return;
+
+    gameState="levelComplete";
+
+    createBurst(
+        W/2,
+        H*.35,
+        "#34d399",
+        70
+    );
+
+    levelNumber.textContent =
+        level;
+
+    levelScreen.classList.remove(
+        "hidden"
+    );
+
+    vibrate([
+        20,
+        50,
+        20,
+        50,
+        40
+    ]);
+
+}
+
+
+/* =========================================================
+   NEXT LEVEL
+========================================================= */
+
+function nextLevel(){
+
+    level++;
+
+    levelScreen.classList.add(
+        "hidden"
+    );
+
+    /*
+     * Bonus de puntuación por
+     * completar el nivel.
+     */
+
+    score +=
+        100*level;
+
+    if(score>highScore){
+
+        highScore=score;
+
+        localStorage.setItem(
+            "neonArkanoidHighScore",
+            Math.floor(highScore)
+        );
+
+    }
+
+    updateHUD();
+
+    createLevel();
+
+    gameState="playing";
+
+}
+
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+
+function endGame(){
+
+    gameState="gameOver";
+
+    const previousHigh =
+        Number(
+            localStorage.getItem(
+                "neonArkanoidHighScore"
+            )
+        ) || 0;
+
+    const isNew =
+        score >= previousHigh &&
+        score > 0;
+
+    if(score > highScore){
+
+        highScore=score;
+
+        localStorage.setItem(
+            "neonArkanoidHighScore",
+            Math.floor(highScore)
+        );
+
+    }
+
+    finalScore.textContent =
+        Math.floor(score)
+        .toLocaleString("es-ES");
+
+    finalHigh.textContent =
+        Math.floor(highScore)
+        .toLocaleString("es-ES");
+
+    newRecord.style.display =
+        isNew
+            ? "block"
+            : "none";
+
+    gameOverScreen.classList.remove(
+        "hidden"
+    );
+
+    updateHUD();
+
+}
+
+
+/* =========================================================
+   INPUT — TOUCH
+========================================================= */
+
+function getTouchX(e){
+
+    const touch =
+        e.touches[0] ||
+        e.changedTouches[0];
+
+    if(!touch)
+        return;
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    return (
+        touch.clientX -
+        rect.left
+    );
+
+}
+
+
+function handleTouchStart(e){
+
+    e.preventDefault();
+
+    if(gameState !== "playing")
+        return;
+
+    pointerActive=true;
+
+    const x =
+        getTouchX(e);
+
+    if(x != null){
+
+        paddle.targetX =
+            clamp(
+                x,
+                paddle.width/2,
+                W-paddle.width/2
+            );
+
+    }
+
+    /*
+     * Toque = disparo manual
+     * cuando el láser está activo.
+     */
+
+    if(powerState.laser > 0){
+
+        fireLaser();
+
+        vibrate(5);
+
+    }
+
+}
+
+
+function handleTouchMove(e){
+
+    e.preventDefault();
+
+    if(gameState !== "playing")
+        return;
+
+    const x =
+        getTouchX(e);
+
+    if(x != null){
+
+        paddle.targetX =
+            clamp(
+                x,
+                paddle.width/2,
+                W-paddle.width/2
+            );
+
+    }
+
+}
+
+
+function handleTouchEnd(e){
+
+    e.preventDefault();
+
+    pointerActive=false;
+
+}
+
+
+/* =========================================================
+   POINTER / MOUSE FALLBACK
+========================================================= */
+
+function handlePointerMove(e){
+
+    if(
+        gameState !== "playing"
+    )
+        return;
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    paddle.targetX =
+        clamp(
+            e.clientX-rect.left,
+            paddle.width/2,
+            W-paddle.width/2
+        );
+
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+canvas.addEventListener(
+    "touchstart",
+    handleTouchStart,
+    {passive:false}
+);
+
+canvas.addEventListener(
+    "touchmove",
+    handleTouchMove,
+    {passive:false}
+);
+
+canvas.addEventListener(
+    "touchend",
+    handleTouchEnd,
+    {passive:false}
+);
+
+canvas.addEventListener(
+    "touchcancel",
+    handleTouchEnd,
+    {passive:false}
+);
+
+canvas.addEventListener(
+    "pointermove",
+    handlePointerMove,
+    {passive:true}
+);
+
+
+/* Evitar menú contextual */
+
+document.addEventListener(
+    "contextmenu",
+    function(e){
+        e.preventDefault();
+    }
+);
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+playButton.addEventListener(
+    "click",
+    startGame
+);
+
+retryButton.addEventListener(
+    "click",
+    startGame
+);
+
+nextLevelButton.addEventListener(
+    "click",
+    nextLevel
+);
+
+menuButton.addEventListener(
+    "click",
+    function(){
+
+        gameOverScreen.classList.add(
+            "hidden"
+        );
+
+        levelScreen.classList.add(
+            "hidden"
+        );
+
+        startScreen.classList.remove(
+            "hidden"
+        );
+
+        gameState="menu";
+
+    }
+);
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function gameLoop(timestamp){
+
+    if(!lastTime)
+        lastTime=timestamp;
+
+    const dt =
+        Math.min(
+            .05,
+            (timestamp-lastTime)/1000
+        );
+
+    lastTime=timestamp;
+
+    update(dt);
+
+    draw();
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+resize();
+
+updateHUD();
+
+requestAnimationFrame(
+    gameLoop
+);
+
+
+/* =========================================================
+   SAFARI PAGE VISIBILITY
+   Pausa lógica cuando el usuario sale
+   de Safari.
+========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    function(){
+
+        if(
+            document.hidden &&
+            gameState === "playing"
+        ){
+
+            gameState="paused";
+
+        }else if(
+            !document.hidden &&
+            gameState === "paused"
+        ){
+
+            gameState="playing";
+
+            lastTime=
+                performance.now();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   PREVENIR GESTOS DE iOS
+========================================================= */
+
+document.addEventListener(
+    "touchmove",
+    function(e){
+
+        if(
+            gameState === "playing"
+        ){
+            e.preventDefault();
+        }
+
+    },
+    {passive:false}
+);
+
+document.addEventListener(
+    "gesturestart",
+    function(e){
+        e.preventDefault();
+    },
+    {passive:false}
+);
+
+document.addEventListener(
+    "gesturechange",
+    function(e){
+        e.preventDefault();
+    },
+    {passive:false}
+);
+
+document.addEventListener(
+    "gestureend",
+    function(e){
+        e.preventDefault();
+    },
+    {passive:false}
+);
+
+</script>
+
 </body>
 </html>
