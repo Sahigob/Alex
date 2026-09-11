@@ -1,43 +1,2473 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Frogger Retro - Pixel</title>
-<link rel="stylesheet" href="style.css" />
+<meta charset="utf-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#061018">
+<title>Neon Frogger</title>
+
+<style>
+:root{
+  --bg:#050a0e;
+  --panel:#0b141b;
+  --panel2:#101d25;
+  --line:#1d303b;
+  --green:#48ff91;
+  --cyan:#24e7ff;
+  --yellow:#ffe66d;
+  --red:#ff456d;
+  --purple:#a879ff;
+  --white:#f4fbff;
+  --muted:#79909d;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--white);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  touch-action:none;
+}
+
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#app{
+  position:relative;
+  width:100%;
+  height:100%;
+  max-width:600px;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(36,231,255,.09),transparent 35%),
+    linear-gradient(180deg,#07121a,#03080c);
+}
+
+canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+#hud{
+  position:absolute;
+  z-index:10;
+  top:env(safe-area-inset-top,10px);
+  left:10px;
+  right:10px;
+  padding-top:8px;
+  pointer-events:none;
+}
+
+.hudTop{
+  display:grid;
+  grid-template-columns:1fr 1.3fr 1fr;
+  gap:7px;
+}
+
+.stat{
+  min-width:0;
+  padding:8px 10px;
+  border:1px solid rgba(130,190,210,.16);
+  border-radius:13px;
+  background:rgba(5,13,18,.78);
+  backdrop-filter:blur(12px);
+  box-shadow:0 8px 25px rgba(0,0,0,.2);
+}
+
+.statLabel{
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:1.3px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.statValue{
+  margin-top:2px;
+  font-size:17px;
+  font-weight:900;
+  line-height:1.1;
+}
+
+#lives{
+  color:var(--red);
+  letter-spacing:2px;
+}
+
+#score{
+  color:var(--yellow);
+}
+
+#record{
+  color:var(--cyan);
+}
+
+.timerWrap{
+  margin-top:7px;
+  height:6px;
+  border-radius:99px;
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.05);
+}
+
+#timerBar{
+  height:100%;
+  width:100%;
+  background:linear-gradient(90deg,var(--green),var(--cyan));
+  transform-origin:left center;
+}
+
+#levelTag{
+  position:absolute;
+  left:50%;
+  top:88px;
+  transform:translateX(-50%);
+  padding:5px 12px;
+  border:1px solid rgba(72,255,145,.25);
+  border-radius:999px;
+  background:rgba(3,12,16,.72);
+  color:var(--green);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.5px;
+  pointer-events:none;
+}
+
+#controls{
+  position:absolute;
+  z-index:20;
+  right:13px;
+  bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  width:128px;
+  height:128px;
+  opacity:.5;
+  transition:.2s;
+}
+
+#controls:active{
+  opacity:.8;
+}
+
+.dpad{
+  position:absolute;
+  inset:0;
+}
+
+.dbtn{
+  position:absolute;
+  width:42px;
+  height:42px;
+  border:1px solid rgba(130,230,240,.22);
+  border-radius:12px;
+  background:rgba(8,20,27,.72);
+  color:#dffaff;
+  font-size:19px;
+  font-weight:900;
+  box-shadow:0 7px 20px rgba(0,0,0,.25);
+}
+
+.dbtn:active{
+  transform:scale(.91);
+  background:rgba(30,90,105,.75);
+}
+
+.up{left:43px;top:0}
+.down{left:43px;bottom:0}
+.left{left:0;top:43px}
+.right{right:0;top:43px}
+
+#overlay{
+  position:absolute;
+  inset:0;
+  z-index:50;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:25px;
+  background:
+    radial-gradient(circle at center,rgba(20,70,82,.25),rgba(2,7,10,.94) 65%);
+  backdrop-filter:blur(4px);
+}
+
+.panel{
+  width:min(430px,100%);
+  padding:28px 22px 22px;
+  border:1px solid rgba(100,220,235,.18);
+  border-radius:25px;
+  background:rgba(7,17,23,.91);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  text-align:center;
+}
+
+.logo{
+  width:72px;
+  height:72px;
+  margin:0 auto 16px;
+  display:grid;
+  place-items:center;
+  border-radius:20px;
+  border:1px solid rgba(72,255,145,.3);
+  background:rgba(20,50,39,.45);
+  font-size:40px;
+  box-shadow:0 0 35px rgba(72,255,145,.12);
+}
+
+h1{
+  margin:0;
+  font-size:34px;
+  letter-spacing:-1.5px;
+  font-weight:950;
+}
+
+.subtitle{
+  margin:7px 0 20px;
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:1px;
+}
+
+.instructions{
+  display:grid;
+  gap:8px;
+  margin:18px 0;
+  text-align:left;
+}
+
+.tip{
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.055);
+  color:#b8cbd4;
+  font-size:12px;
+}
+
+.tip b{
+  color:white;
+}
+
+.mainBtn{
+  width:100%;
+  border:0;
+  border-radius:15px;
+  padding:15px;
+  background:linear-gradient(135deg,#32f17e,#18cfe5);
+  color:#03100d;
+  font-size:14px;
+  font-weight:950;
+  letter-spacing:.7px;
+  cursor:pointer;
+  box-shadow:0 12px 30px rgba(36,231,255,.15);
+}
+
+.mainBtn:active{
+  transform:scale(.98);
+}
+
+.small{
+  margin-top:13px;
+  color:#536b76;
+  font-size:10px;
+}
+
+.hidden{
+  display:none!important;
+}
+
+#flash{
+  position:absolute;
+  inset:0;
+  z-index:35;
+  pointer-events:none;
+  opacity:0;
+  background:white;
+}
+
+#orientation{
+  position:absolute;
+  inset:0;
+  z-index:100;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px;
+  background:#03080c;
+}
+
+@media (orientation:landscape) and (max-height:600px){
+  #orientation{
+    display:flex;
+  }
+}
+
+.orientationBox{
+  max-width:350px;
+}
+
+.orientationIcon{
+  font-size:55px;
+  margin-bottom:15px;
+}
+
+.orientationBox h2{
+  margin:0 0 8px;
+}
+
+.orientationBox p{
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* En pantallas grandes los controles son discretos */
+@media(min-width:800px){
+  #controls{
+    opacity:.25;
+  }
+}
+</style>
 </head>
+
 <body>
 
-<div id="main-wrapper"> 
-    
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
+<div id="app">
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div class="hudTop">
+    <div class="stat">
+      <div class="statLabel">Vidas</div>
+      <div class="statValue" id="lives">♥♥♥</div>
     </div>
 
-    <div id="hud-bottom">
-        <div>Puntuación: <span id="score-value">0</span></div>
-        <div>Vidas: <span id="lives-value">6</span></div>
+    <div class="stat">
+      <div class="statLabel">Puntuación</div>
+      <div class="statValue" id="score">000000</div>
     </div>
 
+    <div class="stat">
+      <div class="statLabel">Récord</div>
+      <div class="statValue" id="record">000000</div>
+    </div>
+  </div>
+
+  <div class="timerWrap">
+    <div id="timerBar"></div>
+  </div>
 </div>
 
-<div id="controls-container">
-    <button id="up">↑</button>
-    <div class="middle-row">
-        <button id="left">←</button>
-        <button id="down">↓</button>
-        <button id="right">→</button>
-    </div>
+<div id="levelTag">NIVEL 1</div>
+
+<div id="controls">
+  <div class="dpad">
+    <button class="dbtn up" data-dir="up">▲</button>
+    <button class="dbtn down" data-dir="down">▼</button>
+    <button class="dbtn left" data-dir="left">◀</button>
+    <button class="dbtn right" data-dir="right">▶</button>
+  </div>
 </div>
 
-<div id="overlay" class="hidden">
-    <div id="overlay-box">
-        <h1 id="overlay-title">GAME OVER</h1>
-        <p id="overlay-sub">Puntuación final: <span id="final-score">0</span></p>
-        <button id="btn-restart">REINICIAR</button>
+<div id="flash"></div>
+
+<div id="overlay">
+  <div class="panel">
+
+    <div class="logo">🐸</div>
+
+    <h1 id="overlayTitle">NEON FROGGER</h1>
+
+    <div class="subtitle" id="overlaySubtitle">
+      CRUZA. SOBREVIVE. DOMINA EL RÍO.
     </div>
+
+    <div class="instructions" id="instructions">
+      <div class="tip">👆 <b>Desliza</b> para saltar una casilla.</div>
+      <div class="tip">🪵 <b>Usa los troncos</b> para cruzar el río.</div>
+      <div class="tip">🚗 <b>Evita el tráfico</b> y llega a las metas.</div>
+      <div class="tip">🎯 <b>Completa 5 metas</b> para avanzar de nivel.</div>
+    </div>
+
+    <button class="mainBtn" id="mainButton">JUGAR</button>
+
+    <div class="small" id="overlaySmall">
+      Mejor puntuación guardada en este dispositivo
+    </div>
+
+  </div>
 </div>
 
-<script src="game.js" defer></script>
+<div id="orientation">
+  <div class="orientationBox">
+    <div class="orientationIcon">📱</div>
+    <h2>Modo vertical</h2>
+    <p>Gira el iPhone para jugar en posición vertical.</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   NEON FROGGER
+   ========================================================= */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d", {alpha:false});
+
+const livesEl = document.getElementById("lives");
+const scoreEl = document.getElementById("score");
+const recordEl = document.getElementById("record");
+const timerBar = document.getElementById("timerBar");
+const levelTag = document.getElementById("levelTag");
+
+const overlay = document.getElementById("overlay");
+const overlayTitle = document.getElementById("overlayTitle");
+const overlaySubtitle = document.getElementById("overlaySubtitle");
+const instructions = document.getElementById("instructions");
+const mainButton = document.getElementById("mainButton");
+const overlaySmall = document.getElementById("overlaySmall");
+const flash = document.getElementById("flash");
+
+/* =========================================================
+   CONSTANTES
+   ========================================================= */
+
+const COLS = 9;
+const ROWS = 13;
+
+const GOAL_ROW = 0;
+const RIVER_START = 1;
+const RIVER_END = 5;
+const SAFE_MIDDLE = 6;
+const ROAD_START = 7;
+const ROAD_END = 11;
+const START_ROW = 12;
+
+const HIGH_KEY = "neon_frogger_highscore_v2";
+
+let W = 0;
+let H = 0;
+let DPR = 1;
+
+let grid = {
+  cellW:0,
+  cellH:0,
+  left:0,
+  top:0,
+  boardW:0,
+  boardH:0
+};
+
+let running = false;
+let lastTime = 0;
+let accumulator = 0;
+
+let level = 1;
+let score = 0;
+let highScore = Number(localStorage.getItem(HIGH_KEY) || 0);
+
+let lives = 3;
+let goalsFilled = 0;
+
+let timeLeft = 30;
+let maxTime = 30;
+
+let vehicles = [];
+let platforms = [];
+let particles = [];
+let ripples = [];
+let sparks = [];
+
+let shake = 0;
+
+let gameTime = 0;
+
+/* =========================================================
+   RANA
+   ========================================================= */
+
+/*
+  IMPORTANTE:
+  La rana tiene dos conceptos diferentes:
+
+  1. cellCol/cellRow = posición lógica.
+  2. x/y = posición visual.
+
+  Durante un salto:
+  - Vertical: X queda bloqueada.
+  - Horizontal: Y queda bloqueada.
+
+  La corriente SOLO modifica x cuando moving=false.
+
+  Esto evita completamente los saltos diagonales.
+*/
+
+const frog = {
+  cellCol:4,
+  cellRow:START_ROW,
+
+  x:0,
+  y:0,
+
+  startX:0,
+  startY:0,
+  targetX:0,
+  targetY:0,
+
+  jumpProgress:0,
+  jumpDuration:.16,
+
+  moving:false,
+  directionX:0,
+  directionY:0,
+
+  onPlatform:null,
+
+  bob:0,
+  alive:true,
+
+  jumpId:0
+};
+
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+
+function clamp(v,a,b){
+  return Math.max(a,Math.min(b,v));
+}
+
+function lerp(a,b,t){
+  return a+(b-a)*t;
+}
+
+function easeOutCubic(t){
+  return 1-Math.pow(1-t,3);
+}
+
+function random(a,b){
+  return a+Math.random()*(b-a);
+}
+
+function randInt(a,b){
+  return Math.floor(random(a,b+1));
+}
+
+function pad(n,len=6){
+  return String(Math.floor(n)).padStart(len,"0");
+}
+
+/* =========================================================
+   RESIZE
+   ========================================================= */
+
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+
+  W=window.innerWidth;
+  H=window.innerHeight;
+
+  canvas.width=Math.floor(W*DPR);
+  canvas.height=Math.floor(H*DPR);
+
+  canvas.style.width=W+"px";
+  canvas.style.height=H+"px";
+
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  /*
+    El tablero usa 9 columnas.
+    Dejamos una zona superior para HUD.
+  */
+
+  const topSpace=Math.min(118,H*.15);
+  const bottomSpace=Math.min(145,H*.18);
+
+  const availableH=H-topSpace-bottomSpace;
+
+  const cellW=Math.min(W*.94/ COLS,58);
+  const cellH=Math.min(availableH/ROWS,52);
+
+  grid.cellW=cellW;
+  grid.cellH=cellH;
+
+  grid.boardW=cellW*COLS;
+  grid.boardH=cellH*ROWS;
+
+  grid.left=(W-grid.boardW)/2;
+  grid.top=topSpace+(availableH-grid.boardH)/2;
+
+  if(!frog.moving){
+    frog.x=cellCenterX(frog.cellCol);
+    frog.y=cellCenterY(frog.cellRow);
+  }
+}
+
+function cellCenterX(col){
+  return grid.left+col*grid.cellW+grid.cellW/2;
+}
+
+function cellCenterY(row){
+  return grid.top+row*grid.cellH+grid.cellH/2;
+}
+
+/* =========================================================
+   CREAR NIVEL
+   ========================================================= */
+
+function createLevel(){
+  vehicles=[];
+  platforms=[];
+  particles=[];
+  ripples=[];
+  sparks=[];
+
+  createRoad();
+  createRiver();
+
+  maxTime=Math.max(21,31-(level-1)*1.1);
+  timeLeft=maxTime;
+
+  frog.cellCol=4;
+  frog.cellRow=START_ROW;
+  frog.x=cellCenterX(frog.cellCol);
+  frog.y=cellCenterY(frog.cellRow);
+
+  frog.moving=false;
+  frog.onPlatform=null;
+  frog.alive=true;
+
+  goalsFilled=0;
+
+  levelTag.textContent="NIVEL "+level;
+
+  updateHUD();
+}
+
+/* =========================================================
+   CARRETERA
+   ========================================================= */
+
+function createRoad(){
+
+  const baseSpeed=.72+(level-1)*.055;
+
+  const colors=[
+    "#ff456d",
+    "#24e7ff",
+    "#ffe66d",
+    "#a879ff",
+    "#48ff91"
+  ];
+
+  for(let row=ROAD_START;row<=ROAD_END;row++){
+
+    const lane=row-ROAD_START;
+
+    const direction=(lane%2===0)?1:-1;
+
+    const speed=baseSpeed*(.75+lane*.09)*(direction);
+
+    const count=lane%2===0?3:2;
+
+    const spacing=W/count;
+
+    for(let i=0;i<count;i++){
+
+      const truck=(lane===1 || lane===4) && i===0;
+
+      vehicles.push({
+        row,
+        x:i*spacing+random(-grid.cellW,grid.cellW),
+        width:grid.cellW*(truck?1.45:1.05),
+        height:grid.cellH*.48,
+        speed,
+        color:colors[(lane+i)%colors.length],
+        truck
+      });
+    }
+  }
+}
+
+/* =========================================================
+   RÍO
+   ========================================================= */
+
+function createRiver(){
+
+  const base=.30+(level-1)*.035;
+
+  for(let row=RIVER_START;row<=RIVER_END;row++){
+
+    const lane=row-RIVER_START;
+
+    const direction=(lane%2===0)?1:-1;
+
+    const speed=base*(.75+lane*.14)*direction;
+
+    const count=lane%2===0?3:2;
+
+    const spacing=W/count;
+
+    for(let i=0;i<count;i++){
+
+      const turtle=(lane===1 || lane===4);
+
+      platforms.push({
+        row,
+
+        x:i*spacing+random(-grid.cellW,grid.cellW),
+
+        width:grid.cellW*(turtle?1.65:1.8),
+
+        height:grid.cellH*.52,
+
+        speed,
+
+        turtle,
+
+        phase:random(0,Math.PI*2)
+      });
+    }
+  }
+}
+
+/* =========================================================
+   UPDATE VEHÍCULOS
+   ========================================================= */
+
+function updateVehicles(dt){
+
+  for(const v of vehicles){
+
+    v.x+=v.speed*grid.cellW*dt;
+
+    if(v.speed>0 && v.x>W+v.width+20){
+      v.x=-v.width-20;
+    }
+
+    if(v.speed<0 && v.x<-v.width-20){
+      v.x=W+v.width+20;
+    }
+  }
+}
+
+/* =========================================================
+   UPDATE TRONCOS
+   ========================================================= */
+
+function updatePlatforms(dt){
+
+  for(const p of platforms){
+
+    p.x+=p.speed*grid.cellW*dt;
+
+    if(p.speed>0 && p.x>W+p.width+30){
+      p.x=-p.width-30;
+    }
+
+    if(p.speed<0 && p.x<-p.width-30){
+      p.x=W+p.width+30;
+    }
+  }
+}
+
+/* =========================================================
+   MOVIMIENTO DE LA RANA
+   ========================================================= */
+
+function moveFrog(dx,dy){
+
+  if(!running) return;
+  if(frog.moving) return;
+  if(!frog.alive) return;
+
+  /*
+    Solo permitimos una dirección por salto.
+  */
+
+  if(dx!==0) dy=0;
+  if(dy!==0) dx=0;
+
+  const newCol=frog.cellCol+dx;
+  const newRow=frog.cellRow+dy;
+
+  if(newCol<0 || newCol>=COLS) return;
+  if(newRow<0 || newRow>=ROWS) return;
+
+  /*
+    AQUÍ ESTÁ LA CORRECCIÓN PRINCIPAL.
+
+    El origen SIEMPRE es la posición actual real.
+
+    Si vamos arriba/abajo:
+      targetX = startX
+      targetY = nueva fila
+
+    Si vamos izquierda/derecha:
+      targetX = startX +/- celda
+      targetY = startY
+
+    Por tanto nunca puede aparecer una diagonal.
+  */
+
+  const startX=frog.x;
+  const startY=frog.y;
+
+  let targetX=startX;
+  let targetY=startY;
+
+  if(dx!==0){
+    targetX=startX+dx*grid.cellW;
+  }
+
+  if(dy!==0){
+    targetY=startY+dy*grid.cellH;
+  }
+
+  /*
+    Límites físicos.
+  */
+
+  const minX=grid.left+grid.cellW*.5;
+  const maxX=grid.left+grid.boardW-grid.cellW*.5;
+
+  targetX=clamp(targetX,minX,maxX);
+
+  frog.startX=startX;
+  frog.startY=startY;
+
+  frog.targetX=targetX;
+  frog.targetY=targetY;
+
+  frog.directionX=dx;
+  frog.directionY=dy;
+
+  frog.cellCol=newCol;
+  frog.cellRow=newRow;
+
+  frog.onPlatform=null;
+
+  frog.jumpProgress=0;
+  frog.moving=true;
+
+  frog.jumpId++;
+
+  /*
+    El salto vertical es algo más largo visualmente.
+  */
+
+  frog.jumpDuration=(dy!==0)?.18:.16;
+
+  playJumpSound();
+}
+
+/* =========================================================
+   UPDATE DEL SALTO
+   ========================================================= */
+
+function updateFrog(dt){
+
+  frog.bob+=dt*7;
+
+  if(!frog.moving) return;
+
+  frog.jumpProgress+=dt/frog.jumpDuration;
+
+  const t=clamp(frog.jumpProgress,0,1);
+  const e=easeOutCubic(t);
+
+  /*
+    Movimiento ABSOLUTAMENTE AXIAL.
+
+    No hacemos:
+      x = lerp(startX,targetX,e)
+      y = lerp(startY,targetY,e)
+
+    a menos que el eje correspondiente haya cambiado.
+
+    Así garantizamos matemáticamente:
+      vertical -> X constante
+      horizontal -> Y constante
+  */
+
+  if(frog.directionY!==0){
+
+    frog.x=frog.startX;
+    frog.y=lerp(frog.startY,frog.targetY,e);
+
+  }else{
+
+    frog.x=lerp(frog.startX,frog.targetX,e);
+    frog.y=frog.startY;
+  }
+
+  if(t>=1){
+
+    frog.moving=false;
+
+    frog.x=frog.targetX;
+    frog.y=frog.targetY;
+
+    /*
+      Al terminar el salto actualizamos la fila/columna.
+    */
+
+    checkLanding();
+  }
+}
+
+/* =========================================================
+   COMPROBAR ATERRIZAJE
+   ========================================================= */
+
+function checkLanding(){
+
+  if(frog.cellRow===GOAL_ROW){
+    checkGoal();
+    return;
+  }
+
+  if(frog.cellRow>=RIVER_START &&
+     frog.cellRow<=RIVER_END){
+
+    const support=findPlatformUnderFrog();
+
+    if(!support){
+      loseLife("water");
+      return;
+    }
+
+    frog.onPlatform=support;
+    createSplash(frog.x,frog.y,6);
+
+    return;
+  }
+
+  if(frog.cellRow>=ROAD_START &&
+     frog.cellRow<=ROAD_END){
+
+    if(hitVehicle()){
+      loseLife("car");
+      return;
+    }
+  }
+
+  /*
+    Zona segura.
+  */
+
+  frog.onPlatform=null;
+}
+
+/* =========================================================
+   TRANSPORTE POR TRONCO
+   ========================================================= */
+
+function applyPlatformMotion(dt){
+
+  if(frog.moving) return;
+  if(!frog.onPlatform) return;
+
+  const p=frog.onPlatform;
+
+  /*
+    La corriente mueve exclusivamente X.
+
+    Nunca Y.
+  */
+
+  frog.x+=p.speed*grid.cellW*dt;
+
+  /*
+    Si sale demasiado por los lados,
+    la rana cae al agua.
+  */
+
+  const margin=grid.cellW*.42;
+
+  if(frog.x<grid.left-margin ||
+     frog.x>grid.left+grid.boardW+margin){
+
+    loseLife("river");
+    return;
+  }
+}
+
+/* =========================================================
+   SOPORTE
+   ========================================================= */
+
+function findPlatformUnderFrog(){
+
+  const frogW=grid.cellW*.48;
+
+  for(const p of platforms){
+
+    if(p.row!==frog.cellRow) continue;
+
+    const left=p.x;
+    const right=p.x+p.width;
+
+    if(
+      frog.x+frogW*.35>left &&
+      frog.x-frogW*.35<right
+    ){
+      return p;
+    }
+  }
+
+  return null;
+}
+
+/* =========================================================
+   COLISIONES
+   ========================================================= */
+
+function hitVehicle(){
+
+  const fw=grid.cellW*.38;
+  const fh=grid.cellH*.31;
+
+  for(const v of vehicles){
+
+    if(v.row!==frog.cellRow) continue;
+
+    const vx=v.x;
+    const vy=cellCenterY(v.row);
+    const vw=v.width*.82;
+    const vh=v.height*.72;
+
+    if(
+      Math.abs(frog.x-vx-vw/2)<fw+vw/2 &&
+      Math.abs(frog.y-vy)<fh+vh/2
+    ){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* =========================================================
+   GOLES
+   ========================================================= */
+
+const goals=[0,2,4,6,8];
+
+function checkGoal(){
+
+  let closest=0;
+  let distance=Infinity;
+
+  for(const c of goals){
+
+    const d=Math.abs(frog.x-cellCenterX(c));
+
+    if(d<distance){
+      distance=d;
+      closest=c;
+    }
+  }
+
+  /*
+    La rana debe estar razonablemente cerca
+    de un agujero.
+  */
+
+  if(distance>grid.cellW*.48){
+
+    loseLife("goal");
+    return;
+  }
+
+  if(window.completedGoals &&
+     window.completedGoals.has(closest)){
+
+    loseLife("goal");
+    return;
+  }
+
+  if(!window.completedGoals){
+    window.completedGoals=new Set();
+  }
+
+  window.completedGoals.add(closest);
+
+  goalsFilled=window.completedGoals.size;
+
+  score+=250*level;
+
+  if(score>highScore){
+    highScore=score;
+    localStorage.setItem(HIGH_KEY,String(highScore));
+  }
+
+  createGoalBurst(cellCenterX(closest),cellCenterY(GOAL_ROW));
+
+  /*
+    La rana vuelve a empezar después de ocupar una meta.
+  */
+
+  setTimeout(()=>{
+
+    if(!running) return;
+
+    if(goalsFilled>=5){
+
+      levelComplete();
+
+    }else{
+
+      resetFrog();
+    }
+
+  },220);
+}
+
+/* =========================================================
+   RESET RANA
+   ========================================================= */
+
+function resetFrog(){
+
+  frog.cellCol=4;
+  frog.cellRow=START_ROW;
+
+  frog.x=cellCenterX(4);
+  frog.y=cellCenterY(START_ROW);
+
+  frog.startX=frog.x;
+  frog.startY=frog.y;
+
+  frog.targetX=frog.x;
+  frog.targetY=frog.y;
+
+  frog.moving=false;
+  frog.onPlatform=null;
+  frog.alive=true;
+
+  timeLeft=maxTime;
+}
+
+/* =========================================================
+   PERDER VIDA
+   ========================================================= */
+
+function loseLife(reason){
+
+  if(!running) return;
+  if(!frog.alive) return;
+
+  frog.alive=false;
+  frog.moving=false;
+  frog.onPlatform=null;
+
+  lives--;
+
+  createDeathBurst(frog.x,frog.y);
+
+  screenShake(8);
+
+  flashScreen();
+
+  if(lives<=0){
+
+    setTimeout(gameOver,500);
+
+  }else{
+
+    setTimeout(()=>{
+
+      if(!running) return;
+
+      resetFrog();
+
+    },550);
+  }
+
+  updateHUD();
+}
+
+/* =========================================================
+   NIVEL COMPLETADO
+   ========================================================= */
+
+function levelComplete(){
+
+  running=false;
+
+  score+=1000*level;
+
+  if(score>highScore){
+    highScore=score;
+    localStorage.setItem(HIGH_KEY,String(highScore));
+  }
+
+  playLevelSound();
+
+  showOverlay(
+    "NIVEL COMPLETADO",
+    "HAS DOMINADO EL RÍO",
+    "SIGUIENTE NIVEL",
+    "La velocidad aumenta. Prepárate."
+  );
+}
+
+/* =========================================================
+   SIGUIENTE NIVEL
+   ========================================================= */
+
+function nextLevel(){
+
+  level++;
+
+  lives=Math.min(3,lives+1);
+
+  window.completedGoals=new Set();
+
+  createLevel();
+
+  overlay.classList.add("hidden");
+
+  running=true;
+  lastTime=performance.now();
+}
+
+/* =========================================================
+   GAME OVER
+   ========================================================= */
+
+function gameOver(){
+
+  running=false;
+
+  showOverlay(
+    "GAME OVER",
+    "EL RÍO HA GANADO ESTA VEZ",
+    "VOLVER A JUGAR",
+    "Puntuación: "+score
+  );
+}
+
+/* =========================================================
+   INICIAR
+   ========================================================= */
+
+function startGame(){
+
+  level=1;
+  score=0;
+  lives=3;
+
+  window.completedGoals=new Set();
+
+  createLevel();
+
+  overlay.classList.add("hidden");
+
+  running=true;
+  lastTime=performance.now();
+
+  playStartSound();
+}
+
+/* =========================================================
+   HUD
+   ========================================================= */
+
+function updateHUD(){
+
+  livesEl.textContent="♥".repeat(Math.max(0,lives));
+
+  scoreEl.textContent=pad(score);
+
+  recordEl.textContent=pad(highScore);
+
+  levelTag.textContent=
+    "NIVEL "+level+
+    " · "+goalsFilled+"/5";
+
+  timerBar.style.transform=
+    "scaleX("+clamp(timeLeft/maxTime,0,1)+")";
+}
+
+/* =========================================================
+   TIEMPO
+   ========================================================= */
+
+function updateTime(dt){
+
+  if(!running) return;
+
+  if(frog.cellRow!==GOAL_ROW){
+
+    timeLeft-=dt;
+
+    if(timeLeft<=0){
+
+      timeLeft=0;
+      loseLife("time");
+
+      if(lives>0){
+        timeLeft=maxTime;
+      }
+    }
+  }
+}
+
+/* =========================================================
+   PARTÍCULAS
+   ========================================================= */
+
+function createSplash(x,y,count=10){
+
+  for(let i=0;i<count;i++){
+
+    particles.push({
+      x,
+      y,
+      vx:random(-45,45),
+      vy:random(-65,-15),
+      life:random(.25,.55),
+      max:.55,
+      size:random(1.5,3.5),
+      type:"water"
+    });
+  }
+
+  ripples.push({
+    x,y,
+    r:2,
+    life:.4
+  });
+}
+
+function createDeathBurst(x,y){
+
+  for(let i=0;i<28;i++){
+
+    const a=random(0,Math.PI*2);
+    const s=random(50,150);
+
+    particles.push({
+      x,
+      y,
+      vx:Math.cos(a)*s,
+      vy:Math.sin(a)*s,
+      life:random(.35,.8),
+      max:.8,
+      size:random(2,5),
+      type:"death"
+    });
+  }
+}
+
+function createGoalBurst(x,y){
+
+  for(let i=0;i<35;i++){
+
+    const a=random(0,Math.PI*2);
+    const s=random(30,120);
+
+    particles.push({
+      x,
+      y,
+      vx:Math.cos(a)*s,
+      vy:Math.sin(a)*s,
+      life:random(.4,.9),
+      max:.9,
+      size:random(2,4),
+      type:"goal"
+    });
+  }
+
+  screenShake(4);
+}
+
+function updateParticles(dt){
+
+  for(let i=particles.length-1;i>=0;i--){
+
+    const p=particles[i];
+
+    p.life-=dt;
+
+    if(p.life<=0){
+
+      particles.splice(i,1);
+      continue;
+    }
+
+    p.x+=p.vx*dt;
+    p.y+=p.vy*dt;
+
+    if(p.type==="death"){
+      p.vy+=240*dt;
+    }else{
+      p.vy+=90*dt;
+    }
+  }
+
+  for(let i=ripples.length-1;i>=0;i--){
+
+    const r=ripples[i];
+
+    r.life-=dt;
+    r.r+=45*dt;
+
+    if(r.life<=0){
+      ripples.splice(i,1);
+    }
+  }
+}
+
+/* =========================================================
+   SHAKE
+   ========================================================= */
+
+function screenShake(amount){
+
+  shake=Math.max(shake,amount);
+}
+
+/* =========================================================
+   DIBUJO
+   ========================================================= */
+
+function draw(){
+
+  ctx.save();
+
+  if(shake>0){
+
+    ctx.translate(
+      random(-shake,shake),
+      random(-shake,shake)
+    );
+
+    shake*=.88;
+
+    if(shake<.1) shake=0;
+  }
+
+  drawBackground();
+  drawBoard();
+  drawGoals();
+  drawPlatforms();
+  drawVehicles();
+  drawFrog();
+  drawParticles();
+
+  ctx.restore();
+}
+
+/* =========================================================
+   FONDO
+   ========================================================= */
+
+function drawBackground(){
+
+  ctx.fillStyle="#03080c";
+  ctx.fillRect(0,0,W,H);
+
+  const g=ctx.createRadialGradient(
+    W*.5,H*.45,0,
+    W*.5,H*.45,H*.75
+  );
+
+  g.addColorStop(0,"#0a1c23");
+  g.addColorStop(1,"#03080c");
+
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,H);
+}
+
+/* =========================================================
+   TABLERO
+   ========================================================= */
+
+function drawBoard(){
+
+  for(let row=0;row<ROWS;row++){
+
+    const y=grid.top+row*grid.cellH;
+
+    let fill;
+
+    if(row===GOAL_ROW){
+      fill="#0b241b";
+    }else if(row>=RIVER_START && row<=RIVER_END){
+      fill="#042b37";
+    }else if(row===SAFE_MIDDLE){
+      fill="#12331f";
+    }else if(row>=ROAD_START && row<=ROAD_END){
+      fill="#11161a";
+    }else{
+      fill="#12351f";
+    }
+
+    ctx.fillStyle=fill;
+
+    ctx.fillRect(
+      grid.left,
+      y,
+      grid.boardW,
+      grid.cellH
+    );
+
+    /*
+      líneas de separación
+    */
+
+    ctx.strokeStyle="rgba(255,255,255,.035)";
+    ctx.lineWidth=1;
+
+    ctx.beginPath();
+    ctx.moveTo(grid.left,y);
+    ctx.lineTo(grid.left+grid.boardW,y);
+    ctx.stroke();
+  }
+
+  /*
+    Marcas de carretera
+  */
+
+  for(let row=ROAD_START;row<=ROAD_END;row++){
+
+    const y=cellCenterY(row);
+
+    ctx.strokeStyle="rgba(255,230,109,.17)";
+    ctx.lineWidth=2;
+    ctx.setLineDash([grid.cellW*.28,grid.cellW*.28]);
+
+    ctx.beginPath();
+
+    ctx.moveTo(grid.left+4,y);
+    ctx.lineTo(grid.left+grid.boardW-4,y);
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+  }
+
+  /*
+    Agua: pequeñas ondas
+  */
+
+  for(let row=RIVER_START;row<=RIVER_END;row++){
+
+    const y=grid.top+row*grid.cellH;
+
+    for(let x=grid.left;x<grid.left+grid.boardW;x+=grid.cellW*.8){
+
+      const offset=
+        Math.sin(gameTime*1.7+x*.02+row)*3;
+
+      ctx.strokeStyle="rgba(36,231,255,.08)";
+      ctx.lineWidth=1;
+
+      ctx.beginPath();
+
+      ctx.moveTo(x,y+grid.cellH*.25+offset);
+      ctx.lineTo(x+grid.cellW*.25,y+grid.cellH*.25+offset);
+
+      ctx.stroke();
+    }
+  }
+}
+
+/* =========================================================
+   METAS
+   ========================================================= */
+
+function drawGoals(){
+
+  for(let c of goals){
+
+    const x=cellCenterX(c);
+    const y=cellCenterY(GOAL_ROW);
+
+    const filled=
+      window.completedGoals &&
+      window.completedGoals.has(c);
+
+    ctx.save();
+
+    ctx.translate(x,y);
+
+    /*
+      glow
+    */
+
+    ctx.shadowBlur=filled?18:10;
+    ctx.shadowColor=filled?"#48ff91":"#20d99b";
+
+    ctx.fillStyle=filled?"#153f2c":"#07140f";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      0,0,
+      grid.cellW*.30,
+      grid.cellH*.28,
+      0,0,Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur=0;
+
+    ctx.strokeStyle=
+      filled?"#48ff91":"rgba(72,255,145,.32)";
+
+    ctx.lineWidth=2;
+
+    ctx.stroke();
+
+    if(filled){
+
+      ctx.font=
+        Math.floor(grid.cellH*.42)+"px Arial";
+
+      ctx.textAlign="center";
+      ctx.textBaseline="middle";
+
+      ctx.fillStyle="#48ff91";
+      ctx.fillText("✓",0,1);
+
+    }else{
+
+      ctx.fillStyle="rgba(0,0,0,.65)";
+
+      ctx.beginPath();
+      ctx.ellipse(
+        0,0,
+        grid.cellW*.21,
+        grid.cellH*.17,
+        0,0,Math.PI*2
+      );
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
+/* =========================================================
+   TRONCOS / TORTUGAS
+   ========================================================= */
+
+function drawPlatforms(){
+
+  for(const p of platforms){
+
+    const y=cellCenterY(p.row);
+
+    if(p.turtle){
+      drawTurtlePlatform(p,y);
+    }else{
+      drawLog(p,y);
+    }
+  }
+}
+
+function drawLog(p,y){
+
+  const x=p.x;
+
+  ctx.save();
+
+  ctx.translate(x,y);
+
+  ctx.shadowBlur=9;
+  ctx.shadowColor="rgba(255,150,60,.25)";
+
+  const grad=ctx.createLinearGradient(
+    0,-p.height/2,
+    0,p.height/2
+  );
+
+  grad.addColorStop(0,"#9b6034");
+  grad.addColorStop(.5,"#6d3c25");
+  grad.addColorStop(1,"#47261b");
+
+  ctx.fillStyle=grad;
+
+  roundRect(
+    ctx,
+    0,
+    -p.height/2,
+    p.width,
+    p.height,
+    p.height*.3
+  );
+
+  ctx.fill();
+
+  ctx.shadowBlur=0;
+
+  ctx.strokeStyle="rgba(255,210,120,.25)";
+  ctx.lineWidth=1;
+
+  for(let i=1;i<4;i++){
+
+    const xx=p.width*(i/4);
+
+    ctx.beginPath();
+    ctx.ellipse(
+      xx,
+      0,
+      p.height*.13,
+      p.height*.29,
+      0,0,Math.PI*2
+    );
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawTurtlePlatform(p,y){
+
+  const x=p.x;
+
+  ctx.save();
+
+  ctx.translate(x,y);
+
+  const count=Math.max(
+    2,
+    Math.floor(p.width/(grid.cellW*.55))
+  );
+
+  for(let i=0;i<count;i++){
+
+    const cx=
+      i*(p.width/count)+
+      p.width/count/2;
+
+    const bob=
+      Math.sin(gameTime*2.2+p.phase+i)*1.5;
+
+    ctx.fillStyle="#174c43";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      cx,
+      bob,
+      grid.cellW*.22,
+      grid.cellH*.21,
+      0,0,Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.strokeStyle="#2e9b7c";
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+
+    ctx.fillStyle="#78d5a0";
+
+    ctx.beginPath();
+    ctx.arc(
+      cx-grid.cellW*.03,
+      bob-grid.cellH*.02,
+      grid.cellW*.045,
+      0,
+      Math.PI*2
+    );
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+/* =========================================================
+   VEHÍCULOS
+   ========================================================= */
+
+function drawVehicles(){
+
+  for(const v of vehicles){
+
+    const y=cellCenterY(v.row);
+
+    ctx.save();
+
+    ctx.translate(v.x,y);
+
+    const h=v.height;
+    const w=v.width;
+
+    ctx.shadowBlur=10;
+    ctx.shadowColor=v.color;
+
+    ctx.fillStyle=v.color;
+
+    roundRect(
+      ctx,
+      0,
+      -h/2,
+      w,
+      h,
+      h*.22
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur=0;
+
+    /*
+      cristales
+    */
+
+    ctx.fillStyle="rgba(4,14,20,.78)";
+
+    if(v.truck){
+
+      ctx.fillRect(
+        w*.57,
+        -h*.30,
+        w*.25,
+        h*.38
+      );
+
+      ctx.fillRect(
+        w*.09,
+        -h*.30,
+        w*.38,
+        h*.38
+      );
+
+    }else{
+
+      ctx.fillRect(
+        w*.18,
+        -h*.30,
+        w*.27,
+        h*.38
+      );
+
+      ctx.fillRect(
+        w*.55,
+        -h*.30,
+        w*.27,
+        h*.38
+      );
+    }
+
+    /*
+      ruedas
+    */
+
+    ctx.fillStyle="#020508";
+
+    const wheelR=h*.23;
+
+    for(const wx of [w*.20,w*.80]){
+
+      ctx.beginPath();
+      ctx.arc(wx,h*.42,wheelR,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
+/* =========================================================
+   RANA
+   ========================================================= */
+
+function drawFrog(){
+
+  if(!frog.alive) return;
+
+  const x=frog.x;
+  const y=frog.y;
+
+  /*
+    La sombra NO modifica la trayectoria.
+  */
+
+  const shadowScale=
+    frog.moving
+      ? Math.sin(frog.jumpProgress*Math.PI)
+      : .3;
+
+  ctx.save();
+
+  ctx.globalAlpha=.25;
+
+  ctx.fillStyle="#000";
+
+  ctx.beginPath();
+
+  ctx.ellipse(
+    x,
+    y+grid.cellH*.27,
+    grid.cellW*.25*(1-shadowScale*.45),
+    grid.cellH*.08,
+    0,0,Math.PI*2
+  );
+
+  ctx.fill();
+
+  ctx.restore();
+
+  /*
+    Salto:
+    elevación puramente visual.
+  */
+
+  let jumpHeight=0;
+
+  if(frog.moving){
+
+    jumpHeight=
+      Math.sin(
+        clamp(frog.jumpProgress,0,1)*Math.PI
+      )*
+      grid.cellH*.25;
+  }
+
+  const drawY=y-jumpHeight;
+
+  ctx.save();
+
+  ctx.translate(x,drawY);
+
+  /*
+    Cuerpo
+  */
+
+  ctx.shadowBlur=13;
+  ctx.shadowColor="#48ff91";
+
+  ctx.fillStyle="#48ff91";
+
+  ctx.beginPath();
+
+  ctx.ellipse(
+    0,
+    4,
+    grid.cellW*.27,
+    grid.cellH*.25,
+    0,0,Math.PI*2
+  );
+
+  ctx.fill();
+
+  ctx.shadowBlur=0;
+
+  /*
+    patas
+  */
+
+  ctx.fillStyle="#32d878";
+
+  for(const side of [-1,1]){
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      side*grid.cellW*.25,
+      8,
+      grid.cellW*.14,
+      grid.cellH*.09,
+      side*.25,
+      0,Math.PI*2
+    );
+
+    ctx.fill();
+  }
+
+  /*
+    ojos
+  */
+
+  for(const side of [-1,1]){
+
+    ctx.fillStyle="#56ff9a";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      side*grid.cellW*.13,
+      -grid.cellH*.18,
+      grid.cellW*.11,
+      0,Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle="#03100a";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      side*grid.cellW*.13,
+      -grid.cellH*.19,
+      grid.cellW*.04,
+      0,Math.PI*2
+    );
+
+    ctx.fill();
+  }
+
+  /*
+    boca
+  */
+
+  ctx.strokeStyle="#063d26";
+  ctx.lineWidth=1.7;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    0,
+    grid.cellH*.02,
+    grid.cellW*.12,
+    0,
+    Math.PI
+  );
+
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* =========================================================
+   PARTÍCULAS
+   ========================================================= */
+
+function drawParticles(){
+
+  for(const p of particles){
+
+    const alpha=clamp(p.life/p.max,0,1);
+
+    ctx.save();
+
+    ctx.globalAlpha=alpha;
+
+    if(p.type==="water"){
+      ctx.fillStyle="#24e7ff";
+    }else if(p.type==="goal"){
+      ctx.fillStyle="#48ff91";
+    }else{
+      ctx.fillStyle="#ff456d";
+    }
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      p.size,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  for(const r of ripples){
+
+    ctx.save();
+
+    ctx.globalAlpha=r.life;
+
+    ctx.strokeStyle="#24e7ff";
+    ctx.lineWidth=1.5;
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+      r.x,
+      r.y,
+      r.r,
+      r.r*.4,
+      0,0,Math.PI*2
+    );
+
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+/* =========================================================
+   ROUND RECT
+   ========================================================= */
+
+function roundRect(ctx,x,y,w,h,r){
+
+  r=Math.min(r,w/2,h/2);
+
+  ctx.beginPath();
+
+  ctx.moveTo(x+r,y);
+
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+
+  ctx.closePath();
+}
+
+/* =========================================================
+   GAME LOOP
+   ========================================================= */
+
+function gameLoop(now){
+
+  const dt=Math.min(
+    .035,
+    (now-lastTime)/1000 || 0
+  );
+
+  lastTime=now;
+
+  gameTime+=dt;
+
+  if(running){
+
+    updateTime(dt);
+    updateVehicles(dt);
+    updatePlatforms(dt);
+
+    /*
+      PRIMERO se actualiza el salto.
+    */
+
+    updateFrog(dt);
+
+    /*
+      DESPUÉS la corriente.
+      Pero applyPlatformMotion comprueba moving.
+    */
+
+    applyPlatformMotion(dt);
+
+    updateParticles(dt);
+
+    updateHUD();
+  }else{
+
+    updateParticles(dt);
+  }
+
+  draw();
+
+  requestAnimationFrame(gameLoop);
+}
+
+/* =========================================================
+   CONTROLES TÁCTILES
+   ========================================================= */
+
+let touchStartX=0;
+let touchStartY=0;
+let touchStartTime=0;
+
+canvas.addEventListener("touchstart",e=>{
+
+  if(!running) return;
+
+  const t=e.changedTouches[0];
+
+  touchStartX=t.clientX;
+  touchStartY=t.clientY;
+  touchStartTime=performance.now();
+
+  e.preventDefault();
+
+},{passive:false});
+
+canvas.addEventListener("touchend",e=>{
+
+  if(!running) return;
+
+  const t=e.changedTouches[0];
+
+  const dx=t.clientX-touchStartX;
+  const dy=t.clientY-touchStartY;
+
+  const duration=performance.now()-touchStartTime;
+
+  if(duration>650){
+    e.preventDefault();
+    return;
+  }
+
+  const distance=Math.sqrt(dx*dx+dy*dy);
+
+  if(distance<24){
+    e.preventDefault();
+    return;
+  }
+
+  if(Math.abs(dx)>Math.abs(dy)){
+
+    moveFrog(dx>0?1:-1,0);
+
+  }else{
+
+    moveFrog(0,dy>0?1:-1);
+  }
+
+  e.preventDefault();
+
+},{passive:false});
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
+document.querySelectorAll(".dbtn").forEach(btn=>{
+
+  btn.addEventListener("pointerdown",e=>{
+
+    e.preventDefault();
+
+    const dir=btn.dataset.dir;
+
+    if(dir==="up") moveFrog(0,-1);
+    if(dir==="down") moveFrog(0,1);
+    if(dir==="left") moveFrog(-1,0);
+    if(dir==="right") moveFrog(1,0);
+
+  });
+});
+
+/* =========================================================
+   TECLADO
+   ========================================================= */
+
+window.addEventListener("keydown",e=>{
+
+  if(!running) return;
+
+  if(
+    e.key==="ArrowUp" ||
+    e.key==="w" ||
+    e.key==="W"
+  ){
+    moveFrog(0,-1);
+  }
+
+  if(
+    e.key==="ArrowDown" ||
+    e.key==="s" ||
+    e.key==="S"
+  ){
+    moveFrog(0,1);
+  }
+
+  if(
+    e.key==="ArrowLeft" ||
+    e.key==="a" ||
+    e.key==="A"
+  ){
+    moveFrog(-1,0);
+  }
+
+  if(
+    e.key==="ArrowRight" ||
+    e.key==="d" ||
+    e.key==="D"
+  ){
+    moveFrog(1,0);
+  }
+});
+
+/* =========================================================
+   OVERLAY
+   ========================================================= */
+
+function showOverlay(title,subtitle,button,small){
+
+  overlay.classList.remove("hidden");
+
+  overlayTitle.textContent=title;
+  overlaySubtitle.textContent=subtitle;
+
+  instructions.classList.add("hidden");
+
+  mainButton.textContent=button;
+
+  overlaySmall.textContent=small;
+}
+
+/* =========================================================
+   BOTÓN PRINCIPAL
+   ========================================================= */
+
+mainButton.addEventListener("click",()=>{
+
+  const title=overlayTitle.textContent;
+
+  if(title==="NIVEL COMPLETADO"){
+
+    nextLevel();
+
+  }else{
+
+    startGame();
+  }
+});
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+
+let audioCtx=null;
+
+function getAudio(){
+
+  if(!audioCtx){
+
+    try{
+      audioCtx=
+        new (window.AudioContext||
+             window.webkitAudioContext)();
+    }catch(e){}
+  }
+
+  return audioCtx;
+}
+
+function beep(freq,duration,type="sine",volume=.035){
+
+  const ac=getAudio();
+
+  if(!ac) return;
+
+  try{
+
+    if(ac.state==="suspended"){
+      ac.resume();
+    }
+
+    const osc=ac.createOscillator();
+    const gain=ac.createGain();
+
+    osc.type=type;
+    osc.frequency.value=freq;
+
+    gain.gain.setValueAtTime(
+      volume,
+      ac.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      ac.currentTime+duration
+    );
+
+    osc.connect(gain);
+    gain.connect(ac.destination);
+
+    osc.start();
+    osc.stop(ac.currentTime+duration);
+
+  }catch(e){}
+}
+
+function playJumpSound(){
+
+  beep(300,.055,"square",.025);
+
+  setTimeout(()=>{
+    beep(440,.045,"square",.018);
+  },35);
+}
+
+function playStartSound(){
+
+  beep(330,.08,"sine",.03);
+
+  setTimeout(()=>{
+    beep(440,.08,"sine",.03);
+  },80);
+
+  setTimeout(()=>{
+    beep(660,.12,"sine",.03);
+  },160);
+}
+
+function playLevelSound(){
+
+  beep(440,.09,"sine",.03);
+
+  setTimeout(()=>{
+    beep(550,.09,"sine",.03);
+  },100);
+
+  setTimeout(()=>{
+    beep(660,.16,"sine",.03);
+  },200);
+}
+
+/* =========================================================
+   FLASH
+   ========================================================= */
+
+function flashScreen(){
+
+  flash.style.transition="none";
+  flash.style.opacity=".18";
+
+  requestAnimationFrame(()=>{
+
+    flash.style.transition="opacity .25s ease";
+    flash.style.opacity="0";
+
+  });
+}
+
+/* =========================================================
+   ARRANQUE
+   ========================================================= */
+
+window.addEventListener("resize",resize);
+
+resize();
+
+window.completedGoals=new Set();
+
+updateHUD();
+
+requestAnimationFrame(gameLoop);
+
+</script>
+
 </body>
 </html>
