@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -129,8 +128,10 @@ body::before{
 
 body::after{
     content:"";
+
     position:fixed;
     inset:0;
+
     pointer-events:none;
 
     background:
@@ -842,13 +843,634 @@ body::after{
 }
 
 /* =========================================================
+   MARIO BROS — PORTADA ESPECIAL
+   ========================================================= */
+
+.mario-card .card-cover{
+    height:155px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #168ff0 0%,
+            #45c9ff 58%,
+            #82e8ff 72%,
+            #55b83e 73%,
+            #248328 100%
+        );
+
+    position:relative;
+
+    isolation:isolate;
+
+    border-bottom:1px solid rgba(255,255,255,.12);
+}
+
+/* Cielo pixelado */
+
+.mario-card .card-cover::before{
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+        radial-gradient(
+            circle at 75% 20%,
+            rgba(255,238,104,.95) 0 17px,
+            transparent 18px
+        ),
+        linear-gradient(
+            90deg,
+            transparent 0 8%,
+            rgba(255,255,255,.12) 8% 9%,
+            transparent 9% 20%,
+            rgba(255,255,255,.10) 20% 21%,
+            transparent 21%
+        );
+
+    opacity:.8;
+
+    z-index:0;
+}
+
+/* No oscurecer la portada */
+
+.mario-card .card-cover::after{
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+        linear-gradient(
+            180deg,
+            transparent 50%,
+            rgba(8,50,18,.32) 100%
+        );
+
+    z-index:1;
+
+    pointer-events:none;
+}
+
+/* Nubes */
+
+.mario-cloud{
+    position:absolute;
+
+    z-index:1;
+
+    color:#fff;
+
+    font-size:28px;
+
+    line-height:1;
+
+    filter:
+        drop-shadow(
+            0 3px 0 rgba(0,0,0,.08)
+        );
+
+    opacity:.95;
+
+    pointer-events:none;
+}
+
+.mario-cloud.cloud-one{
+    left:14px;
+    top:18px;
+}
+
+.mario-cloud.cloud-two{
+    right:54px;
+    top:48px;
+
+    font-size:20px;
+
+    opacity:.85;
+}
+
+/* Bloques */
+
+.mario-blocks{
+    position:absolute;
+
+    left:12px;
+    bottom:40px;
+
+    z-index:4;
+
+    display:flex;
+
+    gap:4px;
+}
+
+.mario-block{
+    width:24px;
+    height:24px;
+
+    border-radius:3px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffc928,
+            #e88900
+        );
+
+    border:2px solid #9d5600;
+
+    box-shadow:
+        inset 2px 2px 0 rgba(255,255,255,.45),
+        inset -2px -2px 0 rgba(101,47,0,.35),
+        0 3px 0 rgba(0,0,0,.22);
+
+    position:relative;
+}
+
+.mario-block::after{
+    content:"?";
+
+    position:absolute;
+
+    inset:0;
+
+    display:grid;
+    place-items:center;
+
+    color:#fff5b4;
+
+    font-family:'Press Start 2P',monospace;
+
+    font-size:10px;
+
+    text-shadow:
+        1px 1px 0 #8a4b00;
+}
+
+/* Monedas */
+
+.mario-coins{
+    position:absolute;
+
+    right:14px;
+    top:14px;
+
+    z-index:5;
+
+    font-size:18px;
+
+    letter-spacing:2px;
+
+    filter:
+        drop-shadow(
+            0 2px 2px rgba(0,0,0,.35)
+        );
+
+    animation:
+        marioCoins 1.8s ease-in-out infinite;
+}
+
+@keyframes marioCoins{
+
+    0%,100%{
+        transform:translateY(0);
+    }
+
+    50%{
+        transform:translateY(-5px);
+    }
+
+}
+
+/* Tubería */
+
+.mario-pipe{
+    position:absolute;
+
+    z-index:3;
+
+    right:18px;
+    bottom:0;
+
+    width:42px;
+    height:58px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #087d25 0%,
+            #22c84b 35%,
+            #0b8e2d 65%,
+            #075d1d 100%
+        );
+
+    border:2px solid #075819;
+
+    border-bottom:0;
+
+    box-shadow:
+        inset 5px 0 rgba(255,255,255,.17),
+        0 -3px 0 rgba(0,0,0,.16);
+}
+
+.mario-pipe::before{
+    content:"";
+
+    position:absolute;
+
+    left:-6px;
+    top:-13px;
+
+    width:50px;
+    height:18px;
+
+    border-radius:3px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #087d25 0%,
+            #27d34f 35%,
+            #0b8e2d 70%,
+            #075d1d 100%
+        );
+
+    border:2px solid #075819;
+
+    box-shadow:
+        inset 5px 0 rgba(255,255,255,.17),
+        0 3px 0 rgba(0,0,0,.18);
+}
+
+/* Personaje */
+
+.mario-character{
+    position:absolute;
+
+    z-index:6;
+
+    left:50%;
+
+    bottom:22px;
+
+    transform:
+        translateX(-50%);
+
+    width:70px;
+    height:88px;
+
+    pointer-events:none;
+
+    filter:
+        drop-shadow(
+            0 7px 4px rgba(0,0,0,.28)
+        );
+
+    animation:
+        marioBounce 1.8s ease-in-out infinite;
+}
+
+@keyframes marioBounce{
+
+    0%,100%{
+        transform:
+            translateX(-50%)
+            translateY(0);
+    }
+
+    50%{
+        transform:
+            translateX(-50%)
+            translateY(-5px);
+    }
+
+}
+
+/* Gorro rojo */
+
+.mario-hat{
+    position:absolute;
+
+    left:16px;
+    top:4px;
+
+    width:42px;
+    height:20px;
+
+    border-radius:
+        20px 20px 8px 8px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ff403d,
+            #bd171d
+        );
+
+    border:2px solid #7c1015;
+
+    box-shadow:
+        inset 3px 2px rgba(255,255,255,.22);
+}
+
+.mario-hat::after{
+    content:"M";
+
+    position:absolute;
+
+    left:50%;
+    top:2px;
+
+    transform:translateX(-50%);
+
+    width:14px;
+    height:14px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    color:#e31c23;
+
+    font-family:'Press Start 2P',monospace;
+
+    font-size:6px;
+}
+
+/* Cara */
+
+.mario-face{
+    position:absolute;
+
+    left:19px;
+    top:19px;
+
+    width:35px;
+    height:38px;
+
+    border-radius:
+        12px 12px 15px 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffc98f,
+            #e99a5e
+        );
+
+    border:2px solid #a65f3b;
+}
+
+/* Pelo */
+
+.mario-face::before{
+    content:"";
+
+    position:absolute;
+
+    left:-3px;
+    top:-3px;
+
+    width:12px;
+    height:25px;
+
+    border-radius:
+        10px 0 0 8px;
+
+    background:#512d1d;
+}
+
+/* Bigote */
+
+.mario-face::after{
+    content:"";
+
+    position:absolute;
+
+    left:7px;
+    bottom:5px;
+
+    width:23px;
+    height:8px;
+
+    border-radius:
+        0 0 10px 10px;
+
+    background:#542d1c;
+}
+
+/* Ojos */
+
+.mario-eyes{
+    position:absolute;
+
+    left:8px;
+    top:12px;
+
+    width:21px;
+    height:6px;
+
+    display:flex;
+
+    justify-content:space-between;
+}
+
+.mario-eyes span{
+    width:5px;
+    height:7px;
+
+    border-radius:50%;
+
+    background:#20130d;
+}
+
+/* Cuerpo azul */
+
+.mario-body{
+    position:absolute;
+
+    left:13px;
+    top:51px;
+
+    width:44px;
+    height:30px;
+
+    border-radius:
+        8px 8px 4px 4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #1264d9,
+            #3189ff,
+            #125bc5
+        );
+
+    border:2px solid #0b3980;
+}
+
+/* Camisa roja */
+
+.mario-body::before{
+    content:"";
+
+    position:absolute;
+
+    left:0;
+    top:-5px;
+
+    width:44px;
+    height:13px;
+
+    border-radius:10px 10px 2px 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #f0252d,
+            #ff4a43,
+            #c9141b
+        );
+
+    border-bottom:2px solid #8b1015;
+}
+
+/* Botones */
+
+.mario-body::after{
+    content:"●  ●";
+
+    position:absolute;
+
+    left:50%;
+    top:7px;
+
+    transform:translateX(-50%);
+
+    color:#ffd84d;
+
+    font-size:8px;
+
+    letter-spacing:5px;
+}
+
+/* Piernas */
+
+.mario-legs{
+    position:absolute;
+
+    left:12px;
+    bottom:0;
+
+    width:46px;
+    height:18px;
+}
+
+.mario-legs::before,
+.mario-legs::after{
+    content:"";
+
+    position:absolute;
+
+    bottom:0;
+
+    width:24px;
+    height:11px;
+
+    border-radius:7px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #59331f,
+            #28170f
+        );
+}
+
+.mario-legs::before{
+    left:0;
+}
+
+.mario-legs::after{
+    right:0;
+}
+
+/* Texto de portada */
+
+.mario-label{
+    position:absolute;
+
+    z-index:7;
+
+    left:50%;
+    top:8px;
+
+    transform:translateX(-50%);
+
+    padding:5px 8px;
+
+    border-radius:7px;
+
+    background:
+        rgba(255,255,255,.88);
+
+    color:#e11b22;
+
+    border:1px solid rgba(170,20,20,.25);
+
+    font-family:'Press Start 2P',monospace;
+
+    font-size:6px;
+
+    white-space:nowrap;
+
+    box-shadow:
+        0 3px 8px rgba(0,0,0,.18);
+}
+
+/* Hover Mario */
+
+.mario-card:hover .mario-character{
+    animation:
+        marioJump .45s ease;
+}
+
+@keyframes marioJump{
+
+    0%{
+        transform:
+            translateX(-50%)
+            translateY(0);
+    }
+
+    45%{
+        transform:
+            translateX(-50%)
+            translateY(-18px)
+            rotate(-3deg);
+    }
+
+    100%{
+        transform:
+            translateX(-50%)
+            translateY(0);
+    }
+
+}
+
+/* =========================================================
    BADGES
    ========================================================= */
 
 .badge{
     position:absolute;
 
-    z-index:5;
+    z-index:10;
 
     top:11px;
 
@@ -888,7 +1510,7 @@ body::after{
 .favorite{
     position:absolute;
 
-    z-index:6;
+    z-index:20;
 
     right:11px;
     bottom:11px;
@@ -1152,6 +1774,19 @@ body::after{
     .card-cover{
         height:140px;
     }
+
+    .mario-card .card-cover{
+        height:140px;
+    }
+
+    .mario-character{
+        transform:
+            translateX(-50%)
+            scale(.88);
+        transform-origin:
+            center bottom;
+    }
+
 }
 
 /* =========================================================
@@ -1251,6 +1886,10 @@ body::after{
         height:125px;
     }
 
+    .mario-card .card-cover{
+        height:125px;
+    }
+
     .game-icon{
         font-size:56px;
     }
@@ -1285,6 +1924,73 @@ body::after{
         height:31px;
 
         font-size:13px;
+    }
+
+    .mario-character{
+        transform:
+            translateX(-50%)
+            scale(.72);
+
+        bottom:14px;
+    }
+
+    .mario-blocks{
+        left:7px;
+        bottom:32px;
+
+        gap:2px;
+    }
+
+    .mario-block{
+        width:18px;
+        height:18px;
+    }
+
+    .mario-block::after{
+        font-size:7px;
+    }
+
+    .mario-pipe{
+        right:9px;
+
+        width:31px;
+        height:45px;
+    }
+
+    .mario-pipe::before{
+        width:39px;
+        height:14px;
+
+        left:-6px;
+        top:-10px;
+    }
+
+    .mario-coins{
+        right:8px;
+        top:10px;
+
+        font-size:12px;
+    }
+
+    .mario-label{
+        top:7px;
+
+        font-size:5px;
+
+        padding:4px 6px;
+    }
+
+    .mario-cloud{
+        font-size:21px;
+    }
+
+    .mario-card .badge{
+        top:8px;
+        left:8px;
+    }
+
+    .mario-card .badge-featured{
+        right:8px;
     }
 
     .mobile-nav{
@@ -1371,6 +2077,16 @@ body::after{
 
     .card-cover{
         height:155px;
+    }
+
+    .mario-card .card-cover{
+        height:155px;
+    }
+
+    .mario-character{
+        transform:
+            translateX(-50%)
+            scale(.9);
     }
 }
 
@@ -1686,18 +2402,24 @@ const games = [
         difficulty:2
     },
 
+    /* =====================================================
+       MARIO BROS
+       El archivo sigue siendo arkanoid2.html
+       ===================================================== */
+
     {
-        id:"arkanoid2",
-        title:"Arkanoid 2",
+        id:"mariobros",
+        title:"Mario Bros",
         file:"arkanoid2.html",
-        category:"Arcade",
-        genre:"Classic",
-        description:"Una nueva versión del clásico Arkanoid.",
-        icon:"🟡",
-        color:"#ffd84d",
-        featured:false,
-        newGame:true,
-        difficulty:3
+        category:"Clásicos",
+        genre:"Platform",
+        description:"Salta, corre y supera todos los obstáculos.",
+        icon:"🍄",
+        color:"#ff3333",
+        featured:true,
+        newGame:false,
+        difficulty:3,
+        coverType:"mario"
     },
 
     {
@@ -2046,8 +2768,15 @@ function createGameCard(game){
     const card =
         document.createElement("article");
 
+    /* MARIO RECIBE SU CLASE ESPECIAL */
+
     card.className =
-        "game-card";
+        "game-card" +
+        (
+            game.coverType === "mario"
+                ? " mario-card"
+                : ""
+        );
 
     card.style.setProperty(
         "--game-color",
@@ -2061,7 +2790,9 @@ function createGameCard(game){
     };
 
 
-    /* COVER */
+    /* =====================================================
+       COVER
+       ===================================================== */
 
     const cover =
         document.createElement("div");
@@ -2070,7 +2801,194 @@ function createGameCard(game){
         "card-cover";
 
 
-    /* NUEVO */
+    /* =====================================================
+       ELEMENTOS ESPECIALES DE MARIO
+       ===================================================== */
+
+    if(game.coverType === "mario"){
+
+        /* Nube 1 */
+
+        const cloud1 =
+            document.createElement("div");
+
+        cloud1.className =
+            "mario-cloud cloud-one";
+
+        cloud1.textContent =
+            "☁️";
+
+        cover.appendChild(cloud1);
+
+
+        /* Nube 2 */
+
+        const cloud2 =
+            document.createElement("div");
+
+        cloud2.className =
+            "mario-cloud cloud-two";
+
+        cloud2.textContent =
+            "☁️";
+
+        cover.appendChild(cloud2);
+
+
+        /* Texto */
+
+        const label =
+            document.createElement("div");
+
+        label.className =
+            "mario-label";
+
+        label.textContent =
+            "MARIO BROS";
+
+        cover.appendChild(label);
+
+
+        /* Monedas */
+
+        const coins =
+            document.createElement("div");
+
+        coins.className =
+            "mario-coins";
+
+        coins.textContent =
+            "🪙 🪙";
+
+        cover.appendChild(coins);
+
+
+        /* Bloques */
+
+        const blocks =
+            document.createElement("div");
+
+        blocks.className =
+            "mario-blocks";
+
+        for(let i=0;i<3;i++){
+
+            const block =
+                document.createElement("div");
+
+            block.className =
+                "mario-block";
+
+            blocks.appendChild(block);
+
+        }
+
+        cover.appendChild(blocks);
+
+
+        /* Tubería */
+
+        const pipe =
+            document.createElement("div");
+
+        pipe.className =
+            "mario-pipe";
+
+        cover.appendChild(pipe);
+
+
+        /* PERSONAJE */
+
+        const character =
+            document.createElement("div");
+
+        character.className =
+            "mario-character";
+
+
+        /* Gorro */
+
+        const hat =
+            document.createElement("div");
+
+        hat.className =
+            "mario-hat";
+
+        character.appendChild(hat);
+
+
+        /* Cara */
+
+        const face =
+            document.createElement("div");
+
+        face.className =
+            "mario-face";
+
+
+        /* Ojos */
+
+        const eyes =
+            document.createElement("div");
+
+        eyes.className =
+            "mario-eyes";
+
+        eyes.innerHTML =
+            "<span></span><span></span>";
+
+        face.appendChild(eyes);
+
+        character.appendChild(face);
+
+
+        /* Cuerpo */
+
+        const body =
+            document.createElement("div");
+
+        body.className =
+            "mario-body";
+
+        character.appendChild(body);
+
+
+        /* Piernas */
+
+        const legs =
+            document.createElement("div");
+
+        legs.className =
+            "mario-legs";
+
+        character.appendChild(legs);
+
+
+        cover.appendChild(character);
+
+    }else{
+
+        /* =================================================
+           ICONO NORMAL
+           ================================================= */
+
+        const icon =
+            document.createElement("div");
+
+        icon.className =
+            "game-icon";
+
+        icon.textContent =
+            game.icon;
+
+        cover.appendChild(icon);
+
+    }
+
+
+    /* =====================================================
+       NUEVO
+       ===================================================== */
 
     if(game.newGame){
 
@@ -2088,7 +3006,9 @@ function createGameCard(game){
     }
 
 
-    /* DESTACADO */
+    /* =====================================================
+       DESTACADO
+       ===================================================== */
 
     if(game.featured){
 
@@ -2106,21 +3026,9 @@ function createGameCard(game){
     }
 
 
-    /* ICONO */
-
-    const icon =
-        document.createElement("div");
-
-    icon.className =
-        "game-icon";
-
-    icon.textContent =
-        game.icon;
-
-    cover.appendChild(icon);
-
-
-    /* FAVORITO */
+    /* =====================================================
+       FAVORITO
+       ===================================================== */
 
     const favorite =
         document.createElement("button");
@@ -2156,7 +3064,9 @@ function createGameCard(game){
     card.appendChild(cover);
 
 
-    /* CONTENIDO */
+    /* =====================================================
+       CONTENIDO
+       ===================================================== */
 
     const content =
         document.createElement("div");
@@ -2203,7 +3113,9 @@ function createGameCard(game){
     titleBox.appendChild(category);
 
 
-    /* DIFICULTAD */
+    /* =====================================================
+       DIFICULTAD
+       ===================================================== */
 
     const difficulty =
         document.createElement("div");
@@ -2234,7 +3146,9 @@ function createGameCard(game){
     content.appendChild(top);
 
 
-    /* FOOTER */
+    /* =====================================================
+       FOOTER
+       ===================================================== */
 
     const footer =
         document.createElement("div");
@@ -2606,4 +3520,3 @@ renderGames();
 
 </body>
 </html>
-```
