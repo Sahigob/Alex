@@ -1,757 +1,120 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donkey Kong con Carla</title>
-    <style>
-        /* Importamos una fuente retro para la interfaz */
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a1a1a;
-            font-family: 'Press Start 2P', monospace;
-            color: #eeeeee;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-            text-align: center;
-        }
-
-        canvas {
-            /* Estilo de máquina arcade para el canvas */
-            border: 4px solid #cc0000;
-            background: linear-gradient(to bottom, #000033, #000000); /* Fondo oscuro con degradado */
-            display: block;
-            width: 90%;
-            max-width: 380px;
-            height: auto;
-            aspect-ratio: 4 / 5;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), 0 0 5px rgba(255, 255, 255, 0.8) inset;
-            border-radius: 8px;
-            margin-bottom: 10px; /* Espacio reducido para el HUD */
-        }
-
-        h2 {
-            font-size: 18px; /* Un poco más grande para el título */
-            margin: 12px 0 8px 0;
-            text-shadow: 2px 2px #ff0077;
-        }
-        
-        #hud {
-            display: flex;
-            justify-content: space-between;
-            width: 90%;
-            max-width: 380px;
-            margin-bottom: 10px;
-            font-size: 10px;
-            color: #00FF80;
-        }
-
-        #controlesTactiles {
-            /* Contenedor principal para el D-Pad */
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 columnas */
-            grid-template-rows: repeat(3, 1fr);    /* 3 filas */
-            gap: 5px; /* Pequeño espacio entre los botones */
-            width: 180px; /* Ancho fijo para el conjunto del D-Pad */
-            height: 180px; /* Alto fijo para el conjunto del D-Pad */
-            max-width: 200px; /* Máximo ancho */
-            max-height: 200px; /* Máximo alto */
-            padding: 10px;
-            box-sizing: border-box;
-            background-color: #333; /* Fondo para que el D-Pad destaque */
-            border-radius: 15px;
-            border: 3px solid #666;
-            margin-top: 10px;
-        }
-
-        .botonControl {
-            /* Hacemos que todos los botones sean cuadrados */
-            aspect-ratio: 1 / 1; 
-            font-family: 'Press Start 2P', monospace;
-            font-weight: bold;
-            color: #ffffff;
-            background-color: #6a006a;
-            border: 3px solid #ff00ff; 
-            border-radius: 6px;
-            cursor: pointer;
-            user-select: none;
-            box-shadow: 3px 3px #ff00ff;
-            transition: all 0.1s;
-            touch-action: manipulation;
-            display: flex; 
-            align-items: center;
-            justify-content: center;
-            font-size: 24px; /* Tamaño de las flechas */
-            line-height: 1; 
-        }
-
-        /* Posicionamiento específico para cada botón dentro del grid */
-        .botonControl[data-key="ArrowUp"] {
-            grid-column: 2; 
-            grid-row: 1;    
-            background-color: #ff8c00;
-            border: 3px solid #ffa500;
-            box-shadow: 3px 3px #ffa500;
-        }
-        .botonControl[data-key="ArrowLeft"] {
-            grid-column: 1; 
-            grid-row: 2;    
-            background-color: #6a006a;
-            border: 3px solid #ff00ff;
-            box-shadow: 3px 3px #ff00ff;
-        }
-        .botonControl[data-key=" "] { /* Botón de SALTO (Centro) */
-            grid-column: 2; 
-            grid-row: 2;    
-            background-color: #004d40;
-            border: 3px solid #00ff80;
-            box-shadow: 3px 3px #00ff80;
-            font-size: 10px; /* Ajustamos el tamaño para que el texto encaje en el cuadrado */
-            line-height: 1.2;
-            padding: 2px;
-        }
-        .botonControl[data-key="ArrowRight"] {
-            grid-column: 3; 
-            grid-row: 2;    
-            background-color: #6a006a;
-            border: 3px solid #ff00ff;
-            box-shadow: 3px 3px #ff00ff;
-        }
-        .botonControl[data-key="ArrowDown"] {
-            grid-column: 2; 
-            grid-row: 3;    
-            background-color: #ff8c00;
-            border: 3px solid #ffa500;
-            box-shadow: 3px 3px #ffa500;
-        }
-
-        /* Ocultar los espacios vacíos para que solo se vean los botones */
-        .grid-cell-empty {
-            visibility: hidden;
-        }
-
-        .botonControl:active {
-            box-shadow: 0 0 #ff00ff;
-            transform: translateY(3px);
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Barrel Tower</title>
+<style>
+:root{--bg:#050507;--panel:#101016;--line:#292936;--pink:#ff176f;--red:#ff334d;--blue:#16b8ff;--gold:#ffd34d;--text:#f5f5f7}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:var(--text);font-family:Arial,sans-serif;touch-action:none}body{display:flex;align-items:center;justify-content:center}
+#wrap{position:relative;width:100vw;height:100dvh;max-width:600px;background:#050507;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hud{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top)) 14px 8px;display:flex;justify-content:space-between;pointer-events:none;text-shadow:0 2px 4px #000;font-weight:900;letter-spacing:.04em;font-size:13px}.hudbox{background:#09090dcc;border:1px solid #353542;border-radius:10px;padding:6px 9px;min-width:78px}.hudbox b{display:block;color:var(--gold);font-size:17px;margin-top:2px}.hudcenter{text-align:center}.hudright{text-align:right}
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;pointer-events:none}.panel{pointer-events:auto;width:min(92%,420px);background:linear-gradient(180deg,#15151dF5,#09090ef5);border:1px solid #3b3b4b;border-radius:22px;padding:26px 22px;text-align:center;box-shadow:0 20px 70px #000;backdrop-filter:blur(10px)}.hidden{display:none!important}.logo{font-size:36px;font-weight:1000;letter-spacing:.12em;color:#fff;text-shadow:4px 4px 0 #b10b49;margin-bottom:3px}.sub{color:#9fa0ad;font-size:12px;letter-spacing:.18em;margin-bottom:18px}.panel h2{margin:0 0 8px;font-size:28px}.panel p{color:#b9bac5;line-height:1.5;font-size:14px}.btn{border:0;border-radius:13px;padding:13px 18px;margin-top:10px;background:linear-gradient(135deg,#ff176f,#b80d48);color:white;font-size:16px;font-weight:900;box-shadow:0 8px 22px #ff176f35;touch-action:none}.btn.secondary{background:#1c1c25;border:1px solid #3a3a46;box-shadow:none}.hint{font-size:11px!important;color:#777986!important;margin-top:15px!important}
+#controls{position:absolute;inset:0;pointer-events:none}.pad{position:absolute;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));width:164px;height:164px;pointer-events:auto}.ctrl{position:absolute;width:54px;height:54px;border-radius:16px;border:1px solid #ffffff25;background:#15151dcc;color:#fff;font-size:25px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px #0008;user-select:none}.ctrl.active,.ctrl:active{background:#ff176fbb;transform:scale(.96)}#left{left:0;bottom:36px}#right{right:0;bottom:36px}#up{left:55px;top:0}#down{left:55px;bottom:0}.jump{position:absolute;right:17px;bottom:calc(24px + env(safe-area-inset-bottom));width:94px;height:94px;border-radius:50%;background:linear-gradient(145deg,#ff3d55,#b80d48);border:2px solid #ffffff35;color:white;font-weight:1000;font-size:15px;box-shadow:0 8px 28px #ff174d45;pointer-events:auto}.jump.active,.jump:active{transform:scale(.95)}
+#pause{position:absolute;right:12px;top:calc(74px + env(safe-area-inset-top));width:40px;height:40px;border-radius:11px;background:#101016cc;border:1px solid #33333f;color:#fff;font-size:17px;font-weight:900;pointer-events:auto}
+@media(min-width:700px){#wrap{height:100dvh}}
+</style>
 </head>
 <body>
-    <h2>DONKEY KONG CLÁSICO</h2>
-    
-    <div id="hud">
-        <span>VIDAS: <span id="livesDisplay">3</span></span>
-    </div>
-    
-    <canvas id="juegoCanvas" width="320" height="400"></canvas>
-    <div id="controlesTactiles">
-        
-        <div class="grid-cell-empty"></div> 
-        <button class="botonControl" data-key="ArrowUp">↑</button>
-        <div class="grid-cell-empty"></div> 
-
-        <button class="botonControl" data-key="ArrowLeft">←</button>
-        <button class="botonControl" data-key=" ">SALTO</button> 
-        <button class="botonControl" data-key="ArrowRight">→</button>
-        
-        <div class="grid-cell-empty"></div> 
-        <button class="botonControl" data-key="ArrowDown">↓</button>
-        <div class="grid-cell-empty"></div> 
-
-    </div>
-
-    <script>
-        // Game variables and setup
-        const canvas = document.getElementById("juegoCanvas");
-        const ctx = canvas.getContext("2d");
-        const ancho = canvas.width;
-        const alto = canvas.height;
-        
-        // Elementos del HUD
-        const livesDisplay = document.getElementById('livesDisplay');
-
-        let teclasPresionadas = {};
-        const GRAVEDAD = 0.3;
-        let juegoActivo = true;
-        
-        // NUEVAS VARIABLES DE JUEGO
-        let vidas = 3; 
-
-        const ESTADO_INICIAL_CARLA = {
-            ancho: 16, 
-            alto: 24, 
-            x: 20,
-            y: alto - 34,
-            velocidadX: 0,
-            velocidadY: 0,
-            velocidadMovimiento: 3,
-            velocidadEscalada: 2,
-            fuerzaSalto: -8.5,
-            enElSuelo: true,
-            enEscalera: false
-        };
-
-        let carla = { ...ESTADO_INICIAL_CARLA };
-
-        const donkeyKong = {
-            ancho: 30,
-            alto: 40,
-            x: 50,
-            y: 35,
-            dirX: 1,
-            velocidadMovimiento: 0.5,
-            limiteDerecho: ancho - 50,
-            limiteIzquierdo: 20,
-            intervaloBarril: 2000,
-            ultimoBarril: Date.now()
-        };
-        
-        let barriles = [];
-
-
-        const meta = {
-            x: ancho - 50,
-            y: 8,
-            ancho: 40,
-            alto: 60
-        };
-
-        const plataformas = [
-            { x: 0, y: alto - 10, ancho: ancho, alto: 10 },
-            { x: 0, y: alto - 80, ancho: ancho - 20, alto: 10 },
-            { x: 20, y: alto - 160, ancho: ancho, alto: 10 },
-            { x: 0, y: alto - 240, ancho: ancho - 20, alto: 10 },
-            { x: ancho - 150, y: 140, ancho: 150, alto: 10 },
-            { x: 0, y: 70, ancho: ancho, alto: 10 },
-        ];
-        
-        const escaleras = [
-            { x: 50, y: alto - 10, alto: 70 },
-            { x: ancho - 60, y: alto - 80, alto: 80 },
-            { x: 30, y: alto - 160, alto: 80 },
-            { x: ancho - 40, y: alto - 240, alto: 100 }
-        ];
-
-        // --- FUNCIONES DE DIBUJO RETRO PIXEL ART ---
-
-        function dibujarRect(x, y, w, h, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, w, h);
-        }
-
-        function dibujarSombra(x, y, w, h, desplazamiento = 2, color = 'rgba(0,0,0,0.7)') {
-            dibujarRect(x + desplazamiento, y + desplazamiento, w, h, color);
-        }
-
-        function dibujarPlataformas() {
-            plataformas.forEach(p => {
-                dibujarSombra(p.x, p.y, p.ancho, p.alto + 2, 2, 'rgba(0,0,0,0.7)');
-                dibujarRect(p.x, p.y, p.ancho, p.alto, '#666666');
-                dibujarRect(p.x, p.y, p.ancho, 2, '#aaaaaa');
-                dibujarRect(p.x, p.y + p.alto - 2, p.ancho, 2, '#444444');
-            });
-        }
-        
-        function dibujarEscaleras() {
-            const ANCHO_ESCALERA = 12;
-            const ALTURA_PELDAÑO = 8;
-            const COLOR_MADERA = '#A0522D';
-
-            escaleras.forEach(e => {
-                const topY = e.y - e.alto;
-                
-                dibujarRect(e.x, topY, 2, e.alto, COLOR_MADERA);
-                dibujarRect(e.x + ANCHO_ESCALERA - 2, topY, 2, e.alto, COLOR_MADERA);
-
-                for (let y = e.y - ALTURA_PELDAÑO; y > topY; y -= ALTURA_PELDAÑO) {
-                    dibujarRect(e.x + 2, y, ANCHO_ESCALERA - 4, 2, COLOR_MADERA);
-                }
-            });
-        }
-
-        function dibujarCarlaPixel() {
-            const x = carla.x;
-            const y = carla.y;
-            const w = carla.ancho;
-            const h = carla.alto;
-            const COLOR_VESTIDO = '#F87060';
-            const COLOR_PIEL = '#FFDBAC';
-            const COLOR_PELO = '#993300';
-            const COLOR_ZAPATOS = '#444';
-            
-            // Head (piel)
-            dibujarRect(x + 4, y, 8, 8, COLOR_PIEL); 
-            
-            // Hair
-            dibujarRect(x + 3, y, 10, 4, COLOR_PELO);
-
-            // Body (vestido/overol)
-            dibujarRect(x + 3, y + 8, 10, 10, COLOR_VESTIDO);
-
-            // Legs (simulated)
-            dibujarRect(x + 4, y + 18, 3, 6, COLOR_ZAPATOS); 
-            dibujarRect(x + 9, y + 18, 3, 6, COLOR_ZAPATOS);
-            
-            // Arms
-            if (carla.enEscalera) {
-                 dibujarRect(x + 6, y + 10, 4, 3, COLOR_PIEL);
-            } else {
-                 dibujarRect(x + 1, y + 10, 3, 3, COLOR_PIEL);
-                 dibujarRect(x + w - 4, y + 10, 3, 3, COLOR_PIEL); 
-            }
-
-            // Eyes
-            dibujarRect(x + 5, y + 3, 2, 2, '#000000');
-            dibujarRect(x + 9, y + 3, 2, 2, '#000000');
-        }
-
-        function dibujarDonkeyKongPixel() {
-            const x = donkeyKong.x;
-            const y = donkeyKong.y;
-            const w = donkeyKong.ancho;
-            const h = donkeyKong.alto;
-
-            const DK_COLOR_PELO = '#61412A'; // Dark Brown
-            const DK_COLOR_CARA = '#D4A06A'; // Beige/Skin Tone
-            const DK_COLOR_BOCA = '#9E2A2A'; // Reddish
-
-            // Cuerpo principal (Pelaje)
-            dibujarRect(x, y, w, h, DK_COLOR_PELO);
-
-            // Brazos
-            dibujarRect(x - 5, y + 10, 5, 20, DK_COLOR_PELO);
-            dibujarRect(x + w, y + 10, 5, 20, DK_COLOR_PELO);
-
-            // Area de la cara (Beige)
-            dibujarRect(x + 5, y + 5, w - 10, 15, DK_COLOR_CARA);
-
-            // Boca (Detalle Rojo)
-            dibujarRect(x + 10, y + 15, w - 20, 3, DK_COLOR_BOCA);
-
-            // Ojos
-            dibujarRect(x + 7, y + 8, 3, 3, '#000000');
-            dibujarRect(x + w - 10, y + 8, 3, 3, '#000000');
-        }
-
-        function dibujarBarril(b) {
-            // Barrel Drawing (Always Brown)
-            dibujarRect(b.x - b.radio + 1, b.y - b.radio + 1, b.radio * 2, b.radio * 2, 'rgba(0, 0, 0, 0.4)');
-            
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.radio, 0, 2 * Math.PI);
-            ctx.fillStyle = '#8B4513';
-            ctx.fill();
-
-            // Bands
-            dibujarRect(b.x - b.radio, b.y - b.radio + 1, b.radio * 2, 2, '#aaaaaa');
-            dibujarRect(b.x - b.radio, b.y + b.radio - 3, b.radio * 2, 2, '#aaaaaa');
-        }
-
-        function dibujarMeta() {
-            dibujarSombra(meta.x, meta.y, meta.ancho, meta.alto, 2, 'rgba(0,0,0,0.7)');
-            dibujarRect(meta.x, meta.y, meta.ancho, meta.alto, '#B8860B');
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(meta.x, meta.y, meta.ancho, meta.alto);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = '10px "Press Start 2P"';
-            ctx.textAlign = 'center';
-            ctx.fillText('EXIT', meta.x + meta.ancho / 2, meta.y + 20);
-            ctx.textAlign = 'start';
-        }
-        
-        function actualizarHUD() {
-            livesDisplay.textContent = vidas;
-        }
-
-
-        function dibujar() {
-            if (!juegoActivo) return;
-
-            ctx.clearRect(0, 0, ancho, alto);
-
-            dibujarPlataformas();
-            dibujarEscaleras(); 
-            dibujarMeta();
-            dibujarDonkeyKongPixel();
-            barriles.forEach(dibujarBarril);
-            dibujarCarlaPixel();
-        }
-
-        // --- GAME LOGIC ---
-
-        // FUNCIÓN AÑADIDA PARA COMUNICARSE CON EL IFRAME PADRE
-        function notifyParent(playerWon) {
-            setTimeout(() => {
-                try {
-                    if(window.parent && window.parent !== window && typeof window.parent.endGame === 'function'){
-                        window.parent.endGame(playerWon);
-                    } else {
-                        window.location.href = '/'; 
-                    }
-                } catch(e) {
-                    window.location.href = '/';
-                }
-            }, 2500); 
-        }
-
-        // NUEVA FUNCIÓN: Reinicia solo la posición y los barriles.
-        function perderVida() {
-            vidas--;
-            actualizarHUD();
-            
-            if (vidas <= 0) {
-                manejarDerrota("¡Carla ha sido aplastada! Fin del Juego.");
-                return;
-            }
-            
-            // Reinicia la posición de Carla al inicio.
-            carla = { ...ESTADO_INICIAL_CARLA };
-            
-            // Mantiene el juego activo, pero muestra un mensaje breve.
-            const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: absolute;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(255, 0, 0, 0.4);
-                color: white;
-                font-family: 'Press Start 2P', monospace;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                z-index: 999;
-            `;
-            overlay.innerHTML = `<p style="font-size: 16px; color: #fff; text-shadow: 2px 2px #000;">¡OUCH! VIDA PERDIDA. Te quedan ${vidas}</p>`;
-            document.body.appendChild(overlay);
-
-            setTimeout(() => {
-                document.body.removeChild(overlay);
-                juegoActivo = true;
-            }, 1000); 
-            
-            // También se pueden reiniciar los barriles para dar una pequeña tregua
-            barriles = []; 
-            donkeyKong.ultimoBarril = Date.now();
-        }
-
-
-        function reiniciarJuego() {
-            vidas = 3; // Reinicia vidas
-            carla = { ...ESTADO_INICIAL_CARLA };
-            barriles = [];
-            donkeyKong.intervaloBarril = 2000;
-            donkeyKong.velocidadMovimiento = 0.5;
-            juegoActivo = true;
-            actualizarHUD();
-        }
-
-        function mostrarMensaje(mensaje, esGameOver) {
-            const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: absolute;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(0, 0, 0, 0.85);
-                color: white;
-                font-family: 'Press Start 2P', monospace;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                z-index: 1000;
-            `;
-
-            overlay.innerHTML = `
-                <div style="padding: 20px; border: 4px solid #FF0077; background: #333; border-radius: 8px; box-shadow: 0 0 15px #FF0077;">
-                    <p style="margin: 0 0 20px 0; font-size: 14px; color: ${esGameOver ? '#FF0077' : '#00FF80'};">${mensaje}</p>
-                    <button id="okBtn" style="padding: 10px 20px; font-family: 'Press Start 2P', monospace; background: #00FF80; border: none; border-radius: 4px; cursor: pointer; color: black; font-size: 10px;">${esGameOver ? 'Reiniciar' : '¡Genial!'}</button>
-                </div>
-            `;
-
-            document.body.appendChild(overlay);
-
-            document.getElementById('okBtn').onclick = () => {
-                document.body.removeChild(overlay);
-                if (esGameOver) {
-                    reiniciarJuego();
-                } else if (!juegoActivo) { // Si es victoria
-                    notifyParent(true);
-                }
-            };
-        }
-
-        // FUNCIÓN MODIFICADA
-        function manejarDerrota(mensaje) {
-            juegoActivo = false;
-            mostrarMensaje(mensaje, true);
-            // Notifica al padre que el jugador perdió (false)
-            notifyParent(false);
-        }
-
-        function crearBarril() {
-            // Only brown rolling barrels are created
-            barriles.push({
-                x: donkeyKong.x + donkeyKong.ancho / 2,
-                y: donkeyKong.y + donkeyKong.alto,
-                radio: 6,
-                velocidadX: 0,
-                velocidadY: 0,
-                rodando: false,
-                dirRodamiento: donkeyKong.dirX,
-                velocidadRodamiento: 1.5,
-                rebotador: false
-            });
-            donkeyKong.ultimoBarril = Date.now();
-        }
-
-        function actualizarBarriles() {
-            barriles = barriles.filter(b => b.y < alto + b.radio);
-
-            barriles.forEach(b => {
-                b.velocidadY += GRAVEDAD;
-
-                let colisionEnSuelo = false;
-                plataformas.forEach(p => {
-                    if (
-                        b.x > p.x && b.x < p.x + p.ancho &&
-                        b.y + b.radio >= p.y && b.y + b.radio <= p.y + 5 && b.velocidadY >= 0
-                    ) {
-                        b.y = p.y - b.radio;
-                        b.velocidadY = 0;
-                        b.rodando = true;
-                        colisionEnSuelo = true;
-                    }
-                });
-
-                if (b.rodando && colisionEnSuelo) {
-                    b.velocidadX = b.dirRodamiento * b.velocidadRodamiento;
-                } else {
-                    b.velocidadX = 0;
-                }
-
-                if (b.rodando && !colisionEnSuelo) {
-                    b.rodando = false;
-                    b.velocidadX = 0;
-                    b.dirRodamiento *= -1; 
-                }
-
-                b.x += b.velocidadX;
-                b.y += b.velocidadY;
-            });
-        }
-
-        function comprobarColisionCarla() {
-            // Colisión con Barriles
-            for (let i = barriles.length - 1; i >= 0; i--) {
-                const b = barriles[i];
-                const dx = Math.abs((carla.x + carla.ancho / 2) - b.x);
-                const dy = Math.abs((carla.y + carla.alto / 2) - b.y);
-
-                if (dx < (carla.ancho / 2 + b.radio) && dy < (carla.alto / 2 + b.radio)) {
-                    barriles.splice(i, 1); // El barril desaparece
-                    juegoActivo = false; // Detiene el juego por un momento
-                    perderVida(); // El juego continúa si quedan vidas
-                    return; // Sale inmediatamente después de colisionar
-                }
-            }
-
-            // Colisión con Meta (Victoria)
-            if (
-                carla.x < meta.x + meta.ancho && carla.x + carla.ancho > meta.x &&
-                carla.y + carla.alto > meta.y && carla.y < meta.y + meta.alto
-            ) {
-                juegoActivo = false;
-                mostrarMensaje("¡Carla ha alcanzado la puerta! ¡Has ganado!", false);
-            }
-        }
-        
-        function estaCercaDeEscalera() {
-            const ANCHO_ESCALERA = 12;
-            let tocandoEscalera = false;
-            
-            escaleras.forEach(e => {
-                const topY = e.y - e.alto;
-                
-                // Comprueba si Carla está horizontalmente centrada sobre la escalera
-                if (carla.x + carla.ancho / 2 > e.x && carla.x + carla.ancho / 2 < e.x + ANCHO_ESCALERA) {
-                    // Comprueba si Carla está verticalmente en el rango de la escalera
-                    if (carla.y + carla.alto > topY && carla.y < e.y) {
-                        tocandoEscalera = true;
-                    }
-                }
-            });
-            return tocandoEscalera;
-        }
-
-
-        function manejarControles() {
-            carla.velocidadX = 0;
-            const cercaDeEscalera = estaCercaDeEscalera();
-
-            // Determinar si Carla debe entrar/permanecer en modo Escalera
-            if (cercaDeEscalera && (teclasPresionadas['ArrowUp'] || teclasPresionadas['ArrowDown'])) {
-                carla.enEscalera = true;
-                carla.enElSuelo = false;
-                carla.velocidadY = 0; // Detiene la caída por gravedad
-            } else if (carla.enEscalera && !cercaDeEscalera) {
-                // Si estaba en la escalera pero ya no está cerca, cae
-                carla.enEscalera = false;
-            } else if (carla.enEscalera && !teclasPresionadas['ArrowUp'] && !teclasPresionadas['ArrowDown']) {
-                 // Si está en la escalera pero el usuario no presiona nada, se queda quieta verticalmente
-                 carla.velocidadY = 0;
-            }
-
-            if (carla.enEscalera) {
-                // Modo Escalera: Movimiento vertical manual
-                if (teclasPresionadas['ArrowUp']) {
-                    carla.velocidadY = -carla.velocidadEscalada;
-                } else if (teclasPresionadas['ArrowDown']) {
-                    carla.velocidadY = carla.velocidadEscalada;
-                } else {
-                    carla.velocidadY = 0; // Se queda quieta si no se presiona nada
-                }
-                
-                // Permite un pequeño movimiento lateral para alinearse si es necesario
-                if (teclasPresionadas['ArrowLeft']) carla.velocidadX = -carla.velocidadMovimiento / 3;
-                if (teclasPresionadas['ArrowRight']) carla.velocidadX = carla.velocidadMovimiento / 3;
-                
-            } else {
-                // Modo Plataforma: Movimiento lateral y Salto
-                if (teclasPresionadas['ArrowLeft']) {
-                    carla.velocidadX = -carla.velocidadMovimiento;
-                }
-                if (teclasPresionadas['ArrowRight']) {
-                    carla.velocidadX = carla.velocidadMovimiento;
-                }
-                // El salto se maneja en el evento touchstart/mousedown para un solo toque
-                // o aquí si se usa teclado.
-                if (teclasPresionadas[' '] && carla.enElSuelo) {
-                    carla.velocidadY = carla.fuerzaSalto;
-                    carla.enElSuelo = false;
-                }
-            }
-        }
-
-        function aplicarFisica() {
-            if (!carla.enElSuelo && !carla.enEscalera) {
-                carla.velocidadY += GRAVEDAD;
-            }
-            // Si está en escalera, la velocidadY es controlada por el input
-            
-            carla.x += carla.velocidadX;
-            carla.y += carla.velocidadY;
-
-            donkeyKong.x += donkeyKong.dirX * donkeyKong.velocidadMovimiento;
-            if (donkeyKong.x > donkeyKong.limiteDerecho || donkeyKong.x < donkeyKong.limiteIzquierdo) {
-                donkeyKong.dirX *= -1;
-            }
-
-            if (Date.now() - donkeyKong.ultimoBarril > donkeyKong.intervaloBarril) {
-                crearBarril();
-                donkeyKong.intervaloBarril = Math.max(500, donkeyKong.intervaloBarril - 30);
-                donkeyKong.velocidadMovimiento = Math.min(2.5, donkeyKong.velocidadMovimiento + 0.05);
-            }
-        }
-
-        function manejarColisiones() {
-            let colisionEnSuelo = false;
-
-            plataformas.forEach(p => {
-                if (
-                    carla.x < p.x + p.ancho && carla.x + carla.ancho > p.x &&
-                    carla.y + carla.alto > p.y && carla.y < p.y + p.alto
-                ) {
-                    // Colisión por encima (aterrizaje)
-                    if (carla.velocidadY >= 0 && carla.y + carla.alto <= p.y + 5) {
-                        carla.y = p.y - carla.alto;
-                        carla.velocidadY = 0;
-                        colisionEnSuelo = true;
-                        carla.enEscalera = false; // Sale de la escalera si aterriza
-                    } 
-                    // Colisión por debajo (salto)
-                    else if (carla.velocidadY < 0 && !carla.enEscalera) {
-                        carla.y = p.y + p.alto;
-                        carla.velocidadY = 0;
-                    }
-                }
-            });
-
-            carla.enElSuelo = colisionEnSuelo;
-
-            // Colisiones con bordes del canvas
-            if (carla.x < 0) carla.x = 0;
-            if (carla.x + carla.ancho > ancho) carla.x = ancho - carla.ancho;
-            
-            // Si cae al vacío (fuera del canvas)
-            if (carla.y > alto && juegoActivo) perderVida(); 
-        }
-
-        // --- BUCLE PRINCIPAL DEL JUEGO ---
-
-        function bucleJuego() {
-            if (juegoActivo) {
-                manejarControles();
-                aplicarFisica();
-                manejarColisiones();
-                actualizarBarriles();
-                comprobarColisionCarla();
-                dibujar();
-            }
-            requestAnimationFrame(bucleJuego);
-        }
-
-        // --- EVENTOS ---
-
-        document.addEventListener('keydown', (e) => {
-            if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault();
-            teclasPresionadas[e.key] = true;
-        });
-
-        document.addEventListener('keyup', (e) => {
-            teclasPresionadas[e.key] = false;
-        });
-
-        document.querySelectorAll('.botonControl').forEach(button => {
-            const key = button.getAttribute('data-key');
-            
-            const startEvent = (e) => {
-                e.preventDefault();
-                teclasPresionadas[key] = true;
-                
-                // El salto (espacio) solo se activa con el toque inicial si Carla está en el suelo
-                if (key === ' ' && carla.enElSuelo) {
-                    carla.velocidadY = carla.fuerzaSalto;
-                    carla.enElSuelo = false;
-                }
-            };
-
-            const endEvent = (e) => {
-                e.preventDefault();
-                teclasPresionadas[key] = false;
-            };
-
-            // Touch events for mobile
-            button.addEventListener('touchstart', startEvent);
-            button.addEventListener('touchend', endEvent);
-            
-            // Mouse events for desktop
-            button.addEventListener('mousedown', startEvent);
-            button.addEventListener('mouseup', endEvent);
-        });
-
-        window.onload = () => {
-            actualizarHUD(); // Muestra las vidas iniciales
-            bucleJuego();
-        }
-
-    </script>
+<div id="wrap">
+<canvas id="game"></canvas>
+<div id="hud" class="hidden"><div class="hudbox">PUNTOS<b id="score">000000</b></div><div class="hudbox hudcenter">NIVEL<b id="level">1 / 5</b></div><div class="hudbox hudright">VIDAS<b id="lives">♥♥♥</b></div></div>
+<button id="pause" class="hidden">Ⅱ</button>
+<div id="overlay"><div class="panel" id="menuPanel"><div class="logo">BARREL TOWER</div><div class="sub">ARCADE · 5 ESCENARIOS · iPHONE</div><p>Sube cinco torres distintas. Los barriles cambian de ruta, aparecen en posiciones variables y cada escenario introduce una mecánica nueva.</p><button class="btn" id="startBtn">JUGAR</button><p class="hint">CONTROLES: ◀ ▶ · ▲ ▼ · SALTO · MULTITOUCH</p></div><div class="panel hidden" id="pausePanel"><h2>PAUSA</h2><p>La partida está congelada.</p><button class="btn" id="resumeBtn">CONTINUAR</button><button class="btn secondary" id="restartPause">REINICIAR</button></div><div class="panel hidden" id="endPanel"><h2 id="endTitle">GAME OVER</h2><p id="endText"></p><button class="btn" id="restartBtn">JUGAR DE NUEVO</button></div></div>
+<div id="controls" class="hidden"><div class="pad"><div class="ctrl" id="left">◀</div><div class="ctrl" id="right">▶</div><div class="ctrl" id="up">▲</div><div class="ctrl" id="down">▼</div></div><button class="jump" id="jump">SALTO</button></div>
+</div>
+<script>
+'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const W=360,H=640;let dpr=1,scale=1,ox=0,oy=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);const r=document.getElementById('wrap').getBoundingClientRect();canvas.width=Math.floor(r.width*dpr);canvas.height=Math.floor(r.height*dpr);scale=Math.min(r.width/W,r.height/H);ox=(r.width-W*scale)/2;oy=(r.height-H*scale)/2}addEventListener('resize',resize);resize();
+
+const LEVELS=[
+ {name:'LA FÁBRICA',color:'#ff176f',bg:'#08060a',beams:[[[18,555],[342,570]],[[18,478],[342,462]],[[18,386],[342,402]],[[18,315],[342,299]],[[18,224],[342,240]],[[18,145],[342,129]]],ladders:[[0,1,285,0],[0,1,92,1],[1,2,205,0],[1,2,58,0],[2,3,305,1],[2,3,135,0],[3,4,78,0],[3,4,260,1],[4,5,205,0],[4,5,320,0]],hazard:'classic'},
+ {name:'FÁBRICA EN LLAMAS',color:'#ff334d',bg:'#100505',beams:[[[15,556],[345,548]],[[15,475],[345,493]],[[15,397],[345,382]],[[15,318],[345,335]],[[15,235],[345,214]],[[15,151],[345,165]]],ladders:[[0,1,65,0],[0,1,275,0],[1,2,150,0],[1,2,315,1],[2,3,55,0],[2,3,250,0],[3,4,175,0],[3,4,315,0],[4,5,90,1],[4,5,270,0]],hazard:'fire'},
+ {name:'PLANTA INDUSTRIAL',color:'#16b8ff',bg:'#050b10',beams:[[[15,558],[345,558]],[[25,482],[335,462]],[[15,395],[345,410]],[[30,325],[330,292]],[[15,235],[345,250]],[[25,150],[335,126]]],ladders:[[0,1,315,0],[0,1,105,0],[1,2,215,0],[1,2,45,1],[2,3,95,0],[2,3,290,0],[3,4,205,0],[3,4,70,0],[4,5,315,0],[4,5,145,0]],hazard:'conveyor'},
+ {name:'LA AZOTEA',color:'#9b7cff',bg:'#080712',beams:[[[18,560],[342,560]],[[35,475],[180,455]],[[210,430],[342,405]],[[18,345],[155,365]],[[205,315],[342,285]],[[35,205],[180,180]],[[215,160],[342,135]]],ladders:[[0,1,120,0],[0,1,285,1],[1,2,250,0],[2,3,70,0],[3,4,125,0],[4,5,270,0],[5,6,250,0]],hazard:'roof'},
+ {name:'TORRE FINAL',color:'#ffd34d',bg:'#090807',beams:[[[15,560],[345,560]],[[15,480],[345,465]],[[15,390],[345,405]],[[15,315],[345,295]],[[15,225],[345,245]],[[15,150],[345,125]]],ladders:[[0,1,70,0],[0,1,290,0],[1,2,190,0],[1,2,320,0],[2,3,65,0],[2,3,275,0],[3,4,160,0],[3,4,320,1],[4,5,90,0],[4,5,260,0]],hazard:'final'}
+];
+let cfg=LEVELS[0],beams=[],ladderDefs=[];
+function loadLevel(n){cfg=LEVELS[n-1];beams=cfg.beams.map(b=>({x1:b[0][0],y1:b[0][1],x2:b[1][0],y2:b[1][1]}));ladderDefs=cfg.ladders.map(a=>({b:a[0],t:a[1],x:a[2],broken:!!a[3]}));}
+
+let state='MENU',score=0,lives=3,level=1,bonus=5000,bonusTimer=0,hammer=0,spawnClock=.8,last=0,shake=0,flash=0,high=0,levelBanner=0;let player,barrels=[],particles=[],texts=[],hazards=[],keys={left:0,right:0,up:0,down:0,jump:0};let routeSeed=0,hammerPickup=null,fallObjects=[];
+try{high=+localStorage.getItem('barrelTowerHigh')||0}catch(e){}
+function rand(){routeSeed=(routeSeed*1664525+1013904223)>>>0;return routeSeed/4294967296}
+function beamY(i,x){const b=beams[i];if(!b)return 0;return b.y1+(b.y2-b.y1)*(x-b.x1)/(b.x2-b.x1)}
+function reset(){score=0;lives=3;level=1;bonus=5000;bonusTimer=0;hammer=0;routeSeed=(Math.random()*0xffffffff)>>>0;barrels=[];particles=[];texts=[];hazards=[];fallObjects=[];loadLevel(1);spawnClock=.9;levelBanner=2.2;makePlayer();makePickup();}
+function makePlayer(){player={x:45,y:beamY(0,45)-28,vx:0,vy:0,w:18,h:28,beam:0,ladder:null,ladderT:0,jumpLock:0,inv:0,dir:1,onGround:true}}
+function makePickup(){let candidates=[];for(let i=1;i<beams.length;i++)for(const l of ladderDefs)if(l.b===i&&!l.broken)candidates.push([i,l.x]);if(!candidates.length){hammerPickup=null;return}let p=candidates[(rand()*candidates.length)|0];hammerPickup={beam:p[0],x:p[1],active:true}}
+function start(){reset();state='PLAYING';showGame();audio.init();audio.beep(440,.08,'square',.04);last=performance.now();requestAnimationFrame(loop)}
+function showGame(){document.getElementById('overlay').style.display='none';document.getElementById('hud').classList.remove('hidden');document.getElementById('controls').classList.remove('hidden');document.getElementById('pause').classList.remove('hidden');updateHUD()}
+function showMenu(){document.getElementById('overlay').style.display='flex';['menuPanel','pausePanel','endPanel'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById('menuPanel').classList.remove('hidden');document.getElementById('hud').classList.add('hidden');document.getElementById('controls').classList.add('hidden');document.getElementById('pause').classList.add('hidden')}
+function pause(){if(state!=='PLAYING')return;state='PAUSED';document.getElementById('overlay').style.display='flex';document.getElementById('menuPanel').classList.add('hidden');document.getElementById('endPanel').classList.add('hidden');document.getElementById('pausePanel').classList.remove('hidden')}
+function resume(){if(state!=='PAUSED')return;state='PLAYING';document.getElementById('overlay').style.display='none';last=performance.now();requestAnimationFrame(loop)}
+function finishGame(win){state=win?'LEVEL_COMPLETE':'GAME_OVER';document.getElementById('overlay').style.display='flex';document.getElementById('menuPanel').classList.add('hidden');document.getElementById('pausePanel').classList.add('hidden');document.getElementById('endPanel').classList.remove('hidden');document.getElementById('endTitle').textContent=win?'¡TORRE COMPLETADA!':'GAME OVER';document.getElementById('endText').textContent=(win?'Has superado los 5 escenarios. ':'Puntuación final: ')+score.toLocaleString('es-ES')+' · Récord: '+high.toLocaleString('es-ES');audio.beep(win?880:100,.16,win?'square':'sawtooth',.05)}
+function nextLevel(){if(level>=5){addScore(bonus);finishGame(true);return}addScore(1000*level);level++;bonus=Math.min(7000,bonus+900);hammer=0;barrels=[];particles=[];texts=[];fallObjects=[];loadLevel(level);makePlayer();makePickup();spawnClock=.8;levelBanner=2.4;flash=.5;shake=.2;audio.beep(500,.08,'triangle',.04);setTimeout(()=>audio.beep(750,.1,'square',.04),90);updateHUD()}
+function addScore(n){score+=n;if(score>high){high=score;try{localStorage.setItem('barrelTowerHigh',high)}catch(e){}}if(player)texts.push({x:player.x,y:player.y-22,s:'+'+n,t:1.1});audio.beep(700,.045,'square',.025)}
+function nearestLadder(){let best=null,dist=999;for(const l of ladderDefs){if(l.b!==player.beam&&l.t!==player.beam)continue;if(l.broken)continue;let y=beamY(player.beam,player.x);if(Math.abs(l.x-player.x)<20&&Math.abs(player.y+player.h-y)<30&&Math.abs(l.x-player.x)<dist){best=l;dist=Math.abs(l.x-player.x)}}return best}
+function updatePlayer(dt){if(player.inv>0)player.inv-=dt;if(player.jumpLock>0)player.jumpLock-=dt;
+ let dir=(keys.right?1:0)-(keys.left?1:0);
+ if(player.ladder){const l=player.ladder;let moving=(keys.up?1:0)-(keys.down?1:0);player.ladderT+=moving*dt*.9;player.ladderT=Math.max(0,Math.min(1,player.ladderT));player.x=l.x;const yTop=beamY(l.t,l.x),yBot=beamY(l.b,l.x);player.y=yBot+(yTop-yBot)*player.ladderT-player.h; if(player.ladderT<=0||player.ladderT>=1){const target=player.ladderT>=1?l.t:l.b;player.beam=target;player.ladder=null;player.onGround=true;player.y=beamY(target,player.x)-player.h;audio.beep(500,.035,'triangle',.025)}return;}
+ player.vx+=dir*900*dt;player.vx*=Math.pow(.0008,dt);player.vx=Math.max(-130,Math.min(130,player.vx));player.x+=player.vx*dt;player.x=Math.max(14,Math.min(346,player.x));if(Math.abs(player.vx)>3)player.dir=player.vx>0?1:-1;
+ if(keys.jump&&!player.jumpLock&&player.onGround){player.vy=-250;player.onGround=false;player.jumpLock=.25;audio.beep(330,.08,'square',.04)}
+ player.vy+=650*dt;player.y+=player.vy*dt;let ground=beamY(player.beam,player.x)-player.h;if(player.vy>=0&&player.y>=ground&&player.y<ground+32){player.y=ground;player.vy=0;player.onGround=true}else player.onGround=false;
+ if((keys.up||keys.down)&&player.onGround){let l=nearestLadder();if(l){player.ladder=l;player.ladderT=player.beam===l.b?0:1;player.onGround=false;audio.beep(240,.04,'triangle',.025)}}
+ if(player.y>H+35)loseLife('fall');
+ if(player.beam===beams.length-1&&player.x>305)nextLevel();
+}
+function loseLife(){if(state!=='PLAYING')return;lives--;flash=.35;shake=.25;audio.beep(100,.18,'sawtooth',.05);if(lives<=0){finishGame(false);return}makePlayer();bonus=Math.max(1000,bonus-500);barrels=[];hammer=0;updateHUD()}
+function spawnBarrel(){let top=beams.length-1;let fromLeft=rand()<.5;let x=fromLeft?34:326;let speed=62+rand()*30+Math.min(48,score/700)+level*3;barrels.push({x,y:beamY(top,x)-10,vx:(fromLeft?1:-1)*speed,r:10,beam:top,mode:'roll',rot:0,age:0,counted:false,dead:false,ladder:null,ladderT:0})}
+function chooseDrop(b){let opts=ladderDefs.filter(l=>l.b===b.beam&&!l.broken&&Math.abs(l.x-b.x)<145);let chance=.18+level*.025+Math.min(.16,score/18000);if(opts.length&&rand()<chance){let l=opts[(rand()*opts.length)|0];b.mode='ladder';b.ladder=l;b.ladderT=1;b.x=l.x;return true}return false}
+function updateBarrel(b,dt){b.age+=dt;b.rot+=b.vx*dt/10;
+ if(b.mode==='ladder'){b.ladderT-=dt*(.58+level*.025);let l=b.ladder;b.x=l.x;const yb=beamY(l.b,l.x),yt=beamY(l.t,l.x);b.y=yt+(yb-yt)*b.ladderT-10;if(b.ladderT<=0){b.beam=l.b;b.mode='roll';b.vx=(rand()<.5?1:-1)*(68+rand()*50+level*3);b.x+=b.vx>0?3:-3}return}
+ if(b.mode==='fall'){b.vy+=650*dt;b.y+=b.vy*dt;if(b.y>H+40)b.dead=true;return}
+ b.x+=b.vx*dt;b.y=beamY(b.beam,b.x)-10;
+ if(b.x<14||b.x>346){if(!chooseDrop(b)){if(b.beam===0){b.dead=true}else{b.beam--;b.x=b.x<14?330:30;b.vx=(b.x<180?1:-1)*(68+rand()*48+level*3)}}}
+ else if(rand()<dt*(.045+level*.006))chooseDrop(b);
+ if(b.age>1.2&&rand()<dt*(.008+level*.002))b.vx*=-1;
+ if(!b.counted&&player.beam===b.beam&&player.y+player.h<b.y+5&&Math.abs(player.x-b.x)<24){b.counted=true;addScore(100)}
+ if(player.inv<=0&&player.beam===b.beam&&Math.hypot(player.x-b.x,(player.y+player.h/2)-(b.y+10))<21){if(hammer>0){b.dead=true;addScore(250);burst(b.x,b.y,'gold');audio.beep(180,.06,'square',.035)}else loseLife('barrel')}
+}
+function updateHazards(dt){hazards=[];
+ if(cfg.hazard==='fire'){for(let i=0;i<8;i++)hazards.push({x:25+i*45+Math.sin(performance.now()/350+i)*5,y:beamY(0,25+i*45)-5,sz:5+((i+level)%3)*2})}
+ if(cfg.hazard==='conveyor'){hazards.push({x:0,y:beamY(1,100)-9,w:110,h:5,v:25});hazards.push({x:250,y:beamY(3,280)-9,w:90,h:5,v:-30});if(player.onGround&&(player.beam===1||player.beam===3)){player.x+= (player.beam===1?.8:-.8)*dt*10}}
+ if(cfg.hazard==='roof'){if(rand()<dt*.7)fallObjects.push({x:25+rand()*310,y:105,vy:40+rand()*45,r:5+rand()*5});for(const o of fallObjects){o.vy+=90*dt;o.y+=o.vy*dt;if(o.y>H+20)o.dead=true;if(player.inv<=0&&Math.hypot(player.x-o.x,player.y-o.y)<18){o.dead=true;loseLife('falling')}}fallObjects=fallObjects.filter(o=>!o.dead)}
+ if(cfg.hazard==='final'){if(rand()<dt*.35)fallObjects.push({x:25+rand()*310,y:95,vy:55+rand()*65,r:6});for(const o of fallObjects){o.vy+=100*dt;o.y+=o.vy*dt;if(o.y>H+20)o.dead=true;if(player.inv<=0&&Math.hypot(player.x-o.x,player.y-o.y)<19){o.dead=true;loseLife('object')}}fallObjects=fallObjects.filter(o=>!o.dead)}
+}
+function update(dt){if(state!=='PLAYING')return;bonusTimer+=dt;if(bonusTimer>=1){bonus=Math.max(0,bonus-35);bonusTimer=0}hammer=Math.max(0,hammer-dt);spawnClock-=dt;let max=1+Math.min(3,Math.floor(score/900))+Math.floor((level-1)/2);if(spawnClock<=0){if(barrels.filter(b=>!b.dead).length<max)spawnBarrel();spawnClock=Math.max(.62,1.75-score/8500-level*.07)*(.72+rand()*.6)}updatePlayer(dt);if(state!=='PLAYING')return;for(const b of barrels)if(!b.dead)updateBarrel(b,dt);barrels=barrels.filter(b=>!b.dead);updateHazards(dt);if(hammerPickup&&hammerPickup.active&&player.beam===hammerPickup.beam&&Math.abs(player.x-hammerPickup.x)<19&&Math.abs(player.y-(beamY(player.beam,player.x)-player.h))<28){hammerPickup.active=false;hammer=8;addScore(500);burst(hammerPickup.x,hammerPickup.y,'gold');audio.beep(620,.1,'square',.05)}
+ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=p.g*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);for(const t of texts){t.y-=18*dt;t.t-=dt}texts=texts.filter(t=>t.t>0);shake=Math.max(0,shake-dt);flash=Math.max(0,flash-dt);levelBanner=Math.max(0,levelBanner-dt);updateHUD()}
+function burst(x,y,c){for(let i=0;i<18;i++){let a=rand()*Math.PI*2,s=40+rand()*100;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,g:150,life:.45+rand()*.35,c})}}
+function updateHUD(){document.getElementById('score').textContent=String(score).padStart(6,'0');document.getElementById('level').textContent=level+' / 5';document.getElementById('lives').textContent='♥'.repeat(lives)+'♡'.repeat(3-lives)}
+function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);if(shake)ctx.translate((Math.random()-.5)*shake*12,(Math.random()-.5)*shake*12);drawBackground();drawBeams();drawLadders();drawHazards();drawGoal();drawPickup();drawBoss();for(const o of fallObjects)drawFalling(o);for(const b of barrels)drawBarrel(b);drawPlayer();for(const p of particles)drawParticle(p);for(const t of texts)drawText(t);if(hammer>0)drawHammerTimer();if(levelBanner>0)drawBanner();if(flash){ctx.fillStyle='rgba(255,40,80,'+(flash*.35)+')';ctx.fillRect(0,0,W,H)}ctx.restore()}
+function drawBackground(){ctx.fillStyle=cfg.bg;ctx.fillRect(0,0,W,H);for(let y=50;y<H;y+=28){ctx.strokeStyle='rgba(255,255,255,.025)';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.fillStyle=cfg.color;ctx.globalAlpha=.07;ctx.fillRect(0,105,W,3);ctx.globalAlpha=1;for(let i=0;i<24;i++){let x=(i*73+level*31)%W,y=65+(i*47+level*17)%500;ctx.fillStyle=i%2?cfg.color:'#16b8ff';ctx.globalAlpha=.25;ctx.fillRect(x,y,2,2)}ctx.globalAlpha=1;if(cfg.hazard==='fire'){ctx.fillStyle='#ff3344';ctx.globalAlpha=.08;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1}if(cfg.hazard==='roof'){ctx.strokeStyle='#17152b';ctx.lineWidth=10;for(let x=-50;x<W;x+=45){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+100,H);ctx.stroke()}}
+}
+function drawBeams(){for(let i=0;i<beams.length;i++){let b=beams[i];ctx.lineCap='round';ctx.lineWidth=15;ctx.strokeStyle=cfg.hazard==='fire'&&i===0?'#9e160e':'#a40e4d';ctx.beginPath();ctx.moveTo(b.x1,b.y1);ctx.lineTo(b.x2,b.y2);ctx.stroke();ctx.lineWidth=9;ctx.strokeStyle=i%2?cfg.color:'#ff176f';ctx.beginPath();ctx.moveTo(b.x1,b.y1-2);ctx.lineTo(b.x2,b.y2-2);ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle='#fff';ctx.globalAlpha=.25;ctx.beginPath();ctx.moveTo(b.x1,b.y1-5);ctx.lineTo(b.x2,b.y2-5);ctx.stroke();ctx.globalAlpha=1}}
+function drawLadders(){for(const l of ladderDefs){let yb=beamY(l.b,l.x),yt=beamY(l.t,l.x);ctx.strokeStyle=l.broken?'#23627d':'#16b8ff';ctx.lineWidth=5;let gap=l.broken?.42:0,yA=yb-(yb-yt)*gap/2,yB=yt+(yb-yt)*gap/2;ctx.beginPath();ctx.moveTo(l.x-7,yA);ctx.lineTo(l.x-7,yB);ctx.moveTo(l.x+7,yA);ctx.lineTo(l.x+7,yB);ctx.stroke();if(!l.broken){ctx.lineWidth=3;for(let t=.08;t<.94;t+=.14){let y=yb+(yt-yb)*t;ctx.beginPath();ctx.moveTo(l.x-8,y);ctx.lineTo(l.x+8,y);ctx.stroke()}}else{ctx.fillStyle='#ff334d';ctx.fillRect(l.x-4,(yb+yt)/2-3,8,6)}}}
+function drawGoal(){let top=beams.length-1,x=320,y=beamY(top,320)-42;ctx.fillStyle=cfg.color;ctx.fillRect(x-24,y+31,48,3);ctx.strokeStyle='#ffd34d';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-16,y+30);ctx.lineTo(x-16,y);ctx.lineTo(x+16,y);ctx.stroke();ctx.fillStyle='#ffd34d';ctx.beginPath();ctx.arc(x,y+15,12,0,Math.PI*2);ctx.fill();ctx.fillStyle='#5b1834';ctx.fillRect(x-7,y+12,14,10);ctx.fillStyle='#fff';ctx.font='900 9px Arial';ctx.textAlign='center';ctx.fillText('GO!',x,y+18)}
+function drawBoss(){let top=beams.length-1,x=38,y=beamY(top,38)-48;ctx.save();ctx.translate(x,y);ctx.fillStyle='#6b321e';ctx.beginPath();ctx.arc(0,12,23,0,Math.PI*2);ctx.fill();ctx.fillStyle='#7d3d25';ctx.beginPath();ctx.arc(0,-4,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#111';ctx.fillRect(-9,-9,5,5);ctx.fillRect(4,-9,5,5);ctx.fillStyle='#ffb27d';ctx.fillRect(-10,1,20,5);ctx.fillStyle='#8b4a2a';ctx.fillRect(-25,17,50,7);ctx.restore()}
+function drawPickup(){if(!hammerPickup||!hammerPickup.active)return;let p=hammerPickup,y=beamY(p.beam,p.x)-18;ctx.save();ctx.translate(p.x,y);ctx.rotate(-.3+Math.sin(performance.now()/150)*.06);ctx.shadowColor='#ffd34d';ctx.shadowBlur=12;ctx.fillStyle='#8c4b20';ctx.fillRect(-2,-13,4,25);ctx.fillStyle='#ddd';ctx.fillRect(-10,-17,20,7);ctx.restore()}
+function drawHazards(){for(const h of hazards){if(h.sz){ctx.fillStyle='#ff8a18';ctx.beginPath();ctx.arc(h.x,h.y, h.sz,Math.PI,0);ctx.lineTo(h.x-h.sz,h.y);ctx.fill();ctx.fillStyle='#ffdf4d';ctx.beginPath();ctx.arc(h.x,h.y-3,h.sz*.45,Math.PI,0);ctx.fill()}else{ctx.fillStyle='#16b8ff';ctx.fillRect(h.x,h.y,h.w,h.h);for(let x=h.x+8;x<h.x+h.w;x+=18){ctx.fillStyle='#082c3b';ctx.fillRect(x,h.y,8,h.h)}}}}
+function drawFalling(o){ctx.fillStyle='#ffd34d';ctx.shadowColor='#ffd34d';ctx.shadowBlur=12;ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+function drawBarrel(b){ctx.save();ctx.translate(b.x,b.y+10);ctx.rotate(b.rot);ctx.shadowColor='#ff9d00';ctx.shadowBlur=10;let grad=ctx.createRadialGradient(-3,-4,2,0,0,11);grad.addColorStop(0,'#ffd35a');grad.addColorStop(1,'#8b3d0d');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(0,0,10,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#4a2008';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,7,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(-7,-7);ctx.lineTo(7,7);ctx.moveTo(7,-7);ctx.lineTo(-7,7);ctx.stroke();ctx.restore()}
+function drawPlayer(){if(player.inv>0&&Math.floor(player.inv*10)%2===0)return;let x=player.x,y=player.y;ctx.save();ctx.translate(x,y);if(player.dir<0)ctx.scale(-1,1);ctx.fillStyle='#2f65ff';ctx.fillRect(-7,10,14,17);ctx.fillStyle='#d83a2f';ctx.fillRect(-9,5,18,7);ctx.fillStyle='#ffbd83';ctx.beginPath();ctx.arc(0,1,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff334d';ctx.fillRect(-8,-7,16,6);ctx.fillStyle='#ffd34d';ctx.fillRect(-8,27,7,3);ctx.fillRect(2,27,7,3);ctx.fillStyle='#111';ctx.fillRect(3,-1,2,2);if(hammer>0){ctx.rotate(-.35);ctx.fillStyle='#8c4b20';ctx.fillRect(8,2,3,22);ctx.fillStyle='#bbb';ctx.fillRect(4,0,13,7)}ctx.restore()}
+function drawParticle(p){ctx.save();ctx.globalAlpha=Math.max(0,p.life*2);ctx.fillStyle=p.c==='gold'?'#ffd34d':p.c==='blue'?'#16b8ff':'#ff176f';ctx.fillRect(p.x,p.y,3,3);ctx.restore()}
+function drawText(t){ctx.save();ctx.globalAlpha=Math.min(1,t.t*2);ctx.fillStyle='#fff';ctx.font='900 14px Arial';ctx.textAlign='center';ctx.fillText(t.s,t.x,t.y);ctx.restore()}
+function drawHammerTimer(){ctx.fillStyle='#ffd34d';ctx.font='900 12px Arial';ctx.textAlign='center';ctx.fillText('MARTILLO '+hammer.toFixed(1)+'s',W/2,92)}
+function drawBanner(){ctx.save();ctx.globalAlpha=Math.min(1,levelBanner<.4?levelBanner/0.4:1);ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(45,275,270,72);ctx.strokeStyle=cfg.color;ctx.lineWidth=2;ctx.strokeRect(45,275,270,72);ctx.fillStyle='#fff';ctx.font='900 13px Arial';ctx.textAlign='center';ctx.fillText('NIVEL '+level,180,298);ctx.fillStyle=cfg.color;ctx.font='900 22px Arial';ctx.fillText(cfg.name,180,325);ctx.restore()}
+function loop(now){if(state!=='PLAYING')return;let dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
+function bind(el,name){let active=new Set();el.addEventListener('pointerdown',e=>{e.preventDefault();active.add(e.pointerId);keys[name]=1;el.classList.add('active');try{el.setPointerCapture(e.pointerId)}catch(_){}},{passive:false});const off=e=>{if(active.has(e.pointerId)){active.delete(e.pointerId);if(active.size===0){keys[name]=0;el.classList.remove('active')}}};el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('pointerleave',e=>{if(e.buttons===0)off(e)});}
+bind(document.getElementById('left'),'left');bind(document.getElementById('right'),'right');bind(document.getElementById('up'),'up');bind(document.getElementById('down'),'down');bind(document.getElementById('jump'),'jump');
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=1;if(e.key==='ArrowRight'||e.key==='d')keys.right=1;if(e.key==='ArrowUp'||e.key==='w')keys.up=1;if(e.key==='ArrowDown'||e.key==='s')keys.down=1;if(e.key===' '){keys.jump=1;e.preventDefault()}if(e.key==='Escape'){if(state==='PLAYING')pause();else if(state==='PAUSED')resume()}});addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=0;if(e.key==='ArrowRight'||e.key==='d')keys.right=0;if(e.key==='ArrowUp'||e.key==='w')keys.up=0;if(e.key==='ArrowDown'||e.key==='s')keys.down=0;if(e.key===' ')keys.jump=0});
+document.getElementById('startBtn').onclick=start;document.getElementById('resumeBtn').onclick=resume;document.getElementById('pause').onclick=pause;document.getElementById('restartBtn').onclick=start;document.getElementById('restartPause').onclick=start;
+const audio={ctx:null,init(){if(this.ctx)return;try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==='suspended')this.ctx.resume()}catch(e){}},beep(f,d,type,g){if(!this.ctx)return;let o=this.ctx.createOscillator(),a=this.ctx.createGain();o.type=type;o.frequency.value=f;a.gain.setValueAtTime(g,this.ctx.currentTime);a.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+d);o.connect(a);a.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+d)}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='PLAYING')pause()});document.addEventListener('contextmenu',e=>e.preventDefault());
+reset();showMenu();draw();
+</script>
 </body>
 </html>
