@@ -18,8 +18,14 @@
     box-sizing:border-box;
     margin:0;
     padding:0;
+
+    -webkit-user-select:none !important;
+    user-select:none !important;
+
+    -webkit-touch-callout:none !important;
     -webkit-tap-highlight-color:transparent;
-    user-select:none;
+
+    -webkit-user-drag:none;
 }
 
 html,
@@ -27,8 +33,16 @@ body{
     width:100%;
     height:100%;
     overflow:hidden;
+
     background:#111;
-    font-family:Arial,Helvetica,sans-serif;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    -webkit-user-select:none !important;
+    user-select:none !important;
 }
 
 body{
@@ -37,23 +51,66 @@ body{
     align-items:center;
 }
 
+button,
+canvas{
+    -webkit-user-select:none !important;
+    user-select:none !important;
+
+    -webkit-touch-callout:none !important;
+    -webkit-user-drag:none;
+
+    touch-action:none;
+}
+
+button{
+    appearance:none;
+    -webkit-appearance:none;
+
+    outline:none !important;
+
+    -webkit-tap-highlight-color:transparent;
+
+    cursor:pointer;
+}
+
+button:focus,
+button:active,
+button:focus-visible{
+    outline:none !important;
+}
+
+/* =========================================================
+   CONTENEDOR
+========================================================= */
+
 #gameShell{
     position:relative;
+
     width:100%;
     max-width:520px;
     height:100dvh;
+
     background:#000;
+
     overflow:hidden;
+
     box-shadow:
         0 0 0 4px #252525,
         0 0 30px rgba(0,0,0,.8);
 }
 
+/* =========================================================
+   CANVAS
+========================================================= */
+
 canvas{
     display:block;
+
     width:100%;
     height:calc(100% - 125px);
+
     background:#000;
+
     image-rendering:pixelated;
     image-rendering:crisp-edges;
 }
@@ -64,129 +121,213 @@ canvas{
 
 #touchControls{
     position:absolute;
+
     left:0;
     right:0;
     bottom:0;
+
     height:125px;
+
     background:
         linear-gradient(
             #151515,
             #090909
         );
+
     border-top:4px solid #303030;
-    box-shadow:0 -5px 15px rgba(0,0,0,.8);
+
+    box-shadow:
+        0 -5px 15px rgba(0,0,0,.8);
+
     z-index:20;
+
+    -webkit-user-select:none !important;
+    user-select:none !important;
 }
 
 .control{
     position:absolute;
+
     border:3px solid #555;
+
     background:
         linear-gradient(
             #383838,
             #1b1b1b
         );
+
     color:#fff;
+
     border-radius:10px;
-    font-family:Arial,Helvetica,sans-serif;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
     font-weight:bold;
+
     font-size:24px;
+
     box-shadow:
         inset 0 2px 0 rgba(255,255,255,.12),
         0 4px 0 #050505;
+
     touch-action:none;
+
+    -webkit-user-select:none !important;
+    user-select:none !important;
+
+    -webkit-touch-callout:none !important;
+
+    -webkit-tap-highlight-color:transparent;
+
+    outline:none !important;
 }
 
 .control:active,
 .control.active{
-    transform:translateY(3px);
+    transform:translateY(2px);
+
     box-shadow:
         inset 0 2px 0 rgba(255,255,255,.05),
         0 1px 0 #050505;
+
     background:#252525;
 }
 
 #left{
     left:3%;
     bottom:35px;
+
     width:14%;
     min-width:52px;
+
     height:55px;
 }
 
 #right{
     left:18%;
     bottom:35px;
+
     width:14%;
     min-width:52px;
+
     height:55px;
 }
 
 #up{
     left:33%;
     bottom:64px;
+
     width:13%;
     min-width:48px;
+
     height:45px;
+
     font-size:20px;
 }
 
 #down{
     left:33%;
     bottom:13px;
+
     width:13%;
     min-width:48px;
+
     height:45px;
+
     font-size:20px;
 }
 
 #jump{
     right:18%;
     bottom:29px;
+
     width:21%;
     min-width:78px;
+
     height:61px;
+
     font-size:15px;
 }
 
 #hammer{
     right:3%;
     bottom:29px;
+
     width:13%;
     min-width:55px;
+
     height:61px;
+
     font-size:25px;
 }
 
+/* =========================================================
+   BOTÓN INICIO
+========================================================= */
+
 #startTouch{
     position:absolute;
+
     left:50%;
+
     transform:translateX(-50%);
+
     bottom:140px;
+
     z-index:30;
+
     padding:15px 28px;
+
     border:3px solid #d7b347;
+
     border-radius:8px;
+
     background:#171717;
+
     color:#ffe48a;
+
     font-size:18px;
+
     font-weight:bold;
+
     letter-spacing:1px;
+
     box-shadow:
         0 4px 0 #000,
         inset 0 1px 0 rgba(255,255,255,.15);
+
     display:none;
+
+    -webkit-user-select:none !important;
+    user-select:none !important;
+
+    -webkit-touch-callout:none !important;
+
+    touch-action:none;
+}
+
+#startTouch.hidden{
+    display:none !important;
 }
 
 @media(max-width:700px){
+
     #startTouch{
         display:block;
+    }
+
+    #startTouch.hidden{
+        display:none !important;
     }
 }
 
 @media(min-width:701px){
+
     #startTouch{
-        display:none!important;
+        display:none !important;
     }
 }
 </style>
@@ -198,7 +339,9 @@ canvas{
 
     <canvas id="game" width="360" height="515"></canvas>
 
-    <button id="startTouch">PULSA PARA JUGAR</button>
+    <button id="startTouch">
+        PULSA PARA JUGAR
+    </button>
 
     <div id="touchControls">
 
@@ -236,13 +379,17 @@ canvas{
    CANVAS
 ========================================================= */
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas =
+    document.getElementById("game");
+
+const ctx =
+    canvas.getContext("2d");
 
 const W = canvas.width;
 const H = canvas.height;
 
 ctx.imageSmoothingEnabled = false;
+
 
 /* =========================================================
    AUDIO
@@ -251,26 +398,44 @@ ctx.imageSmoothingEnabled = false;
 let audioCtx = null;
 
 function initAudio(){
+
     if(!audioCtx){
+
         try{
-            audioCtx = new (
+
+            audioCtx = new(
                 window.AudioContext ||
                 window.webkitAudioContext
             )();
+
         }catch(e){}
     }
 
-    if(audioCtx && audioCtx.state === "suspended"){
+    if(
+        audioCtx &&
+        audioCtx.state === "suspended"
+    ){
+
         audioCtx.resume().catch(()=>{});
     }
 }
 
-function beep(freq,duration,type="square",volume=.035){
+function beep(
+    freq,
+    duration,
+    type="square",
+    volume=.035
+){
+
     if(!audioCtx) return;
 
     try{
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+
+        const osc =
+            audioCtx.createOscillator();
+
+        const gain =
+            audioCtx.createGain();
 
         osc.type = type;
         osc.frequency.value = freq;
@@ -287,15 +452,20 @@ function beep(freq,duration,type="square",volume=.035){
             audioCtx.currentTime + duration
         );
 
-        osc.stop(audioCtx.currentTime + duration);
+        osc.stop(
+            audioCtx.currentTime + duration
+        );
+
     }catch(e){}
 }
+
 
 /* =========================================================
    INPUT
 ========================================================= */
 
 const keys = {
+
     left:false,
     right:false,
     up:false,
@@ -307,45 +477,123 @@ const keys = {
 let jumpPressed = false;
 let hammerPressed = false;
 
+
+/* =========================================================
+   BOTONES TÁCTILES
+========================================================= */
+
+function bindButton(id,name){
+
+    const el =
+        document.getElementById(id);
+
+    let pointerId = null;
+
+    function down(e){
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        initAudio();
+
+        pointerId = e.pointerId;
+
+        try{
+            el.setPointerCapture(e.pointerId);
+        }catch(err){}
+
+        el.classList.add("active");
+
+        pressKey(name);
+    }
+
+    function up(e){
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(
+            pointerId !== null &&
+            e.pointerId !== pointerId
+        ){
+            return;
+        }
+
+        pointerId = null;
+
+        el.classList.remove("active");
+
+        releaseKey(name);
+
+        try{
+            if(el.hasPointerCapture(e.pointerId)){
+                el.releasePointerCapture(e.pointerId);
+            }
+        }catch(err){}
+    }
+
+    el.addEventListener(
+        "pointerdown",
+        down,
+        {passive:false}
+    );
+
+    el.addEventListener(
+        "pointerup",
+        up,
+        {passive:false}
+    );
+
+    el.addEventListener(
+        "pointercancel",
+        up,
+        {passive:false}
+    );
+
+    el.addEventListener(
+        "lostpointercapture",
+        ()=>{
+            el.classList.remove("active");
+            releaseKey(name);
+            pointerId=null;
+        }
+    );
+
+    el.addEventListener(
+        "contextmenu",
+        e=>e.preventDefault()
+    );
+
+    el.addEventListener(
+        "selectstart",
+        e=>e.preventDefault()
+    );
+
+    el.addEventListener(
+        "dragstart",
+        e=>e.preventDefault()
+    );
+}
+
 function pressKey(name){
+
     if(!keys[name]){
-        if(name === "jump") jumpPressed = true;
-        if(name === "hammer") hammerPressed = true;
+
+        if(name === "jump"){
+            jumpPressed = true;
+        }
+
+        if(name === "hammer"){
+            hammerPressed = true;
+        }
     }
 
     keys[name] = true;
 }
 
 function releaseKey(name){
+
     keys[name] = false;
-}
-
-/* =========================================================
-   TOUCH
-========================================================= */
-
-function bindButton(id,name){
-    const el = document.getElementById(id);
-
-    const down = e =>{
-        e.preventDefault();
-        initAudio();
-
-        el.classList.add("active");
-        pressKey(name);
-    };
-
-    const up = e =>{
-        e.preventDefault();
-
-        el.classList.remove("active");
-        releaseKey(name);
-    };
-
-    el.addEventListener("pointerdown",down);
-    el.addEventListener("pointerup",up);
-    el.addEventListener("pointercancel",up);
-    el.addEventListener("pointerleave",up);
 }
 
 bindButton("left","left");
@@ -355,81 +603,126 @@ bindButton("down","down");
 bindButton("jump","jump");
 bindButton("hammer","hammer");
 
+
+/* =========================================================
+   EVITAR SELECCIÓN EN TODA LA PÁGINA
+========================================================= */
+
+document.addEventListener(
+    "selectstart",
+    e=>e.preventDefault()
+);
+
+document.addEventListener(
+    "dragstart",
+    e=>e.preventDefault()
+);
+
+document.addEventListener(
+    "contextmenu",
+    e=>{
+
+        if(
+            e.target.classList &&
+            e.target.classList.contains("control")
+        ){
+            e.preventDefault();
+        }
+    }
+);
+
+
 /* =========================================================
    TECLADO
 ========================================================= */
 
-window.addEventListener("keydown",e=>{
+window.addEventListener(
+    "keydown",
+    e=>{
 
-    initAudio();
+        initAudio();
 
-    if(
-        e.code === "ArrowLeft" ||
-        e.code === "ArrowRight" ||
-        e.code === "ArrowUp" ||
-        e.code === "ArrowDown" ||
-        e.code === "Space"
-    ){
-        e.preventDefault();
+        if(
+            e.code === "ArrowLeft" ||
+            e.code === "ArrowRight" ||
+            e.code === "ArrowUp" ||
+            e.code === "ArrowDown" ||
+            e.code === "Space"
+        ){
+            e.preventDefault();
+        }
+
+        if(e.code === "ArrowLeft"){
+            pressKey("left");
+        }
+
+        if(e.code === "ArrowRight"){
+            pressKey("right");
+        }
+
+        if(e.code === "ArrowUp"){
+            pressKey("up");
+        }
+
+        if(e.code === "ArrowDown"){
+            pressKey("down");
+        }
+
+        if(e.code === "Space"){
+            pressKey("jump");
+        }
+
+        if(
+            e.code === "KeyZ" ||
+            e.code === "KeyX"
+        ){
+            pressKey("hammer");
+        }
+
+    },
+    {passive:false}
+);
+
+window.addEventListener(
+    "keyup",
+    e=>{
+
+        if(e.code === "ArrowLeft"){
+            releaseKey("left");
+        }
+
+        if(e.code === "ArrowRight"){
+            releaseKey("right");
+        }
+
+        if(e.code === "ArrowUp"){
+            releaseKey("up");
+        }
+
+        if(e.code === "ArrowDown"){
+            releaseKey("down");
+        }
+
+        if(e.code === "Space"){
+            releaseKey("jump");
+        }
+
+        if(
+            e.code === "KeyZ" ||
+            e.code === "KeyX"
+        ){
+            releaseKey("hammer");
+        }
     }
+);
 
-    if(e.code === "ArrowLeft"){
-        pressKey("left");
-    }
-
-    if(e.code === "ArrowRight"){
-        pressKey("right");
-    }
-
-    if(e.code === "ArrowUp"){
-        pressKey("up");
-    }
-
-    if(e.code === "ArrowDown"){
-        pressKey("down");
-    }
-
-    if(e.code === "Space"){
-        pressKey("jump");
-    }
-
-    if(e.code === "KeyZ" || e.code === "KeyX"){
-        pressKey("hammer");
-    }
-});
-
-window.addEventListener("keyup",e=>{
-
-    if(e.code === "ArrowLeft"){
-        releaseKey("left");
-    }
-
-    if(e.code === "ArrowRight"){
-        releaseKey("right");
-    }
-
-    if(e.code === "ArrowUp"){
-        releaseKey("up");
-    }
-
-    if(e.code === "ArrowDown"){
-        releaseKey("down");
-    }
-
-    if(e.code === "Space"){
-        releaseKey("jump");
-    }
-
-    if(e.code === "KeyZ" || e.code === "KeyX"){
-        releaseKey("hammer");
-    }
-});
 
 /* =========================================================
    ESTADOS
 ========================================================= */
 
 const STATE = {
+
     TITLE:0,
     PLAYING:1,
     LEVEL_COMPLETE:2,
@@ -440,150 +733,142 @@ const STATE = {
 let state = STATE.TITLE;
 
 let score = 0;
-let highScore = Number(
-    localStorage.getItem("jungleKongHighScore") || 0
-);
+
+let highScore =
+    Number(
+        localStorage.getItem(
+            "jungleKongHighScore"
+        ) || 0
+    );
 
 let lives = 3;
+
 let level = 1;
 
 let frame = 0;
 
+
 /* =========================================================
-   NIVEL
+   NIVELES
 ========================================================= */
 
 let platforms = [];
 let ladders = [];
 let barrels = [];
 
-let levelTimer = 0;
 let nextBarrelTimer = 100;
 
-/*
-    IMPORTANTE:
-
-    platformIndex:
-      0 = plataforma inferior
-      1 = siguiente plataforma
-      2 = siguiente...
-    
-    El jugador SOLO puede aterrizar:
-      - en su plataforma actual
-      - en plataformas inferiores
-
-    NUNCA en una plataforma superior.
-
-    Para subir:
-      exclusivamente mediante escalera.
-*/
 
 const LEVELS = [
 
-    {
-        platforms:[
-            {x:8,y:455,w:344,tilt:0},
-            {x:25,y:395,w:305,tilt:-.045},
-            {x:8,y:335,w:320,tilt:.045},
-            {x:30,y:275,w:320,tilt:-.045},
-            {x:8,y:215,w:320,tilt:.045},
-            {x:28,y:155,w:320,tilt:-.045},
-            {x:8,y:95,w:325,tilt:.045}
-        ],
+{
+    platforms:[
+        {x:8,y:455,w:344,tilt:0},
+        {x:25,y:395,w:305,tilt:-.045},
+        {x:8,y:335,w:320,tilt:.045},
+        {x:30,y:275,w:320,tilt:-.045},
+        {x:8,y:215,w:320,tilt:.045},
+        {x:28,y:155,w:320,tilt:-.045},
+        {x:8,y:95,w:325,tilt:.045}
+    ],
 
-        ladders:[
-            {x:285,y:395,h:60},
-            {x:48,y:335,h:60},
-            {x:275,y:275,h:60},
-            {x:55,y:215,h:60},
-            {x:280,y:155,h:60},
-            {x:85,y:95,h:60}
-        ],
+    ladders:[
+        {x:285,y:395,h:60},
+        {x:48,y:335,h:60},
+        {x:275,y:275,h:60},
+        {x:55,y:215,h:60},
+        {x:280,y:155,h:60},
+        {x:85,y:95,h:60}
+    ],
 
-        kongX:258,
-        kongY:48
-    },
+    kongX:258,
+    kongY:48
+},
 
-    {
-        platforms:[
-            {x:8,y:455,w:344,tilt:0},
-            {x:22,y:395,w:310,tilt:.055},
-            {x:8,y:335,w:320,tilt:-.055},
-            {x:30,y:275,w:320,tilt:.055},
-            {x:8,y:215,w:320,tilt:-.055},
-            {x:25,y:155,w:325,tilt:.055},
-            {x:8,y:95,w:330,tilt:-.055}
-        ],
+{
+    platforms:[
+        {x:8,y:455,w:344,tilt:0},
+        {x:22,y:395,w:310,tilt:.055},
+        {x:8,y:335,w:320,tilt:-.055},
+        {x:30,y:275,w:320,tilt:.055},
+        {x:8,y:215,w:320,tilt:-.055},
+        {x:25,y:155,w:325,tilt:.055},
+        {x:8,y:95,w:330,tilt:-.055}
+    ],
 
-        ladders:[
-            {x:60,y:395,h:60},
-            {x:275,y:335,h:60},
-            {x:60,y:275,h:60},
-            {x:275,y:215,h:60},
-            {x:70,y:155,h:60},
-            {x:285,y:95,h:60}
-        ],
+    ladders:[
+        {x:60,y:395,h:60},
+        {x:275,y:335,h:60},
+        {x:60,y:275,h:60},
+        {x:275,y:215,h:60},
+        {x:70,y:155,h:60},
+        {x:285,y:95,h:60}
+    ],
 
-        kongX:250,
-        kongY:48
-    },
+    kongX:250,
+    kongY:48
+},
 
-    {
-        platforms:[
-            {x:8,y:455,w:344,tilt:0},
-            {x:28,y:395,w:305,tilt:-.065},
-            {x:8,y:335,w:320,tilt:.065},
-            {x:30,y:275,w:320,tilt:-.065},
-            {x:8,y:215,w:320,tilt:.065},
-            {x:28,y:155,w:320,tilt:-.065},
-            {x:8,y:95,w:325,tilt:.065}
-        ],
+{
+    platforms:[
+        {x:8,y:455,w:344,tilt:0},
+        {x:28,y:395,w:305,tilt:-.065},
+        {x:8,y:335,w:320,tilt:.065},
+        {x:30,y:275,w:320,tilt:-.065},
+        {x:8,y:215,w:320,tilt:.065},
+        {x:28,y:155,w:320,tilt:-.065},
+        {x:8,y:95,w:325,tilt:.065}
+    ],
 
-        ladders:[
-            {x:280,y:395,h:60},
-            {x:50,y:335,h:60},
-            {x:275,y:275,h:60},
-            {x:55,y:215,h:60},
-            {x:280,y:155,h:60},
-            {x:75,y:95,h:60}
-        ],
+    ladders:[
+        {x:280,y:395,h:60},
+        {x:50,y:335,h:60},
+        {x:275,y:275,h:60},
+        {x:55,y:215,h:60},
+        {x:280,y:155,h:60},
+        {x:75,y:95,h:60}
+    ],
 
-        kongX:245,
-        kongY:48
-    },
+    kongX:245,
+    kongY:48
+},
 
-    {
-        platforms:[
-            {x:8,y:455,w:344,tilt:0},
-            {x:20,y:395,w:315,tilt:.075},
-            {x:8,y:335,w:320,tilt:-.075},
-            {x:25,y:275,w:325,tilt:.075},
-            {x:8,y:215,w:320,tilt:-.075},
-            {x:25,y:155,w:325,tilt:.075},
-            {x:8,y:95,w:330,tilt:-.075}
-        ],
+{
+    platforms:[
+        {x:8,y:455,w:344,tilt:0},
+        {x:20,y:395,w:315,tilt:.075},
+        {x:8,y:335,w:320,tilt:-.075},
+        {x:25,y:275,w:325,tilt:.075},
+        {x:8,y:215,w:320,tilt:-.075},
+        {x:25,y:155,w:325,tilt:.075},
+        {x:8,y:95,w:330,tilt:-.075}
+    ],
 
-        ladders:[
-            {x:65,y:395,h:60},
-            {x:270,y:335,h:60},
-            {x:60,y:275,h:60},
-            {x:275,y:215,h:60},
-            {x:70,y:155,h:60},
-            {x:285,y:95,h:60}
-        ],
+    ladders:[
+        {x:65,y:395,h:60},
+        {x:270,y:335,h:60},
+        {x:60,y:275,h:60},
+        {x:275,y:215,h:60},
+        {x:70,y:155,h:60},
+        {x:285,y:95,h:60}
+    ],
 
-        kongX:250,
-        kongY:48
-    }
+    kongX:250,
+    kongY:48
+}
+
 ];
+
 
 /* =========================================================
    JUGADOR
 ========================================================= */
 
 let player = {
+
     x:38,
     y:430,
+
     w:18,
     h:25,
 
@@ -591,6 +876,7 @@ let player = {
     vy:0,
 
     speed:1.65,
+
     jump:-7.4,
 
     grounded:true,
@@ -598,6 +884,7 @@ let player = {
     platformIndex:0,
 
     onLadder:false,
+
     ladderIndex:-1,
 
     facing:1,
@@ -605,13 +892,15 @@ let player = {
     anim:0,
 
     hammer:0,
+
     hammerTimer:0,
 
     invincible:0
 };
 
+
 /* =========================================================
-   KONG / PRINCESA
+   KONG
 ========================================================= */
 
 let kong = {
@@ -621,19 +910,25 @@ let kong = {
 
 let princess = {
     x:55,
-    y:65
+    y:62
 };
+
 
 /* =========================================================
    UTILIDADES
 ========================================================= */
 
 function clamp(v,min,max){
-    return Math.max(min,Math.min(max,v));
+
+    return Math.max(
+        min,
+        Math.min(max,v)
+    );
 }
 
 function rectsOverlap(a,b){
-    return (
+
+    return(
         a.x < b.x+b.w &&
         a.x+a.w > b.x &&
         a.y < b.y+b.h &&
@@ -642,13 +937,41 @@ function rectsOverlap(a,b){
 }
 
 function platformYAt(p,x){
-    const center = p.x + p.w/2;
+
+    const center =
+        p.x+p.w/2;
 
     const normalized =
         (x-center)/(p.w/2);
 
-    return p.y + normalized * p.tilt * p.w;
+    return(
+        p.y+
+        normalized*
+        p.tilt*
+        p.w
+    );
 }
+
+
+/* =========================================================
+   BOTÓN DE INICIO
+========================================================= */
+
+const startTouch =
+    document.getElementById("startTouch");
+
+function updateStartButton(){
+
+    if(state === STATE.TITLE){
+
+        startTouch.classList.remove("hidden");
+
+    }else{
+
+        startTouch.classList.add("hidden");
+    }
+}
+
 
 /* =========================================================
    CREAR NIVEL
@@ -656,80 +979,120 @@ function platformYAt(p,x){
 
 function createLevel(){
 
-    const data = LEVELS[level-1];
+    const data =
+        LEVELS[level-1];
 
-    platforms = data.platforms.map(p=>({...p}));
-    ladders = data.ladders.map(l=>({...l}));
+    platforms =
+        data.platforms.map(
+            p=>({...p})
+        );
 
-    kong.x = data.kongX;
-    kong.y = data.kongY;
+    ladders =
+        data.ladders.map(
+            l=>({...l})
+        );
 
-    princess.x = level % 2 === 0 ? 275 : 55;
-    princess.y = 62;
+    kong.x=data.kongX;
+    kong.y=data.kongY;
 
-    barrels = [];
+    princess.x =
+        level%2===0
+            ? 275
+            : 55;
 
-    levelTimer = 0;
+    princess.y=62;
+
+    barrels=[];
+
+    /*
+       Primer barril después
+       de un pequeño intervalo.
+    */
 
     nextBarrelTimer =
-        level === 1
-            ? 105
-            : 85;
+        level===1
+            ? 130
+            : 105;
 
-    player.x = 38;
-    player.platformIndex = 0;
+    player.x=38;
 
-    const bottom = platforms[0];
+    player.platformIndex=0;
+
+    const bottom =
+        platforms[0];
 
     player.y =
         platformYAt(
             bottom,
-            player.x + player.w/2
-        ) - player.h;
+            player.x+player.w/2
+        )-player.h;
 
-    player.vx = 0;
-    player.vy = 0;
+    player.vx=0;
+    player.vy=0;
 
-    player.grounded = true;
-    player.onLadder = false;
-    player.ladderIndex = -1;
+    player.grounded=true;
 
-    player.hammer = 0;
-    player.hammerTimer = 0;
-    player.invincible = 90;
+    player.onLadder=false;
+    player.ladderIndex=-1;
 
-    jumpPressed = false;
-    hammerPressed = false;
+    player.hammer=0;
+    player.hammerTimer=0;
+
+    player.invincible=90;
+
+    jumpPressed=false;
+    hammerPressed=false;
 }
 
+
 /* =========================================================
-   INICIAR
+   INICIO
 ========================================================= */
 
 function startGame(){
 
     initAudio();
 
-    score = 0;
-    lives = 3;
-    level = 1;
+    score=0;
+    lives=3;
+    level=1;
 
-    state = STATE.PLAYING;
+    state=STATE.PLAYING;
+
+    /*
+       OCULTAR INMEDIATAMENTE
+       EL BOTÓN PULSA PARA JUGAR
+    */
+
+    updateStartButton();
 
     createLevel();
 
     beep(440,.08);
-    setTimeout(()=>beep(660,.1),100);
+
+    setTimeout(
+        ()=>beep(660,.1),
+        100
+    );
 }
+
+
+/* =========================================================
+   SIGUIENTE NIVEL
+========================================================= */
 
 function nextLevel(){
 
-    if(level >= LEVELS.length){
+    if(level>=LEVELS.length){
 
-        state = STATE.WIN;
+        state=STATE.WIN;
 
-        if(score > highScore){
-            highScore = score;
+        updateStartButton();
+
+        if(score>highScore){
+
+            highScore=score;
+
             localStorage.setItem(
                 "jungleKongHighScore",
                 highScore
@@ -741,32 +1104,49 @@ function nextLevel(){
 
     level++;
 
-    state = STATE.PLAYING;
+    state=STATE.PLAYING;
+
+    updateStartButton();
 
     createLevel();
 
     beep(523,.1);
-    setTimeout(()=>beep(784,.12),100);
+
+    setTimeout(
+        ()=>beep(784,.12),
+        100
+    );
 }
 
+
 /* =========================================================
-   REINICIAR TRAS MORIR
+   PERDER VIDA
 ========================================================= */
 
 function loseLife(){
 
-    if(player.invincible > 0) return;
+    if(player.invincible>0){
+        return;
+    }
 
     lives--;
 
-    beep(110,.25,"sawtooth",.045);
+    beep(
+        110,
+        .25,
+        "sawtooth",
+        .045
+    );
 
-    if(lives <= 0){
+    if(lives<=0){
 
-        state = STATE.GAMEOVER;
+        state=STATE.GAMEOVER;
 
-        if(score > highScore){
-            highScore = score;
+        updateStartButton();
+
+        if(score>highScore){
+
+            highScore=score;
 
             localStorage.setItem(
                 "jungleKongHighScore",
@@ -780,53 +1160,42 @@ function loseLife(){
     createLevel();
 }
 
+
 /* =========================================================
    ESCALERAS
 ========================================================= */
 
-/*
-    Cada escalera conecta:
-
-       plataforma i
-              |
-              |
-       plataforma i+1
-
-    ladder[i]
-
-    La parte inferior está en:
-       ladder.y + ladder.h
-
-    La parte superior está en:
-       ladder.y
-*/
-
 function getLadderAtBottom(){
 
     if(
-        player.platformIndex < 0 ||
-        player.platformIndex >= ladders.length
+        player.platformIndex<0 ||
+        player.platformIndex>=ladders.length
     ){
         return null;
     }
 
-    const l = ladders[player.platformIndex];
+    const l =
+        ladders[player.platformIndex];
 
-    const playerCenter =
-        player.x + player.w/2;
+    const center =
+        player.x+player.w/2;
 
     const ladderCenter =
-        l.x + 9;
+        l.x+9;
 
     const feet =
-        player.y + player.h;
+        player.y+player.h;
 
-    const bottomY =
-        l.y + l.h;
+    const bottom =
+        l.y+l.h;
 
     if(
-        Math.abs(playerCenter-ladderCenter) < 18 &&
-        Math.abs(feet-bottomY) < 13
+        Math.abs(
+            center-ladderCenter
+        )<18 &&
+        Math.abs(
+            feet-bottom
+        )<14
     ){
         return l;
     }
@@ -836,30 +1205,32 @@ function getLadderAtBottom(){
 
 function getLadderAtTop(){
 
-    if(player.platformIndex <= 0){
+    if(player.platformIndex<=0){
         return null;
     }
 
     const index =
-        player.platformIndex - 1;
+        player.platformIndex-1;
 
-    const l = ladders[index];
+    const l =
+        ladders[index];
 
-    const playerCenter =
-        player.x + player.w/2;
+    const center =
+        player.x+player.w/2;
 
     const ladderCenter =
-        l.x + 9;
+        l.x+9;
 
     const feet =
-        player.y + player.h;
-
-    const topY =
-        l.y;
+        player.y+player.h;
 
     if(
-        Math.abs(playerCenter-ladderCenter) < 18 &&
-        Math.abs(feet-topY) < 13
+        Math.abs(
+            center-ladderCenter
+        )<18 &&
+        Math.abs(
+            feet-l.y
+        )<14
     ){
         return l;
     }
@@ -870,44 +1241,36 @@ function getLadderAtTop(){
 function alignToLadder(l){
 
     player.x =
-        l.x + 9 - player.w/2;
+        l.x+9-player.w/2;
 
-    player.vx = 0;
+    player.vx=0;
 }
-
-/* =========================================================
-   INICIAR SUBIDA
-========================================================= */
 
 function tryStartClimbing(){
 
-    if(player.onLadder) return true;
-
-    /*
-       SUBIR
-    */
+    if(player.onLadder){
+        return true;
+    }
 
     if(keys.up){
 
-        const bottomLadder =
+        const l =
             getLadderAtBottom();
 
-        if(bottomLadder){
+        if(l){
 
-            player.onLadder = true;
+            player.onLadder=true;
 
             player.ladderIndex =
                 player.platformIndex;
 
-            alignToLadder(bottomLadder);
+            alignToLadder(l);
 
             player.y =
-                bottomLadder.y +
-                bottomLadder.h -
-                player.h;
+                l.y+l.h-player.h;
 
-            player.vy = 0;
-            player.grounded = false;
+            player.vy=0;
+            player.grounded=false;
 
             beep(300,.04);
 
@@ -915,30 +1278,25 @@ function tryStartClimbing(){
         }
     }
 
-    /*
-       BAJAR
-    */
-
     if(keys.down){
 
-        const topLadder =
+        const l =
             getLadderAtTop();
 
-        if(topLadder){
+        if(l){
 
-            player.onLadder = true;
+            player.onLadder=true;
 
             player.ladderIndex =
-                player.platformIndex - 1;
+                player.platformIndex-1;
 
-            alignToLadder(topLadder);
+            alignToLadder(l);
 
             player.y =
-                topLadder.y -
-                player.h;
+                l.y-player.h;
 
-            player.vy = 0;
-            player.grounded = false;
+            player.vy=0;
+            player.grounded=false;
 
             beep(280,.04);
 
@@ -949,91 +1307,91 @@ function tryStartClimbing(){
     return false;
 }
 
-/* =========================================================
-   ACTUALIZAR ESCALERA
-========================================================= */
-
 function updateLadder(){
 
-    if(!player.onLadder) return false;
+    if(!player.onLadder){
+        return;
+    }
 
     const l =
         ladders[player.ladderIndex];
 
     if(!l){
 
-        player.onLadder = false;
-        return false;
+        player.onLadder=false;
+
+        return;
     }
 
     alignToLadder(l);
 
     const topY =
-        l.y - player.h;
+        l.y-player.h;
 
     const bottomY =
-        l.y + l.h - player.h;
+        l.y+l.h-player.h;
 
     if(keys.up){
 
-        player.y -= 1.55;
+        player.y-=1.55;
 
-        player.y =
-            Math.max(topY,player.y);
+        if(player.y<topY){
+            player.y=topY;
+        }
     }
 
     if(keys.down){
 
-        player.y += 1.55;
+        player.y+=1.55;
 
-        player.y =
-            Math.min(bottomY,player.y);
+        if(player.y>bottomY){
+            player.y=bottomY;
+        }
     }
 
-    player.vy = 0;
+    player.vy=0;
 
     /*
-       LLEGÓ ARRIBA
+       ARRIBA
     */
 
-    if(player.y <= topY){
+    if(player.y<=topY){
 
-        player.y = topY;
+        player.y=topY;
 
-        player.onLadder = false;
+        player.onLadder=false;
 
         player.platformIndex =
-            player.ladderIndex + 1;
+            player.ladderIndex+1;
 
-        player.grounded = true;
+        player.grounded=true;
 
         beep(390,.05);
 
-        return true;
+        return;
     }
 
     /*
-       LLEGÓ ABAJO
+       ABAJO
     */
 
-    if(player.y >= bottomY){
+    if(player.y>=bottomY){
 
-        player.y = bottomY;
+        player.y=bottomY;
 
-        player.onLadder = false;
+        player.onLadder=false;
 
         player.platformIndex =
             player.ladderIndex;
 
-        player.grounded = true;
+        player.grounded=true;
 
         beep(260,.05);
 
-        return true;
+        return;
     }
-
-    return true;
 }
+
 
 /* =========================================================
    SALTO
@@ -1041,71 +1399,65 @@ function updateLadder(){
 
 function tryJump(){
 
-    if(!jumpPressed) return;
+    if(!jumpPressed){
+        return;
+    }
 
-    jumpPressed = false;
+    jumpPressed=false;
 
-    if(state !== STATE.PLAYING) return;
+    if(state!==STATE.PLAYING){
+        return;
+    }
 
-    if(player.onLadder) return;
+    if(player.onLadder){
+        return;
+    }
 
     if(player.grounded){
 
-        player.vy = player.jump;
+        player.vy=
+            player.jump;
 
-        player.grounded = false;
+        player.grounded=false;
 
         beep(220,.07);
-
     }
 }
 
+
 /* =========================================================
-   PLATAFORMA SOBRE LA QUE PUEDE CAER
+   ATERRIZAJE DEL JUGADOR
 ========================================================= */
-
-/*
-    ESTA ES UNA DE LAS CORRECCIONES IMPORTANTES.
-
-    Si estamos en plataforma 2:
-
-      puede caer a 2
-      puede caer a 1
-      puede caer a 0
-
-      NO puede caer a 3, 4, 5...
-
-    Por tanto un salto nunca permite atravesar
-    la lógica de las escaleras.
-*/
 
 function getLandingPlatform(){
 
     const cx =
-        player.x + player.w/2;
+        player.x+player.w/2;
 
     const feet =
-        player.y + player.h;
+        player.y+player.h;
 
-    let best = null;
-    let bestIndex = -1;
+    let best=null;
+    let bestIndex=-1;
 
     for(let i=0;i<platforms.length;i++){
 
         /*
-           No se permite aterrizar
-           sobre una plataforma superior.
+           JAMÁS puede aterrizar
+           en una plataforma superior.
         */
 
-        if(i > player.platformIndex){
+        if(
+            i>player.platformIndex
+        ){
             continue;
         }
 
-        const p = platforms[i];
+        const p=platforms[i];
 
         if(
-            cx < p.x-2 ||
-            cx > p.x+p.w+2
+            cx<p.x-2 ||
+            cx>p.x+p.w+2
         ){
             continue;
         }
@@ -1113,22 +1465,17 @@ function getLandingPlatform(){
         const py =
             platformYAt(p,cx);
 
-        /*
-           Solo si estamos cayendo
-           hacia la superficie.
-        */
-
         if(
-            feet >= py-2 &&
-            feet <= py+13
+            feet>=py-3 &&
+            feet<=py+13
         ){
 
             if(
-                best === null ||
-                py < best.y
+                best===null ||
+                py<best.y
             ){
-                best = {
-                    platform:p,
+
+                best={
                     y:py,
                     index:i
                 };
@@ -1140,7 +1487,7 @@ function getLandingPlatform(){
 
     if(best){
 
-        best.index = bestIndex;
+        best.index=bestIndex;
 
         return best;
     }
@@ -1148,19 +1495,16 @@ function getLandingPlatform(){
     return null;
 }
 
+
 /* =========================================================
    ACTUALIZAR JUGADOR
 ========================================================= */
 
 function updatePlayer(){
 
-    if(player.invincible > 0){
+    if(player.invincible>0){
         player.invincible--;
     }
-
-    /*
-       SI ESTÁ EN ESCALERA
-    */
 
     if(player.onLadder){
 
@@ -1168,10 +1512,6 @@ function updatePlayer(){
 
         return;
     }
-
-    /*
-       Intentar empezar escalera
-    */
 
     tryStartClimbing();
 
@@ -1182,64 +1522,39 @@ function updatePlayer(){
         return;
     }
 
-    /*
-       MOVIMIENTO HORIZONTAL
-    */
-
-    player.vx = 0;
+    player.vx=0;
 
     if(keys.left){
 
-        player.vx = -player.speed;
-        player.facing = -1;
+        player.vx=-player.speed;
+        player.facing=-1;
 
     }else if(keys.right){
 
-        player.vx = player.speed;
-        player.facing = 1;
+        player.vx=player.speed;
+        player.facing=1;
     }
 
-    player.x += player.vx;
+    player.x+=player.vx;
 
-    /*
-       Límites
-    */
-
-    player.x =
+    player.x=
         clamp(
             player.x,
             5,
             W-player.w-5
         );
 
-    /*
-       SALTO
-    */
-
     tryJump();
 
-    /*
-       GRAVEDAD
-    */
+    player.vy+=.31;
 
-    player.vy += .31;
-
-    if(player.vy > 7){
-        player.vy = 7;
+    if(player.vy>7){
+        player.vy=7;
     }
 
-    const oldY = player.y;
+    player.y+=player.vy;
 
-    player.y += player.vy;
-
-    /*
-       ATERRIZAJE
-
-       Solo en plataforma actual
-       o inferior.
-    */
-
-    if(player.vy >= 0){
+    if(player.vy>=0){
 
         const landing =
             getLandingPlatform();
@@ -1247,56 +1562,44 @@ function updatePlayer(){
         if(landing){
 
             player.y =
-                landing.y -
-                player.h;
+                landing.y-player.h;
 
-            player.vy = 0;
+            player.vy=0;
 
-            player.grounded = true;
-
-            /*
-               Si ha caído a una plataforma inferior,
-               actualizamos la plataforma actual.
-            */
+            player.grounded=true;
 
             if(
-                landing.index <
+                landing.index<
                 player.platformIndex
             ){
 
                 player.platformIndex =
                     landing.index;
 
-                score += 50;
+                score+=50;
             }
 
         }else{
 
-            player.grounded = false;
+            player.grounded=false;
         }
 
     }else{
 
-        player.grounded = false;
+        player.grounded=false;
     }
 
-    /*
-       Caída fuera del escenario
-    */
-
-    if(player.y > H+30){
+    if(player.y>H+30){
 
         loseLife();
     }
 
-    /*
-       Animación
-    */
+    if(Math.abs(player.vx)>.1){
 
-    if(Math.abs(player.vx) > .1){
-        player.anim += .2;
+        player.anim+=.2;
     }
 }
+
 
 /* =========================================================
    BARRILES
@@ -1305,49 +1608,88 @@ function updatePlayer(){
 function spawnBarrel(){
 
     const maxBarrels =
-        level === 1 ? 3 : 4;
+        level===1
+            ? 3
+            : 4;
 
-    if(barrels.length >= maxBarrels){
+    if(barrels.length>=maxBarrels){
         return;
     }
 
     /*
-       Evitar que nazcan amontonados
+       Evitar barriles amontonados
+       debajo de Kong.
     */
 
     for(const b of barrels){
 
         if(
-            Math.abs(b.x-kong.x) < 45 &&
-            Math.abs(b.y-kong.y) < 35
+            Math.abs(
+                b.x-(kong.x+15)
+            )<35 &&
+            Math.abs(
+                b.y-(kong.y+32)
+            )<25
         ){
             return;
         }
     }
 
+    /*
+       IMPORTANTE:
+
+       El barril comienza en la
+       PLATAFORMA SUPERIOR.
+    */
+
+    const topIndex =
+        platforms.length-1;
+
+    const p =
+        platforms[topIndex];
+
+    let startX =
+        kong.x+15;
+
+    startX =
+        clamp(
+            startX,
+            p.x+5,
+            p.x+p.w-18
+        );
+
+    const py =
+        platformYAt(
+            p,
+            startX
+        );
+
     const direction =
-        Math.random() < .5
+        Math.random()<.5
             ? -1
             : 1;
 
     barrels.push({
 
-        x:kong.x+15,
-        y:kong.y+32,
+        x:startX,
+
+        y:py-13,
 
         w:13,
         h:13,
 
         vx:
-            direction *
-            (1.05 + level*.06),
+            direction*
+            (1.05+level*.06),
 
         vy:0,
 
         rotation:0,
 
         platformIndex:
-            platforms.length-1,
+            topIndex,
+
+        falling:false,
 
         life:0
     });
@@ -1355,28 +1697,61 @@ function spawnBarrel(){
     beep(120,.04);
 }
 
+
+/* =========================================================
+   INICIAR CAÍDA DEL BARRIL
+========================================================= */
+
+function makeBarrelFall(b){
+
+    if(b.falling){
+        return;
+    }
+
+    b.falling=true;
+
+    b.vy=1.0;
+
+    /*
+       Conservamos el movimiento horizontal,
+       pero reducimos un poco la velocidad
+       para que la caída sea visible.
+    */
+
+    b.vx*=.88;
+}
+
+
 /* =========================================================
    PLATAFORMA DEL BARRIL
 ========================================================= */
 
-function getBarrelPlatform(b){
+function getBarrelLanding(b){
 
     const cx =
-        b.x + b.w/2;
+        b.x+b.w/2;
 
     const bottom =
-        b.y + b.h;
+        b.y+b.h;
 
-    let best = null;
-    let bestIndex = -1;
+    let best=null;
 
-    for(let i=0;i<platforms.length;i++){
+    /*
+       Solo puede caer a plataformas
+       INFERIORES a la actual.
+    */
 
-        const p = platforms[i];
+    for(
+        let i=b.platformIndex-1;
+        i>=0;
+        i--
+    ){
+
+        const p=platforms[i];
 
         if(
-            cx < p.x ||
-            cx > p.x+p.w
+            cx<p.x-3 ||
+            cx>p.x+p.w+3
         ){
             continue;
         }
@@ -1385,32 +1760,26 @@ function getBarrelPlatform(b){
             platformYAt(p,cx);
 
         if(
-            bottom >= py-3 &&
-            bottom <= py+12 &&
-            b.vy >= 0
+            bottom>=py-4 &&
+            bottom<=py+12
         ){
 
             if(
-                best === null ||
-                py < best
+                !best ||
+                py<best.y
             ){
 
-                best = py;
-                bestIndex = i;
+                best={
+                    y:py,
+                    index:i
+                };
             }
         }
     }
 
-    if(best !== null){
-
-        return {
-            y:best,
-            index:bestIndex
-        };
-    }
-
-    return null;
+    return best;
 }
+
 
 /* =========================================================
    ACTUALIZAR BARRILES
@@ -1418,117 +1787,193 @@ function getBarrelPlatform(b){
 
 function updateBarrels(){
 
-    levelTimer++;
-
     /*
-       Aparición controlada.
-
-       No usamos una probabilidad por frame,
-       porque eso puede producir demasiados barriles.
+       GENERACIÓN CONTROLADA
     */
 
     nextBarrelTimer--;
 
-    if(nextBarrelTimer <= 0){
+    if(nextBarrelTimer<=0){
 
         spawnBarrel();
 
         nextBarrelTimer =
-            95 +
+            100+
             Math.floor(
                 Math.random()*55
             );
 
-        /*
-           En niveles superiores,
-           un poco más frecuentes.
-        */
-
-        if(level >= 3){
-            nextBarrelTimer -= 10;
+        if(level>=3){
+            nextBarrelTimer-=10;
         }
     }
 
-    for(let i=barrels.length-1;i>=0;i--){
 
-        const b = barrels[i];
+    for(
+        let i=barrels.length-1;
+        i>=0;
+        i--
+    ){
+
+        const b=barrels[i];
 
         b.life++;
 
-        b.vy += .28;
 
-        if(b.vy > 6){
-            b.vy = 6;
-        }
+        /* =================================================
+           BARRIL RODANDO POR PLATAFORMA
+        ================================================= */
 
-        b.x += b.vx;
-        b.y += b.vy;
+        if(!b.falling){
 
-        b.rotation +=
-            b.vx*.15;
+            const p =
+                platforms[b.platformIndex];
 
-        /*
-           Plataforma
-        */
+            if(!p){
 
-        const p =
-            getBarrelPlatform(b);
+                barrels.splice(i,1);
 
-        if(p){
-
-            b.y =
-                p.y -
-                b.h;
-
-            b.vy = 0;
-
-            b.platformIndex =
-                p.index;
-
-            /*
-               El barril sigue la pendiente.
-            */
-
-            const platform =
-                platforms[p.index];
-
-            const slope =
-                platform.tilt;
-
-            if(Math.abs(slope) > .01){
-
-                b.vx =
-                    Math.abs(b.vx) *
-                    (slope > 0 ? 1 : -1);
+                continue;
             }
 
+            /*
+               Movimiento
+            */
+
+            b.x+=b.vx;
+
+            b.rotation+=
+                b.vx*.15;
+
+            /*
+               Mantener el barril pegado
+               a la pendiente.
+            */
+
+            const cx =
+                b.x+b.w/2;
+
+            /*
+               Si todavía está dentro
+               de la plataforma.
+            */
+
+            if(
+                cx>=p.x &&
+                cx<=p.x+p.w
+            ){
+
+                const py =
+                    platformYAt(
+                        p,
+                        cx
+                    );
+
+                b.y =
+                    py-b.h;
+
+            }else{
+
+                /*
+                   Llegó al extremo.
+
+                   EN VEZ DE DESAPARECER,
+                   CAE A LA PLATAFORMA INFERIOR.
+                */
+
+                makeBarrelFall(b);
+            }
         }
 
-        /*
-           Bordes
 
-           Si el barril sale de una plataforma
-           puede caer y seguir avanzando.
-        */
+        /* =================================================
+           BARRIL CAYENDO
+        ================================================= */
+
+        else{
+
+            b.vy+=.30;
+
+            if(b.vy>6){
+                b.vy=6;
+            }
+
+            b.x+=b.vx;
+
+            b.y+=b.vy;
+
+            b.rotation+=
+                b.vx*.15;
+
+
+            const landing =
+                getBarrelLanding(b);
+
+            if(landing){
+
+                /*
+                   Aterriza sobre la
+                   plataforma inferior.
+                */
+
+                b.platformIndex =
+                    landing.index;
+
+                b.falling=false;
+
+                b.vy=0;
+
+                b.y =
+                    landing.y-b.h;
+
+                /*
+                   Volvemos a darle una
+                   velocidad horizontal.
+                */
+
+                const direction =
+                    Math.random()<.5
+                        ? -1
+                        : 1;
+
+                b.vx =
+                    direction*
+                    (
+                        1.05+
+                        level*.06
+                    );
+
+            }
+        }
+
+
+        /* =================================================
+           ELIMINACIÓN
+        ================================================= */
 
         if(
-            b.x < -40 ||
-            b.x > W+40 ||
-            b.y > H+50
+            b.x<-50 ||
+            b.x>W+50 ||
+            b.y>H+50
         ){
 
             barrels.splice(i,1);
 
-            score += 10;
+            /*
+               No damos puntos por simplemente
+               dejar que caiga.
+            */
 
             continue;
         }
 
-        /*
-           Colisión con jugador
-        */
 
-        const hitBox = {
+        /* =================================================
+           COLISIÓN JUGADOR
+        ================================================= */
+
+        const hitBox={
+
             x:b.x+2,
             y:b.y+2,
             w:b.w-4,
@@ -1536,22 +1981,21 @@ function updateBarrels(){
         };
 
         if(
-            player.invincible <= 0 &&
-            rectsOverlap(player,hitBox)
+            player.invincible<=0 &&
+            rectsOverlap(
+                player,
+                hitBox
+            )
         ){
 
-            /*
-               Si lleva martillo,
-               puede destruir el barril.
-            */
-
-            if(player.hammer > 0){
+            if(player.hammer>0){
 
                 barrels.splice(i,1);
 
-                score += 500;
+                score+=500;
 
                 beep(180,.06);
+
                 setTimeout(
                     ()=>beep(360,.08),
                     50
@@ -1569,6 +2013,7 @@ function updateBarrels(){
     }
 }
 
+
 /* =========================================================
    MARTILLO
 ========================================================= */
@@ -1579,18 +2024,22 @@ function activateHammer(){
         return;
     }
 
-    hammerPressed = false;
+    hammerPressed=false;
 
-    if(state !== STATE.PLAYING){
+    if(
+        state!==STATE.PLAYING
+    ){
         return;
     }
 
-    if(player.hammer <= 0){
+    if(player.hammer<=0){
 
-        player.hammer = 1;
-        player.hammerTimer = 360;
+        player.hammer=1;
+
+        player.hammerTimer=360;
 
         beep(150,.08);
+
         setTimeout(
             ()=>beep(250,.08),
             70
@@ -1600,39 +2049,37 @@ function activateHammer(){
 
 function updateHammer(){
 
-    if(player.hammer <= 0){
+    if(player.hammer<=0){
         return;
     }
 
     player.hammerTimer--;
 
-    if(player.hammerTimer <= 0){
+    if(player.hammerTimer<=0){
 
-        player.hammer = 0;
-        player.hammerTimer = 0;
+        player.hammer=0;
+
+        player.hammerTimer=0;
     }
 
-    /*
-       Golpe del martillo
-
-       Área delante del personaje.
-    */
-
-    const hit = {
+    const hit={
 
         x:
-            player.facing > 0
+            player.facing>0
                 ? player.x+player.w
                 : player.x-28,
 
-        y:
-            player.y-5,
+        y:player.y-5,
 
         w:28,
         h:34
     };
 
-    for(let i=barrels.length-1;i>=0;i--){
+    for(
+        let i=barrels.length-1;
+        i>=0;
+        i--
+    ){
 
         if(
             rectsOverlap(
@@ -1643,9 +2090,10 @@ function updateHammer(){
 
             barrels.splice(i,1);
 
-            score += 500;
+            score+=500;
 
             beep(170,.05);
+
             setTimeout(
                 ()=>beep(330,.08),
                 45
@@ -1654,6 +2102,7 @@ function updateHammer(){
     }
 }
 
+
 /* =========================================================
    META
 ========================================================= */
@@ -1661,20 +2110,26 @@ function updateHammer(){
 function checkGoal(){
 
     if(
-        player.platformIndex >=
+        player.platformIndex>=
         platforms.length-1
     ){
 
-        const goal = {
+        const goal={
+
             x:princess.x-12,
             y:princess.y-5,
             w:35,
             h:35
         };
 
-        if(rectsOverlap(player,goal)){
+        if(
+            rectsOverlap(
+                player,
+                goal
+            )
+        ){
 
-            score += 1000;
+            score+=1000;
 
             beep(523,.1);
 
@@ -1689,28 +2144,31 @@ function checkGoal(){
             );
 
             state =
-                level >= LEVELS.length
+                level>=LEVELS.length
                     ? STATE.WIN
                     : STATE.LEVEL_COMPLETE;
+
+            updateStartButton();
         }
     }
 }
 
+
 /* =========================================================
-   ACTUALIZACIÓN GENERAL
+   UPDATE
 ========================================================= */
 
 function update(){
 
     frame++;
 
-    if(state !== STATE.PLAYING){
+    if(state!==STATE.PLAYING){
         return;
     }
 
     updatePlayer();
 
-    if(state !== STATE.PLAYING){
+    if(state!==STATE.PLAYING){
         return;
     }
 
@@ -1722,8 +2180,9 @@ function update(){
 
     checkGoal();
 
-    if(score > highScore){
-        highScore = score;
+    if(score>highScore){
+
+        highScore=score;
 
         localStorage.setItem(
             "jungleKongHighScore",
@@ -1732,6 +2191,7 @@ function update(){
     }
 }
 
+
 /* =========================================================
    DIBUJO
 ========================================================= */
@@ -1739,22 +2199,36 @@ function update(){
 function clear(){
 
     ctx.fillStyle="#000";
-    ctx.fillRect(0,0,W,H);
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
 }
 
+
 /* =========================================================
-   TEXTO PIXEL
+   TEXTO
 ========================================================= */
 
-function text(txt,x,y,size=10,align="left"){
+function text(
+    txt,
+    x,
+    y,
+    size=10,
+    align="left"
+){
 
     ctx.save();
 
     ctx.font =
         `bold ${size}px "Courier New",monospace`;
 
-    ctx.textAlign = align;
-    ctx.textBaseline = "middle";
+    ctx.textAlign=align;
+
+    ctx.textBaseline="middle";
 
     ctx.fillStyle="#fff";
 
@@ -1766,6 +2240,7 @@ function text(txt,x,y,size=10,align="left"){
 
     ctx.restore();
 }
+
 
 /* =========================================================
    HUD
@@ -1784,7 +2259,7 @@ function drawHUD(){
 
     ctx.fillStyle="#eee";
 
-    ctx.font =
+    ctx.font=
         'bold 10px "Courier New",monospace';
 
     ctx.textAlign="left";
@@ -1838,6 +2313,7 @@ function drawHUD(){
     );
 }
 
+
 /* =========================================================
    PLATAFORMAS
 ========================================================= */
@@ -1849,54 +2325,42 @@ function drawPlatforms(){
         ctx.save();
 
         ctx.strokeStyle="#b51c24";
+
         ctx.lineWidth=5;
 
         ctx.beginPath();
 
         ctx.moveTo(
             p.x,
-            p.y +
-            (0-p.x) *
-            p.tilt
+            p.y
         );
 
         ctx.lineTo(
             p.x+p.w,
-            p.y +
-            p.w *
-            p.tilt
+            p.y+
+            p.w*p.tilt
         );
 
         ctx.stroke();
 
-        /*
-           Borde amarillo clásico
-        */
-
         ctx.strokeStyle="#e0b52d";
+
         ctx.lineWidth=2;
 
         ctx.beginPath();
 
         ctx.moveTo(
             p.x,
-            p.y-3 +
-            (0-p.x) *
-            p.tilt
+            p.y-3
         );
 
         ctx.lineTo(
             p.x+p.w,
-            p.y-3 +
-            p.w *
-            p.tilt
+            p.y-3+
+            p.w*p.tilt
         );
 
         ctx.stroke();
-
-        /*
-           Remaches
-        */
 
         ctx.fillStyle="#ddd";
 
@@ -1907,7 +2371,7 @@ function drawPlatforms(){
         ){
 
             const yy =
-                p.y +
+                p.y+
                 (x-p.x)*
                 p.tilt;
 
@@ -1923,6 +2387,7 @@ function drawPlatforms(){
     }
 }
 
+
 /* =========================================================
    ESCALERAS
 ========================================================= */
@@ -1933,11 +2398,8 @@ function drawLadders(){
 
         ctx.save();
 
-        /*
-           Barrotes laterales
-        */
-
         ctx.strokeStyle="#d6a63a";
+
         ctx.lineWidth=4;
 
         ctx.beginPath();
@@ -1964,11 +2426,8 @@ function drawLadders(){
 
         ctx.stroke();
 
-        /*
-           Peldaños
-        */
-
         ctx.strokeStyle="#f0ca5c";
+
         ctx.lineWidth=2;
 
         for(
@@ -1996,6 +2455,7 @@ function drawLadders(){
     }
 }
 
+
 /* =========================================================
    KONG
 ========================================================= */
@@ -2007,10 +2467,6 @@ function drawKong(){
 
     ctx.save();
 
-    /*
-       Sombra
-    */
-
     ctx.fillStyle="#000";
 
     ctx.fillRect(
@@ -2020,10 +2476,6 @@ function drawKong(){
         9
     );
 
-    /*
-       Cuerpo
-    */
-
     ctx.fillStyle="#74401e";
 
     ctx.fillRect(
@@ -2032,10 +2484,6 @@ function drawKong(){
         42,
         30
     );
-
-    /*
-       Brazos
-    */
 
     ctx.fillRect(
         x-23,
@@ -2051,20 +2499,12 @@ function drawKong(){
         12
     );
 
-    /*
-       Cabeza
-    */
-
     ctx.fillRect(
         x-5,
         y,
         31,
         20
     );
-
-    /*
-       Cara
-    */
 
     ctx.fillStyle="#9b5b2c";
 
@@ -2074,10 +2514,6 @@ function drawKong(){
         23,
         13
     );
-
-    /*
-       Ojos
-    */
 
     ctx.fillStyle="#fff";
 
@@ -2111,10 +2547,6 @@ function drawKong(){
         4
     );
 
-    /*
-       Boca
-    */
-
     ctx.fillStyle="#1b0d08";
 
     ctx.fillRect(
@@ -2123,10 +2555,6 @@ function drawKong(){
         16,
         4
     );
-
-    /*
-       Barril que sostiene
-    */
 
     ctx.fillStyle="#a86c28";
 
@@ -2138,6 +2566,7 @@ function drawKong(){
     );
 
     ctx.strokeStyle="#4c270e";
+
     ctx.lineWidth=2;
 
     ctx.strokeRect(
@@ -2150,6 +2579,7 @@ function drawKong(){
     ctx.restore();
 }
 
+
 /* =========================================================
    PRINCESA
 ========================================================= */
@@ -2161,10 +2591,6 @@ function drawPrincess(){
 
     ctx.save();
 
-    /*
-       Pelo
-    */
-
     ctx.fillStyle="#f1c14c";
 
     ctx.fillRect(
@@ -2174,10 +2600,6 @@ function drawPrincess(){
         18
     );
 
-    /*
-       Cara
-    */
-
     ctx.fillStyle="#f1b07a";
 
     ctx.fillRect(
@@ -2186,10 +2608,6 @@ function drawPrincess(){
         12,
         11
     );
-
-    /*
-       Vestido
-    */
 
     ctx.fillStyle="#e33c45";
 
@@ -2207,10 +2625,6 @@ function drawPrincess(){
         6
     );
 
-    /*
-       Brazos
-    */
-
     ctx.fillStyle="#f1b07a";
 
     ctx.fillRect(
@@ -2226,10 +2640,6 @@ function drawPrincess(){
         6,
         11
     );
-
-    /*
-       Ojos
-    */
 
     ctx.fillStyle="#000";
 
@@ -2250,6 +2660,7 @@ function drawPrincess(){
     ctx.restore();
 }
 
+
 /* =========================================================
    JUGADOR
 ========================================================= */
@@ -2257,8 +2668,8 @@ function drawPrincess(){
 function drawPlayer(){
 
     if(
-        player.invincible > 0 &&
-        Math.floor(frame/5)%2 === 0
+        player.invincible>0 &&
+        Math.floor(frame/5)%2===0
     ){
         return;
     }
@@ -2270,10 +2681,6 @@ function drawPlayer(){
         Math.round(player.y);
 
     ctx.save();
-
-    /*
-       Piernas
-    */
 
     ctx.fillStyle="#253d78";
 
@@ -2291,10 +2698,6 @@ function drawPlayer(){
         8
     );
 
-    /*
-       Zapatos
-    */
-
     ctx.fillStyle="#3b2416";
 
     ctx.fillRect(
@@ -2311,10 +2714,6 @@ function drawPlayer(){
         4
     );
 
-    /*
-       Cuerpo
-    */
-
     ctx.fillStyle="#2453a3";
 
     ctx.fillRect(
@@ -2323,10 +2722,6 @@ function drawPlayer(){
         13,
         12
     );
-
-    /*
-       Camiseta
-    */
 
     ctx.fillStyle="#e33b35";
 
@@ -2337,10 +2732,6 @@ function drawPlayer(){
         6
     );
 
-    /*
-       Cabeza
-    */
-
     ctx.fillStyle="#e7a878";
 
     ctx.fillRect(
@@ -2349,10 +2740,6 @@ function drawPlayer(){
         13,
         11
     );
-
-    /*
-       Pelo
-    */
 
     ctx.fillStyle="#5a321e";
 
@@ -2370,10 +2757,6 @@ function drawPlayer(){
         5
     );
 
-    /*
-       Cara
-    */
-
     ctx.fillStyle="#000";
 
     ctx.fillRect(
@@ -2383,13 +2766,9 @@ function drawPlayer(){
         2
     );
 
-    /*
-       Brazos
-    */
-
     ctx.fillStyle="#e7a878";
 
-    if(player.facing > 0){
+    if(player.facing>0){
 
         ctx.fillRect(
             x+14,
@@ -2408,15 +2787,9 @@ function drawPlayer(){
         );
     }
 
-    /*
-       Martillo
-    */
+    if(player.hammer>0){
 
-    if(player.hammer > 0){
-
-        ctx.save();
-
-        if(player.facing > 0){
+        if(player.facing>0){
 
             ctx.fillStyle="#704323";
 
@@ -2456,15 +2829,14 @@ function drawPlayer(){
                 7
             );
         }
-
-        ctx.restore();
     }
 
     ctx.restore();
 }
 
+
 /* =========================================================
-   BARRILES
+   BARRIL
 ========================================================= */
 
 function drawBarrel(b){
@@ -2484,10 +2856,6 @@ function drawBarrel(b){
 
     ctx.rotate(b.rotation);
 
-    /*
-       Barril
-    */
-
     ctx.fillStyle="#a65f22";
 
     ctx.fillRect(
@@ -2497,11 +2865,8 @@ function drawBarrel(b){
         14
     );
 
-    /*
-       Bandas
-    */
-
     ctx.strokeStyle="#42210e";
+
     ctx.lineWidth=2;
 
     ctx.beginPath();
@@ -2517,34 +2882,22 @@ function drawBarrel(b){
     ctx.restore();
 }
 
+
 /* =========================================================
-   TODO EL ESCENARIO
+   MUNDO
 ========================================================= */
 
 function drawWorld(){
 
     clear();
 
-    /*
-       Marco superior
-    */
-
-    ctx.fillStyle="#111";
-
-    ctx.fillRect(
-        0,
-        0,
-        W,
-        28
-    );
-
-    /*
-       Decoración de fondo
-    */
-
     ctx.fillStyle="#181818";
 
-    for(let y=32;y<H;y+=32){
+    for(
+        let y=32;
+        y<H;
+        y+=32
+    ){
 
         ctx.fillRect(
             0,
@@ -2570,12 +2923,13 @@ function drawWorld(){
 
     drawHUD();
 
+
     /*
-       Indicador de escalera
+       INDICADOR DE ESCALERA
     */
 
     if(
-        state === STATE.PLAYING &&
+        state===STATE.PLAYING &&
         !player.onLadder
     ){
 
@@ -2587,49 +2941,38 @@ function drawWorld(){
 
         if(bottom){
 
-            ctx.fillStyle="#fff";
-
-            ctx.font =
-                'bold 8px "Courier New",monospace';
-
-            ctx.textAlign="center";
-
-            ctx.fillText(
+            text(
                 "▲",
-                player.x+player.w/2,
-                player.y-10
+                player.x+
+                player.w/2,
+                player.y-10,
+                8,
+                "center"
             );
         }
 
         if(top){
 
-            ctx.fillStyle="#fff";
-
-            ctx.font =
-                'bold 8px "Courier New",monospace';
-
-            ctx.textAlign="center";
-
-            ctx.fillText(
+            text(
                 "▼",
-                player.x+player.w/2,
-                player.y-10
+                player.x+
+                player.w/2,
+                player.y-10,
+                8,
+                "center"
             );
         }
     }
 }
 
+
 /* =========================================================
-   PANTALLA DE TÍTULO
+   TÍTULO
 ========================================================= */
 
 function drawTitle(){
 
     clear();
-
-    /*
-       Fondo oscuro
-    */
 
     ctx.fillStyle="#171717";
 
@@ -2640,18 +2983,22 @@ function drawTitle(){
         H
     );
 
-    /*
-       Líneas decorativas
-    */
-
     ctx.strokeStyle="#7e1e24";
+
     ctx.lineWidth=5;
 
-    for(let y=120;y<430;y+=55){
+    for(
+        let y=120;
+        y<430;
+        y+=55
+    ){
 
         ctx.beginPath();
 
-        ctx.moveTo(20,y);
+        ctx.moveTo(
+            20,
+            y
+        );
 
         ctx.lineTo(
             W-20,
@@ -2677,15 +3024,11 @@ function drawTitle(){
         4
     );
 
-    /*
-       Título
-    */
-
     ctx.save();
 
     ctx.textAlign="center";
 
-    ctx.font =
+    ctx.font=
         'bold 30px Impact,Arial Black,sans-serif';
 
     ctx.fillStyle="#e33a31";
@@ -2706,18 +3049,10 @@ function drawTitle(){
 
     ctx.restore();
 
-    /*
-       Mini Kong
-    */
-
     kong.x=160;
     kong.y=205;
 
     drawKong();
-
-    /*
-       Instrucciones
-    */
 
     text(
         "SALVA A LA PRINCESA",
@@ -2743,12 +3078,8 @@ function drawTitle(){
         "center"
     );
 
-    /*
-       High score
-    */
-
     text(
-        "HI-SCORE " +
+        "HI-SCORE "+
         String(highScore).padStart(6,"0"),
         W/2,
         390,
@@ -2756,12 +3087,8 @@ function drawTitle(){
         "center"
     );
 
-    /*
-       Start
-    */
-
     if(
-        Math.floor(frame/30)%2 === 0
+        Math.floor(frame/30)%2===0
     ){
 
         text(
@@ -2773,25 +3100,24 @@ function drawTitle(){
         );
     }
 
-    /*
-       Restaurar Kong
-    */
-
-    const data = LEVELS[level-1];
+    const data =
+        LEVELS[level-1];
 
     kong.x=data.kongX;
     kong.y=data.kongY;
 }
 
+
 /* =========================================================
-   LEVEL COMPLETE
+   NIVEL COMPLETADO
 ========================================================= */
 
 function drawLevelComplete(){
 
     drawWorld();
 
-    ctx.fillStyle="rgba(0,0,0,.78)";
+    ctx.fillStyle=
+        "rgba(0,0,0,.78)";
 
     ctx.fillRect(
         20,
@@ -2838,6 +3164,7 @@ function drawLevelComplete(){
     }
 }
 
+
 /* =========================================================
    GAME OVER
 ========================================================= */
@@ -2846,7 +3173,8 @@ function drawGameOver(){
 
     drawWorld();
 
-    ctx.fillStyle="rgba(0,0,0,.82)";
+    ctx.fillStyle=
+        "rgba(0,0,0,.82)";
 
     ctx.fillRect(
         25,
@@ -2892,6 +3220,7 @@ function drawGameOver(){
         );
     }
 }
+
 
 /* =========================================================
    VICTORIA
@@ -2943,7 +3272,7 @@ function drawWin(){
     );
 
     text(
-        "HI-SCORE " +
+        "HI-SCORE "+
         String(highScore).padStart(6,"0"),
         W/2,
         315,
@@ -2965,95 +3294,132 @@ function drawWin(){
     }
 }
 
+
 /* =========================================================
    DIBUJAR
 ========================================================= */
 
 function draw(){
 
-    if(state === STATE.TITLE){
+    if(state===STATE.TITLE){
 
         drawTitle();
 
-    }else if(state === STATE.PLAYING){
+    }else if(
+        state===STATE.PLAYING
+    ){
 
         drawWorld();
 
-    }else if(state === STATE.LEVEL_COMPLETE){
+    }else if(
+        state===STATE.LEVEL_COMPLETE
+    ){
 
         drawLevelComplete();
 
-    }else if(state === STATE.GAMEOVER){
+    }else if(
+        state===STATE.GAMEOVER
+    ){
 
         drawGameOver();
 
-    }else if(state === STATE.WIN){
+    }else if(
+        state===STATE.WIN
+    ){
 
         drawWin();
     }
 }
 
+
 /* =========================================================
-   CLICK / TOUCH PARA START
+   INICIO DESDE BOTÓN
 ========================================================= */
 
 function actionStart(){
 
     initAudio();
 
-    if(state === STATE.TITLE){
+    if(state===STATE.TITLE){
 
         startGame();
 
-    }else if(state === STATE.LEVEL_COMPLETE){
+    }else if(
+        state===STATE.LEVEL_COMPLETE
+    ){
 
         nextLevel();
 
     }else if(
-        state === STATE.GAMEOVER ||
-        state === STATE.WIN
+        state===STATE.GAMEOVER ||
+        state===STATE.WIN
     ){
 
         startGame();
     }
+
+    /*
+       Nos aseguramos de ocultarlo
+       después de cualquier cambio.
+    */
+
+    updateStartButton();
 }
 
-document
-    .getElementById("startTouch")
-    .addEventListener(
-        "pointerdown",
-        e=>{
-            e.preventDefault();
-            actionStart();
-        }
-    );
+
+startTouch.addEventListener(
+    "pointerdown",
+    e=>{
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        actionStart();
+    },
+    {passive:false}
+);
+
+startTouch.addEventListener(
+    "contextmenu",
+    e=>e.preventDefault()
+);
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
 
 canvas.addEventListener(
     "pointerdown",
     e=>{
 
+        e.preventDefault();
+
         initAudio();
 
-        if(state !== STATE.PLAYING){
+        if(state!==STATE.PLAYING){
+
             actionStart();
         }
-    }
+    },
+    {passive:false}
 );
 
-/*
-   También permite iniciar desde teclado.
-*/
+
+/* =========================================================
+   TECLADO START
+========================================================= */
 
 window.addEventListener(
     "keydown",
     e=>{
 
         if(
-            e.code === "Enter" ||
-            e.code === "Space"
+            e.code==="Enter" ||
+            e.code==="Space"
         ){
 
-            if(state !== STATE.PLAYING){
+            if(state!==STATE.PLAYING){
 
                 e.preventDefault();
 
@@ -3063,23 +3429,45 @@ window.addEventListener(
     }
 );
 
+
 /* =========================================================
-   PAUSA AL SALIR DE LA PÁGINA
+   PAUSA
 ========================================================= */
 
-let paused = false;
+let paused=false;
 
 document.addEventListener(
     "visibilitychange",
     ()=>{
 
-        paused =
-            document.hidden;
+        paused=document.hidden;
+
+        /*
+           Soltar todos los controles
+           al salir de Safari.
+        */
+
+        if(paused){
+
+            for(const key in keys){
+                keys[key]=false;
+            }
+
+            jumpPressed=false;
+            hammerPressed=false;
+
+            document
+                .querySelectorAll(".control")
+                .forEach(
+                    b=>b.classList.remove("active")
+                );
+        }
     }
 );
 
+
 /* =========================================================
-   GAME LOOP
+   LOOP
 ========================================================= */
 
 function loop(){
@@ -3093,11 +3481,14 @@ function loop(){
     requestAnimationFrame(loop);
 }
 
+
 /* =========================================================
    ARRANQUE
 ========================================================= */
 
 createLevel();
+
+updateStartButton();
 
 loop();
 
