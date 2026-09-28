@@ -599,11 +599,11 @@ function startGame(){
     resetInput();
 
     player.x = W/2;
-    player.y = H - 120;
+    player.y = H - 105 - player.h/2;
     player.vx = 0;
     player.vy = 0;
-    player.grounded = false;
-    player.platform = -1;
+    player.grounded = true;
+    player.platform = 0;
     player.invulnerable = 1.2;
 
     state = "playing";
@@ -638,7 +638,7 @@ const player = {
     vy:0,
 
     speed:265,
-    jumpPower:650,
+    jumpPower:720,
     gravity:1450,
 
     grounded:false,
@@ -784,11 +784,11 @@ function beginPhase(){
     spawnTimer = .5;
 
     player.x = W/2;
-    player.y = H - 150;
+    player.y = H - 105 - player.h/2;
     player.vx = 0;
     player.vy = 0;
-    player.platform = -1;
-    player.grounded = false;
+    player.platform = 0;
+    player.grounded = true;
 
     showPhase();
 
@@ -1368,10 +1368,12 @@ function loseLife(){
     }
 
     player.x = W/2;
-    player.y = H-150;
+    player.y = H-105-player.h/2;
 
     player.vx = 0;
     player.vy = 0;
+    player.grounded = true;
+    player.platform = 0;
 
     player.invulnerable = 2;
 
