@@ -340,6 +340,7 @@ canvas{
         </div>
 
         <button
+            type="button"
             class="insert"
             id="startButton"
             onclick="startGame(event)">
@@ -401,6 +402,7 @@ canvas{
         <br>
 
         <button
+            type="button"
             class="insert"
             onclick="startGame(event)">
             INSERT COIN
@@ -523,7 +525,27 @@ const input={
 };
 
 function stopTouch(e){
-    e.preventDefault();
+
+    /*
+       IMPORTANTE EN iOS:
+       No hacemos preventDefault() sobre toda la ventana,
+       porque Safari puede cancelar el click posterior
+       de botones HTML como INSERT COIN.
+
+       Solo bloqueamos gestos cuando realmente estamos
+       tocando el área de juego/controles.
+    */
+    const target = e.target;
+
+    if(
+        target &&
+        (
+            target.closest("#controls") ||
+            target === canvas
+        )
+    ){
+        e.preventDefault();
+    }
 }
 
 addEventListener(
@@ -546,7 +568,14 @@ addEventListener(
 
 addEventListener(
     "gesturestart",
-    stopTouch,
+    e=>{
+        if(
+            e.target === canvas ||
+            (e.target && e.target.closest("#controls"))
+        ){
+            e.preventDefault();
+        }
+    },
     {passive:false}
 );
 
